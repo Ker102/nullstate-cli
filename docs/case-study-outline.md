@@ -27,3 +27,4 @@ The architecture is built for long-context security evidence: Terraform plan JSO
 - Add more Azure rules: storage shared keys, public network access, Key Vault public access.
 - Add real LocalStack Azure exploit execution.
 - Add AWS and Kubernetes adapters behind the same run artifact model.
+- Add AMD GPU-hosted model evidence with vLLM `/metrics` and `amd-smi` or `rocm-smi` snapshots.

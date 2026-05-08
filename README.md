@@ -111,6 +111,8 @@ Each run writes:
 - `runs/<run-id>/events.jsonl`
 - `runs/<run-id>/findings.json`
 - `runs/<run-id>/metrics.json`
+- `runs/<run-id>/vllm-metrics-before.prom` when `/metrics` is reachable
+- `runs/<run-id>/vllm-metrics-after.prom` when `/metrics` is reachable
 - `runs/<run-id>/attack.py`
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`

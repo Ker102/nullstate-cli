@@ -77,6 +77,8 @@ branch -> PR -> tests/lint/type/audit -> review -> squash merge -> tag -> releas
 
 See [Runbook](runbook.md).
 
+Operational evidence includes CLI run artifacts, model endpoint type, vLLM Prometheus snapshots when available, and local `amd-smi` or `rocm-smi` output when GPU tools are present.
+
 ## 9. Cost analysis
 
 See [Cost Report](cost-report.md). V1 is designed to run locally, with AMD Developer Cloud used only for model-serving evidence.
@@ -107,6 +109,7 @@ See [Failure Modes](failure-modes.md).
 - Add real LocalStack Azure exploit execution.
 - Add AWS, Kubernetes, and Docker Compose scenario detectors.
 - Add streamed time-to-first-token metrics.
+- Add AMD GPU-hosted model evidence with vLLM `/metrics` and `amd-smi` or `rocm-smi` snapshots.
 - Add SBOM and signed release provenance.
 
 ## 14. Repository and demo links
