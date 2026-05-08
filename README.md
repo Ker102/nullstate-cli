@@ -123,6 +123,7 @@ Each run writes:
 - [Threat model](docs/threat-model.md)
 - [CI/CD](docs/ci-cd.md)
 - [Runbook](docs/runbook.md)
+- [AMD compute strategy](docs/compute-strategy.md)
 - [Failure modes](docs/failure-modes.md)
 - [Cost report](docs/cost-report.md)
 
