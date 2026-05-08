@@ -2,6 +2,8 @@
 
 Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.
 
+![Nullstate terminal showcase](https://github.com/Ker102/nullstate-cli/releases/download/Media/Showcaseimage)
+
 `nullstate` runs a tight local security validation loop:
 
 1. Read Terraform/IaC input.
@@ -12,7 +14,7 @@ Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.
 6. Validate the attack is blocked.
 7. Write case-study-ready evidence and metrics.
 
-The hackathon V1 has one fully working scenario: Terraform Azure public Blob exposure. The backend model is broader: LocalStack Azure, LocalStack AWS, kind Kubernetes, Docker Compose digital twins, microVM/on-prem digital twins, and plan-only analysis.
+The hackathon V1 has offline deterministic demos for Azure, AWS, Kubernetes, Docker Compose, on-prem baselines, and generic plan review. Live sandbox execution is being added incrementally, starting with LocalStack Azure.
 
 ## Why this exists
 
@@ -21,15 +23,23 @@ Static IaC scanners can identify risky configuration, but they do not always pro
 ## Architecture
 
 ```mermaid
-flowchart LR
-    IaC[Terraform and IaC input] --> Parser[Plan parser]
-    Parser --> Detector[Deterministic detector]
-    Detector --> Sandbox[Sandbox adapter]
-    Sandbox --> Red[Red-team agent]
-    Red --> Evidence[Exploit evidence]
-    Evidence --> Blue[Blue-team agent]
-    Blue --> Patch[Patch validator]
-    Patch --> Report[Report and metrics]
+flowchart TB
+    subgraph Analyze["Analyze and Sandbox"]
+        direction LR
+        IaC[Terraform and IaC input] --> Parser[Plan parser]
+        Parser --> Detector[Deterministic detector]
+        Detector --> Sandbox[Sandbox adapter]
+    end
+
+    subgraph Validate["Attack, Remediate, Validate"]
+        direction LR
+        Red[Red-team agent] --> Evidence[Exploit evidence]
+        Evidence --> Blue[Blue-team agent]
+        Blue --> Patch[Patch validator]
+        Patch --> Report[Report and metrics]
+    end
+
+    Sandbox --> Red
 ```
 
 See [Architecture](docs/architecture.md).
@@ -45,6 +55,13 @@ python -m pip install -e .
 python -m nullstate doctor --offline
 python -m nullstate init-demo azure-public-blob --output examples/azure-public-blob
 python -m nullstate run examples/azure-public-blob --offline
+```
+
+Run another offline scenario:
+
+```powershell
+python -m nullstate run examples/aws-public-s3 --offline --target localstack-aws --scenario aws-public-s3
+python -m nullstate run examples/k8s-privileged-pod --offline --target kind-kubernetes --scenario k8s-privileged-pod
 ```
 
 Sandbox discovery:
@@ -124,11 +141,11 @@ Users do not need to write prompts. `nullstate` sends internal red-team and blue
 
 | Scenario | Backend | Status |
 |---|---|---|
-| `azure-public-blob` | `localstack-azure` | working offline demo; live LocalStack pending |
-| `aws-public-s3` | `localstack-aws` | scaffolded |
-| `k8s-privileged-pod` | `kind-kubernetes` | scaffolded |
-| `compose-exposed-admin` | `docker-compose` | scaffolded |
-| `onprem-ssh-password` | `microvm-onprem` | scaffolded |
+| `azure-public-blob` | `localstack-azure` | offline demo available; live LocalStack pending |
+| `aws-public-s3` | `localstack-aws` | offline demo available; live LocalStack AWS pending |
+| `k8s-privileged-pod` | `kind-kubernetes` | offline demo available; live kind pending |
+| `compose-exposed-admin` | `docker-compose` | offline demo available; live Docker probe pending |
+| `onprem-ssh-password` | `microvm-onprem` | offline demo available; microVM digital twin pending |
 | `generic-plan-review` | `plan-only` | available |
 
 ## Artifacts
@@ -158,6 +175,6 @@ Each run writes:
 
 ## Status
 
-Working now: offline Terraform Azure public Blob demo, deterministic remediation, sandbox registry, report artifacts, metrics artifacts, and DevSecOps repo structure.
+Working now: offline deterministic demos for all listed scenarios, deterministic remediation, sandbox registry, report artifacts, metrics artifacts, branded CLI output, and DevSecOps repo structure.
 
-Experimental: live LocalStack Azure execution and non-Azure sandbox adapters.
+Experimental: live LocalStack Azure execution and non-Azure live sandbox adapters.

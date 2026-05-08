@@ -27,6 +27,9 @@ def run_command(command: list[str], cwd: Path) -> CommandResult:
 
 def load_plan_json(terraform_dir: Path, offline: bool) -> tuple[dict[str, Any], list[CommandResult]]:
     if offline:
+        exported_plan = terraform_dir / "tfplan.json"
+        if exported_plan.exists():
+            return json.loads(exported_plan.read_text(encoding="utf-8")), []
         return static_plan_from_tf(terraform_dir), []
 
     commands: list[CommandResult] = []
@@ -53,8 +56,6 @@ def static_plan_from_tf(terraform_dir: Path) -> dict[str, Any]:
     for tf_file in sorted(terraform_dir.glob("*.tf")):
         text = tf_file.read_text(encoding="utf-8")
         for resource_type, resource_name, body in _resource_blocks(text):
-            if resource_type not in {"azurerm_storage_account", "azurerm_storage_container"}:
-                continue
             values = _parse_values(body)
             resources.append(
                 {

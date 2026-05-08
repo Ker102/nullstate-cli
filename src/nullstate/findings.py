@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any
 
 
@@ -57,11 +58,170 @@ def find_public_blob_exposures(plan: dict[str, Any]) -> list[Finding]:
     return findings
 
 
+def find_scenario_findings(scenario_name: str, workspace_dir: Path, plan: dict[str, Any]) -> list[Finding]:
+    if scenario_name == "azure-public-blob":
+        return find_public_blob_exposures(plan)
+    if scenario_name == "aws-public-s3":
+        return find_public_s3_exposures(plan)
+    if scenario_name == "k8s-privileged-pod":
+        return find_privileged_k8s_workloads(workspace_dir)
+    if scenario_name == "compose-exposed-admin":
+        return find_compose_public_admin_ports(workspace_dir)
+    if scenario_name == "onprem-ssh-password":
+        return find_onprem_ssh_password_login(workspace_dir)
+    if scenario_name == "generic-plan-review":
+        return find_generic_public_admin_ingress(plan)
+    return []
+
+
+def find_public_s3_exposures(plan: dict[str, Any]) -> list[Finding]:
+    resources = list(_iter_resources(plan.get("planned_values", {}).get("root_module", {})))
+    findings: list[Finding] = []
+    for resource in resources:
+        if resource.get("type") != "aws_s3_bucket_public_access_block":
+            continue
+        values = resource.get("values") or {}
+        disabled_controls = [
+            key
+            for key in ("block_public_acls", "block_public_policy", "ignore_public_acls", "restrict_public_buckets")
+            if values.get(key) is False
+        ]
+        if not disabled_controls:
+            continue
+        findings.append(
+            Finding(
+                rule_id="AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED",
+                severity="high",
+                resource_address=str(resource.get("address", "aws_s3_bucket_public_access_block.unknown")),
+                summary="S3 public access block controls are disabled.",
+                evidence="Disabled controls: " + ", ".join(disabled_controls),
+                remediation="Set every aws_s3_bucket_public_access_block control to true.",
+            )
+        )
+    return findings
+
+
+def find_privileged_k8s_workloads(workspace_dir: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for yaml_file in _iac_files(workspace_dir, ("*.yaml", "*.yml")):
+        text = yaml_file.read_text(encoding="utf-8")
+        evidence: list[str] = []
+        if "privileged: true" in text:
+            evidence.append("container securityContext sets privileged: true")
+        if "hostPath:" in text:
+            evidence.append("pod mounts hostPath storage")
+        if not evidence:
+            continue
+        findings.append(
+            Finding(
+                rule_id="K8S_PRIVILEGED_WORKLOAD",
+                severity="critical",
+                resource_address=yaml_file.name,
+                summary="Kubernetes workload can access host-level privileges.",
+                evidence="; ".join(evidence),
+                remediation="Set privileged to false and replace hostPath with an isolated volume.",
+            )
+        )
+    return findings
+
+
+def find_compose_public_admin_ports(workspace_dir: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for compose_file in _iac_files(workspace_dir, ("compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml")):
+        text = compose_file.read_text(encoding="utf-8")
+        if "0.0.0.0:" not in text:
+            continue
+        findings.append(
+            Finding(
+                rule_id="COMPOSE_PUBLIC_ADMIN_PORT",
+                severity="high",
+                resource_address=compose_file.name,
+                summary="Docker Compose admin service is bound to all host interfaces.",
+                evidence="A published port uses 0.0.0.0, exposing the service beyond localhost.",
+                remediation="Bind admin service ports to 127.0.0.1 or remove the host port.",
+            )
+        )
+    return findings
+
+
+def find_onprem_ssh_password_login(workspace_dir: Path) -> list[Finding]:
+    findings: list[Finding] = []
+    for config_file in _iac_files(workspace_dir, ("*.yaml", "*.yml", "*.cfg", "*.conf")):
+        text = config_file.read_text(encoding="utf-8")
+        evidence: list[str] = []
+        if "PasswordAuthentication yes" in text:
+            evidence.append("PasswordAuthentication yes")
+        if "PermitRootLogin yes" in text:
+            evidence.append("PermitRootLogin yes")
+        if not evidence:
+            continue
+        findings.append(
+            Finding(
+                rule_id="ONPREM_SSH_PASSWORD_LOGIN",
+                severity="high",
+                resource_address=config_file.name,
+                summary="On-prem SSH baseline enables password or root login.",
+                evidence="; ".join(evidence),
+                remediation="Disable SSH password authentication and root login in the baseline.",
+            )
+        )
+    return findings
+
+
+def find_generic_public_admin_ingress(plan: dict[str, Any]) -> list[Finding]:
+    resources = list(_iter_resources(plan.get("planned_values", {}).get("root_module", {})))
+    findings: list[Finding] = []
+    for resource in resources:
+        values = resource.get("values") or {}
+        if not _contains_public_cidr(values) or not _contains_admin_port(values):
+            continue
+        findings.append(
+            Finding(
+                rule_id="GENERIC_PUBLIC_ADMIN_INGRESS",
+                severity="medium",
+                resource_address=str(resource.get("address", "generic.resource")),
+                summary="Plan-only review found public ingress to an administrative port.",
+                evidence="Resource contains 0.0.0.0/0 and an administrative port such as 22 or 3389.",
+                remediation="Restrict source ranges to a private management CIDR or remove the administrative listener.",
+            )
+        )
+    return findings
+
+
 def _iter_resources(module: dict[str, Any]) -> list[dict[str, Any]]:
     resources = list(module.get("resources") or [])
     for child in module.get("child_modules") or []:
         resources.extend(_iter_resources(child))
     return resources
+
+
+def _iac_files(workspace_dir: Path, patterns: tuple[str, ...]) -> list[Path]:
+    files: list[Path] = []
+    for pattern in patterns:
+        files.extend(path for path in workspace_dir.glob(pattern) if path.is_file())
+    return sorted(set(files))
+
+
+def _contains_public_cidr(value: Any) -> bool:
+    if isinstance(value, str):
+        return value == "0.0.0.0/0" or value == "::/0"
+    if isinstance(value, list):
+        return any(_contains_public_cidr(item) for item in value)
+    if isinstance(value, dict):
+        return any(_contains_public_cidr(item) for item in value.values())
+    return False
+
+
+def _contains_admin_port(value: Any) -> bool:
+    if isinstance(value, int):
+        return value in {22, 3389, 5985, 5986}
+    if isinstance(value, str) and value.isdigit():
+        return int(value) in {22, 3389, 5985, 5986}
+    if isinstance(value, list):
+        return any(_contains_admin_port(item) for item in value)
+    if isinstance(value, dict):
+        return any(_contains_admin_port(item) for item in value.values())
+    return False
 
 
 def _storage_public_setting(storage_accounts: list[dict[str, Any]], container_values: dict[str, Any]) -> bool | None:

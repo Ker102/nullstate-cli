@@ -3,7 +3,18 @@
   "terraform_version": "1.9.0",
   "planned_values": {
     "root_module": {
-      "resources": []
+      "resources": [
+        {
+          "address": "example_firewall_rule.admin",
+          "type": "example_firewall_rule",
+          "name": "admin",
+          "values": {
+            "name": "admin-ssh",
+            "source_ranges": ["0.0.0.0/0"],
+            "destination_port": 22
+          }
+        }
+      ]
     }
   }
 }
