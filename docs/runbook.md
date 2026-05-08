@@ -30,6 +30,27 @@ Then:
 python -m nullstate sandbox up localstack-azure
 ```
 
+Docker Compose alternative:
+
+```powershell
+$env:LOCALSTACK_AUTH_TOKEN = "<token>"
+docker compose -f docker-compose.localstack-azure.yml up
+```
+
+Docker Compose can read `${LOCALSTACK_AUTH_TOKEN}` from either the current shell or a local `.env` file next to `docker-compose.localstack-azure.yml`:
+
+```env
+LOCALSTACK_AUTH_TOKEN=your-token-here
+```
+
+`.env` is ignored by Git. Never commit the token. You can also keep the token somewhere else and pass it explicitly:
+
+```powershell
+docker compose --env-file .env.local -f docker-compose.localstack-azure.yml up
+```
+
+`env_file:` inside a Compose service is different: it injects variables into a container. For this token, we need Compose interpolation so the compose file can replace `${LOCALSTACK_AUTH_TOKEN}` before starting the service.
+
 ## Model endpoint setup
 
 Set:

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .scenarios import get_scenario
 
-DEMO_MAIN_TF = """\
+
+AZURE_PUBLIC_BLOB_MAIN_TF = """\
 terraform {
   required_providers {
     azurerm = {
@@ -41,7 +43,7 @@ resource "azurerm_storage_container" "secrets" {
 """
 
 
-DEMO_README = """\
+AZURE_PUBLIC_BLOB_README = """\
 # nullstate Azure Public Blob Demo
 
 This fixture intentionally exposes an Azure Blob container for anonymous reads.
@@ -54,10 +56,124 @@ nullstate run . --offline
 For the live LocalStack Azure demo, start LocalStack for Azure first and omit `--offline`.
 """
 
+AWS_PUBLIC_S3_MAIN_TF = """\
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region                      = "us-east-1"
+  access_key                  = "test"
+  secret_key                  = "test"
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
+  endpoints {
+    s3 = "http://localhost.localstack.cloud:4566"
+  }
+}
+
+resource "aws_s3_bucket" "public_logs" {
+  bucket = "nullstate-public-logs"
+}
+
+resource "aws_s3_bucket_public_access_block" "public_logs" {
+  bucket                  = aws_s3_bucket.public_logs.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+"""
+
+K8S_PRIVILEGED_POD_YAML = """\
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nullstate-privileged-pod
+spec:
+  containers:
+    - name: shell
+      image: alpine:latest
+      command: ["sleep", "3600"]
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: host-root
+          mountPath: /host
+  volumes:
+    - name: host-root
+      hostPath:
+        path: /
+"""
+
+COMPOSE_EXPOSED_ADMIN_YAML = """\
+services:
+  admin:
+    image: nginx:alpine
+    ports:
+      - "0.0.0.0:8080:80"
+"""
+
+ONPREM_ANSIBLE_PLAYBOOK = """\
+- name: Intentionally weak on-prem SSH baseline
+  hosts: all
+  become: true
+  tasks:
+    - name: Enable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+    - name: Permit root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin yes'
+"""
+
+GENERIC_PLAN_REVIEW_JSON = """\
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.0",
+  "planned_values": {
+    "root_module": {
+      "resources": []
+    }
+  }
+}
+"""
+
+
+README_BY_SCENARIO = {
+    "azure-public-blob": AZURE_PUBLIC_BLOB_README,
+    "aws-public-s3": "# nullstate AWS Public S3 Demo\n\nScaffolded Terraform AWS scenario for LocalStack AWS.\n",
+    "k8s-privileged-pod": "# nullstate Kubernetes Privileged Pod Demo\n\nScaffolded Kubernetes scenario for kind.\n",
+    "compose-exposed-admin": "# nullstate Docker Compose Exposed Admin Demo\n\nScaffolded digital-twin scenario for Docker Compose.\n",
+    "onprem-ssh-password": "# nullstate On-Prem SSH Password Demo\n\nScaffolded digital-twin scenario for Ansible or VM labs.\n",
+    "generic-plan-review": "# nullstate Generic Plan Review Demo\n\nPlan-only scenario for unsupported IaC providers.\n",
+}
+
 
 def create_demo(name: str, output: Path) -> None:
-    if name != "azure-public-blob":
-        raise ValueError("Only the azure-public-blob demo is available in v1.")
+    scenario = get_scenario(name)
     output.mkdir(parents=True, exist_ok=True)
-    (output / "main.tf").write_text(DEMO_MAIN_TF, encoding="utf-8")
-    (output / "README.md").write_text(DEMO_README, encoding="utf-8")
+    if scenario.name == "azure-public-blob":
+        (output / "main.tf").write_text(AZURE_PUBLIC_BLOB_MAIN_TF, encoding="utf-8")
+    elif scenario.name == "aws-public-s3":
+        (output / "main.tf").write_text(AWS_PUBLIC_S3_MAIN_TF, encoding="utf-8")
+    elif scenario.name == "k8s-privileged-pod":
+        (output / "pod.yaml").write_text(K8S_PRIVILEGED_POD_YAML, encoding="utf-8")
+    elif scenario.name == "compose-exposed-admin":
+        (output / "compose.yaml").write_text(COMPOSE_EXPOSED_ADMIN_YAML, encoding="utf-8")
+    elif scenario.name == "onprem-ssh-password":
+        (output / "playbook.yml").write_text(ONPREM_ANSIBLE_PLAYBOOK, encoding="utf-8")
+    elif scenario.name == "generic-plan-review":
+        (output / "tfplan.json").write_text(GENERIC_PLAN_REVIEW_JSON, encoding="utf-8")
+    (output / "README.md").write_text(README_BY_SCENARIO[scenario.name], encoding="utf-8")

@@ -1,0 +1,13 @@
+services:
+  localstack-azure:
+    image: localstack/localstack-azure-alpha
+    ports:
+      - "4566:4566"
+    environment:
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN:?Set LOCALSTACK_AUTH_TOKEN in your shell or .env file}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - localstack-azure-data:/var/lib/localstack
+
+volumes:
+  localstack-azure-data:
