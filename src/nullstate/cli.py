@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+import os
 
 import typer
 from rich.console import Console
@@ -13,6 +14,7 @@ from .artifacts import EventLog, new_run_id, write_json
 from .attack import simulate_attack, write_attack_script
 from .demo import create_demo
 from .findings import find_public_blob_exposures
+from .metrics import collect_run_metrics
 from .remediation import remediate_terraform_files
 from .report import render_report
 from .sandbox import get_backend, list_backends, render_commands, run_commands
@@ -99,6 +101,12 @@ def run(
     findings = find_public_blob_exposures(plan)
     events.write("analysis", "Terraform plan analyzed", finding_count=len(findings))
     write_json(run_dir / "findings.json", [finding.to_dict() for finding in findings])
+    before_metrics = collect_run_metrics(
+        run_dir=run_dir,
+        base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
+        offline=offline,
+        stage="before",
+    )
 
     write_attack_script(run_dir / "attack.py")
     red_agent = LlmAgent("red", red_model)
@@ -119,10 +127,20 @@ def run(
 
     patch_result = remediate_terraform_files(workspace_dir)
     (run_dir / "remediation.patch").write_text(patch_result.diff, encoding="utf-8")
+    after_metrics = collect_run_metrics(
+        run_dir=run_dir,
+        base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
+        offline=offline,
+        stage="after",
+    )
     write_json(
         run_dir / "metrics.json",
         {
             "model_calls": [red_result.metrics.to_dict(), blue_result.metrics.to_dict()],
+            "endpoint": {
+                "before": before_metrics,
+                "after": after_metrics,
+            },
             "notes": (
                 "Token metrics come from OpenAI-compatible response usage when available. "
                 "Offline mock mode records zero token counts. User-authored prompts are not required; "

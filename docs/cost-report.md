@@ -24,3 +24,5 @@ V1 is designed to keep cloud spend near zero by default. Offline mode runs local
 ## Future tracking
 
 Record actual hackathon model-serving runtime, GPU hours, and any LocalStack or cloud access costs before publishing the case study.
+
+Also record whether each demo run used offline mode, managed inference, or AMD GPU-hosted inference. This keeps the case study honest if a managed endpoint is used as a fallback before DigitalOcean/AMD access is ready.
