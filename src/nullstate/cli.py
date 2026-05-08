@@ -13,9 +13,9 @@ from .agents import LlmAgent
 from .artifacts import EventLog, new_run_id, write_json
 from .attack import simulate_attack, write_attack_script
 from .demo import create_demo
-from .findings import find_public_blob_exposures
+from .findings import find_scenario_findings
 from .metrics import collect_run_metrics
-from .remediation import remediate_terraform_files
+from .remediation import remediate_scenario_files
 from .report import render_report
 from .sandbox import get_backend, list_backends, render_commands, run_commands
 from .scenarios import get_scenario, list_scenarios
@@ -29,10 +29,21 @@ app.add_typer(sandbox_app, name="sandbox")
 app.add_typer(scenarios_app, name="scenarios")
 console = Console()
 
+BANNER = r"""
+ _   _       _ _     _        _
+| \ | |_   _| | |___| |_ __ _| |_ ___
+|  \| | | | | | / __| __/ _` | __/ _ \
+| |\  | |_| | | \__ \ || (_| | ||  __/
+|_| \_|\__,_|_|_|___/\__\__,_|\__\___|
+Nullstate
+Autonomous Purple-Team Sandbox
+"""
+
 
 @app.command()
 def doctor(offline: bool = typer.Option(False, "--offline", help="Skip network and external service checks.")) -> None:
     """Check local dependencies and configured model endpoint."""
+    _print_banner()
     table = Table(title="nullstate doctor")
     table.add_column("Check")
     table.add_column("Status")
@@ -78,10 +89,10 @@ def run(
         scenario_spec = get_scenario(scenario)
     except KeyError as error:
         raise typer.BadParameter(str(error)) from error
-    if scenario_spec.name != "azure-public-blob":
+    if scenario_spec.name != "azure-public-blob" and not offline:
         raise typer.BadParameter(
-            f"Scenario {scenario_spec.name!r} is scaffolded for {scenario_spec.backend}; "
-            "v1 execution currently supports only azure-public-blob."
+            f"Scenario {scenario_spec.name!r} supports offline demo execution only for now. "
+            "Use --offline until its live sandbox adapter is implemented."
         )
     if backend.mode == "plan-only":
         offline = True
@@ -93,7 +104,14 @@ def run(
     _copy_terraform_workspace(terraform_dir, workspace_dir)
     events = EventLog(run_dir / "events.jsonl")
 
-    console.print(Panel.fit(f"nullstate run {run_id}", subtitle="Terraform Azure purple-team loop"))
+    _print_banner()
+    console.print(
+        Panel(
+            f"Run ID: {run_id}\nScenario: {scenario_spec.name}\nTarget: {backend.name}",
+            title="nullstate run",
+            border_style="cyan",
+        )
+    )
     events.write(
         "start",
         "Run started",
@@ -109,7 +127,7 @@ def run(
     for result in commands:
         events.write("terraform", "Command completed", command=result.command, returncode=result.returncode)
 
-    findings = find_public_blob_exposures(plan)
+    findings = find_scenario_findings(scenario_spec.name, workspace_dir, plan)
     events.write("analysis", "Terraform plan analyzed", finding_count=len(findings))
     write_json(run_dir / "findings.json", [finding.to_dict() for finding in findings])
     before_metrics = collect_run_metrics(
@@ -119,7 +137,7 @@ def run(
         stage="before",
     )
 
-    write_attack_script(run_dir / "attack.py")
+    write_attack_script(run_dir / "attack.py", scenario_spec.name)
     red_agent = LlmAgent("red", red_model)
     red_result = red_agent.complete(
         "You are a red-team cloud security agent constrained to LocalStack Azure.",
@@ -136,7 +154,7 @@ def run(
         offline=offline,
     )
 
-    patch_result = remediate_terraform_files(workspace_dir)
+    patch_result = remediate_scenario_files(scenario_spec.name, workspace_dir)
     (run_dir / "remediation.patch").write_text(patch_result.diff, encoding="utf-8")
     after_metrics = collect_run_metrics(
         run_dir=run_dir,
@@ -162,7 +180,7 @@ def run(
     events.write("blue-team", "Terraform remediation generated", changed=patch_result.changed, agent=blue_result)
 
     remediated_plan, _ = load_plan_json(workspace_dir, offline=True)
-    remaining_findings = find_public_blob_exposures(remediated_plan)
+    remaining_findings = find_scenario_findings(scenario_spec.name, workspace_dir, remediated_plan)
     after_attack = simulate_attack(remaining_findings, "after")
     events.write("validation", "Attack attempted after remediation", result=after_attack, remaining_findings=len(remaining_findings))
 
@@ -306,7 +324,7 @@ def _print_run_summary(run_dir: Path, findings, before_attack: dict[str, str], a
     table.add_column("Stage")
     table.add_column("Result")
     table.add_column("Detail")
-    table.add_row("Analysis", f"{len(findings)} finding(s)", "Azure Terraform storage exposure scan")
+    table.add_row("Analysis", f"{len(findings)} finding(s)", "Scenario-specific IaC exposure scan")
     table.add_row("Red before", before_attack["status"], before_attack["detail"])
     table.add_row("Red after", after_attack["status"], after_attack["detail"])
     table.add_row("Artifacts", "written", str(run_dir))
@@ -317,6 +335,10 @@ def _llm_configured() -> bool:
     import os
 
     return bool(os.getenv("NULLSTATE_LLM_BASE_URL"))
+
+
+def _print_banner() -> None:
+    console.print(BANNER, style="bold cyan")
 
 
 def _copy_terraform_workspace(source: Path, destination: Path) -> None:

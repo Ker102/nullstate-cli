@@ -90,7 +90,7 @@ See [AMD Compute Strategy](compute-strategy.md) for the primary DigitalOcean/AMD
 - Offline CLI demo runs end to end.
 - Unit test suite covers findings, remediation, reports, metrics, and sandbox registry.
 - Run artifacts include report, findings, events, attack script, patch, workspace copy, and metrics.
-- Scenario scaffolds cover AWS, Kubernetes, Docker Compose, on-prem digital twins, and generic plan-only review.
+- Offline deterministic scenario demos cover AWS, Kubernetes, Docker Compose, on-prem digital twins, and generic plan-only review.
 
 ## 11. Tradeoffs
 

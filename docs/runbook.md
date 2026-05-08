@@ -8,6 +8,16 @@ python -m nullstate doctor --offline
 python -m nullstate run examples/azure-public-blob --offline
 ```
 
+Run every offline scenario before recording:
+
+```powershell
+python -m nullstate run examples/aws-public-s3 --offline --target localstack-aws --scenario aws-public-s3
+python -m nullstate run examples/k8s-privileged-pod --offline --target kind-kubernetes --scenario k8s-privileged-pod
+python -m nullstate run examples/compose-exposed-admin --offline --target docker-compose --scenario compose-exposed-admin
+python -m nullstate run examples/onprem-ssh-password --offline --target microvm-onprem --scenario onprem-ssh-password
+python -m nullstate run examples/generic-plan-review --offline --target plan-only --scenario generic-plan-review
+```
+
 ## Sandbox discovery
 
 ```powershell

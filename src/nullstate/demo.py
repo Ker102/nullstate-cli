@@ -144,7 +144,18 @@ GENERIC_PLAN_REVIEW_JSON = """\
   "terraform_version": "1.9.0",
   "planned_values": {
     "root_module": {
-      "resources": []
+      "resources": [
+        {
+          "address": "example_firewall_rule.admin",
+          "type": "example_firewall_rule",
+          "name": "admin",
+          "values": {
+            "name": "admin-ssh",
+            "source_ranges": ["0.0.0.0/0"],
+            "destination_port": 22
+          }
+        }
+      ]
     }
   }
 }
@@ -153,11 +164,14 @@ GENERIC_PLAN_REVIEW_JSON = """\
 
 README_BY_SCENARIO = {
     "azure-public-blob": AZURE_PUBLIC_BLOB_README,
-    "aws-public-s3": "# nullstate AWS Public S3 Demo\n\nScaffolded Terraform AWS scenario for LocalStack AWS.\n",
-    "k8s-privileged-pod": "# nullstate Kubernetes Privileged Pod Demo\n\nScaffolded Kubernetes scenario for kind.\n",
-    "compose-exposed-admin": "# nullstate Docker Compose Exposed Admin Demo\n\nScaffolded digital-twin scenario for Docker Compose.\n",
-    "onprem-ssh-password": "# nullstate On-Prem SSH Password Demo\n\nScaffolded digital-twin scenario for Ansible or VM labs.\n",
-    "generic-plan-review": "# nullstate Generic Plan Review Demo\n\nPlan-only scenario for unsupported IaC providers.\n",
+    "aws-public-s3": "# nullstate AWS Public S3 Demo\n\nOffline Terraform AWS scenario for LocalStack AWS public access review.\n",
+    "k8s-privileged-pod": "# nullstate Kubernetes Privileged Pod Demo\n\nOffline Kubernetes scenario for kind privileged workload review.\n",
+    "compose-exposed-admin": "# nullstate Docker Compose Exposed Admin Demo\n\nOffline digital-twin scenario for Docker Compose admin exposure review.\n",
+    "onprem-ssh-password": "# nullstate On-Prem SSH Password Demo\n\nOffline digital-twin scenario for Ansible or VM SSH baseline review.\n",
+    "generic-plan-review": (
+        "# nullstate Generic Plan Review Demo\n\n"
+        "Plan-only scenario for unsupported IaC providers with public administrative ingress.\n"
+    ),
 }
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import difflib
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,12 +15,40 @@ class PatchResult:
 
 
 def remediate_terraform_files(terraform_dir: Path) -> PatchResult:
+    return remediate_scenario_files("azure-public-blob", terraform_dir)
+
+
+def remediate_scenario_files(scenario_name: str, terraform_dir: Path) -> PatchResult:
+    if scenario_name == "azure-public-blob":
+        return _remediate_files(terraform_dir, ("*.tf",), _remediate_azure_text)
+    if scenario_name == "aws-public-s3":
+        return _remediate_files(terraform_dir, ("*.tf",), _remediate_aws_text)
+    if scenario_name == "k8s-privileged-pod":
+        return _remediate_files(terraform_dir, ("*.yaml", "*.yml"), _remediate_k8s_text)
+    if scenario_name == "compose-exposed-admin":
+        return _remediate_files(
+            terraform_dir,
+            ("compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"),
+            _remediate_compose_text,
+        )
+    if scenario_name == "onprem-ssh-password":
+        return _remediate_files(terraform_dir, ("*.yaml", "*.yml", "*.cfg", "*.conf"), _remediate_onprem_text)
+    if scenario_name == "generic-plan-review":
+        return _remediate_files(terraform_dir, ("*.json",), _remediate_generic_plan_text)
+    return PatchResult(changed=False, diff="", changed_files=[])
+
+
+def _remediate_files(terraform_dir: Path, patterns: tuple[str, ...], updater) -> PatchResult:
     changed_files: list[str] = []
     diff_parts: list[str] = []
 
-    for tf_file in sorted(terraform_dir.glob("*.tf")):
+    files: list[Path] = []
+    for pattern in patterns:
+        files.extend(path for path in terraform_dir.glob(pattern) if path.is_file())
+
+    for tf_file in sorted(set(files)):
         before = tf_file.read_text(encoding="utf-8")
-        after = _remediate_text(before)
+        after = updater(before)
         if before == after:
             continue
         tf_file.write_text(after, encoding="utf-8")
@@ -38,10 +67,51 @@ def remediate_terraform_files(terraform_dir: Path) -> PatchResult:
     return PatchResult(changed=bool(changed_files), diff="\n".join(diff_parts), changed_files=changed_files)
 
 
-def _remediate_text(text: str) -> str:
+def _remediate_azure_text(text: str) -> str:
     text = _update_resource_blocks(text, "azurerm_storage_container", _secure_container_block)
     text = _update_resource_blocks(text, "azurerm_storage_account", _secure_storage_account_block)
     return text
+
+
+def _remediate_aws_text(text: str) -> str:
+    for key in ("block_public_acls", "block_public_policy", "ignore_public_acls", "restrict_public_buckets"):
+        text = re.sub(rf"({key}\s*=\s*)false", r"\1true", text)
+    return text
+
+
+def _remediate_k8s_text(text: str) -> str:
+    text = text.replace("privileged: true", "privileged: false")
+    text = text.replace("    - name: host-root\n      hostPath:\n        path: /\n", "    - name: host-root\n      emptyDir: {}\n")
+    return text
+
+
+def _remediate_compose_text(text: str) -> str:
+    return text.replace("0.0.0.0:", "127.0.0.1:")
+
+
+def _remediate_onprem_text(text: str) -> str:
+    text = text.replace("PasswordAuthentication yes", "PasswordAuthentication no")
+    text = text.replace("PermitRootLogin yes", "PermitRootLogin no")
+    return text
+
+
+def _remediate_generic_plan_text(text: str) -> str:
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return text
+    updated = _replace_public_cidr(payload)
+    return json.dumps(updated, indent=2) + "\n"
+
+
+def _replace_public_cidr(value):
+    if isinstance(value, str):
+        return "10.0.0.0/8" if value in {"0.0.0.0/0", "::/0"} else value
+    if isinstance(value, list):
+        return [_replace_public_cidr(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _replace_public_cidr(item) for key, item in value.items()}
+    return value
 
 
 def _update_resource_blocks(text: str, resource_type: str, updater) -> str:

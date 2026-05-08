@@ -21,7 +21,7 @@ def render_report(
 
 Run ID: `{run_id}`
 
-Terraform input: `{terraform_dir}`
+IaC input: `{terraform_dir}`
 
 ## Verdict
 
@@ -51,7 +51,7 @@ Terraform input: `{terraform_dir}`
 
 ## Case Study Notes
 
-nullstate used deterministic Terraform analysis for reliability, then layered red-team and blue-team agents over the evidence trail so the demo remains reproducible under hackathon time pressure.
+nullstate used deterministic IaC analysis for reliability, then layered red-team and blue-team agents over the evidence trail so the demo remains reproducible under hackathon time pressure.
 """
 
 
