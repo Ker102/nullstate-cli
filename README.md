@@ -48,36 +48,65 @@ See [Architecture](docs/architecture.md).
 
 V1 does not target real cloud environments by default. Sandboxes are explicit, run artifacts are local, and remediation happens in a copied run workspace rather than mutating the original Terraform directory. See [Security Model](docs/security-model.md) and [Threat Model](docs/threat-model.md).
 
+## Installation
+
+Current source install:
+
+```powershell
+git clone https://github.com/Ker102/nullstate-cli.git
+cd nullstate-cli
+python -m pip install -e .
+```
+
+This installs the package dependencies and the `nullstate` console command declared in `pyproject.toml`.
+
+If `nullstate` is not recognized after install, your Python Scripts directory is not on `PATH`. You can still run the same CLI through Python:
+
+```powershell
+python -m nullstate doctor --offline
+```
+
+To see where Python installed console scripts:
+
+```powershell
+python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
+```
+
+After the first prerelease tag exists, install directly from GitHub:
+
+```powershell
+python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-alpha.1"
+```
+
 ## Quickstart
 
 ```powershell
-python -m pip install -e .
-python -m nullstate doctor --offline
-python -m nullstate init-demo azure-public-blob --output examples/azure-public-blob
-python -m nullstate run examples/azure-public-blob --offline
+nullstate doctor --offline
+nullstate init-demo azure-public-blob --output examples/azure-public-blob
+nullstate run examples/azure-public-blob --offline
 ```
 
 Run another offline scenario:
 
 ```powershell
-python -m nullstate run examples/aws-public-s3 --offline --target localstack-aws --scenario aws-public-s3
-python -m nullstate run examples/k8s-privileged-pod --offline --target kind-kubernetes --scenario k8s-privileged-pod
+nullstate run examples/aws-public-s3 --offline --target localstack-aws --scenario aws-public-s3
+nullstate run examples/k8s-privileged-pod --offline --target kind-kubernetes --scenario k8s-privileged-pod
 ```
 
 Sandbox discovery:
 
 ```powershell
-python -m nullstate sandbox list
-python -m nullstate sandbox status localstack-azure
-python -m nullstate sandbox up localstack-azure --dry-run
-python -m nullstate scenarios list
+nullstate sandbox list
+nullstate sandbox status localstack-azure
+nullstate sandbox up localstack-azure --dry-run
+nullstate scenarios list
 ```
 
 Open the latest report:
 
 ```powershell
 Get-ChildItem runs -Directory | Sort-Object Name -Descending | Select-Object -First 1
-python -m nullstate report <run-id>
+nullstate report <run-id>
 ```
 
 ## Live LocalStack Azure Path
@@ -86,9 +115,9 @@ Use this after Docker, LocalStack Azure access, and the AzureRM provider are con
 
 ```powershell
 $env:LOCALSTACK_AUTH_TOKEN = "<token>"
-python -m nullstate sandbox up localstack-azure
-python -m nullstate doctor
-python -m nullstate run examples/azure-public-blob --target localstack-azure --scenario azure-public-blob
+nullstate sandbox up localstack-azure
+nullstate doctor
+nullstate run examples/azure-public-blob --target localstack-azure --scenario azure-public-blob
 ```
 
 The demo Terraform provider includes:
@@ -121,7 +150,7 @@ LOCALSTACK_AUTH_TOKEN=your-token-here
 ```powershell
 $env:NULLSTATE_LLM_BASE_URL = "http://<mi300x-host>:8000"
 $env:NULLSTATE_LLM_API_KEY = "<optional-token>"
-python -m nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
+nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
 ```
 
 Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If the endpoint is missing, use `--offline` for deterministic mock agents.
@@ -172,6 +201,18 @@ Each run writes:
 - [AMD compute strategy](docs/compute-strategy.md)
 - [Failure modes](docs/failure-modes.md)
 - [Cost report](docs/cost-report.md)
+
+## Release model
+
+The `Media` prerelease is only used to host README assets. Product releases should use version tags:
+
+| Tag | Purpose |
+|---|---|
+| `v0.1.0-alpha.1` | First hackathon prerelease with offline demos and polished docs |
+| `v0.1.0-beta.1` | Live LocalStack Azure validation path working |
+| `v0.1.0` | Final hackathon release candidate with demo video, case study, and metrics evidence |
+
+The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.1`.
 
 ## Status
 
