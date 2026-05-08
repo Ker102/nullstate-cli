@@ -10,3 +10,5 @@ All notable changes to this project will be documented here.
 - Added DevSecOps repository documentation and GitHub workflow templates.
 - Documented AMD Developer Cloud / DigitalOcean primary compute path with Fireworks fallback.
 - Added vLLM metrics scraping and GPU snapshot evidence collection.
+- Added scaffolded AWS, Kubernetes, Docker Compose, on-prem, and plan-only scenarios.
+- Added Docker Compose file for LocalStack Azure token-based startup.

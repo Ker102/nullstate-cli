@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
-import os
 
 import typer
 from rich.console import Console
@@ -18,12 +18,15 @@ from .metrics import collect_run_metrics
 from .remediation import remediate_terraform_files
 from .report import render_report
 from .sandbox import get_backend, list_backends, render_commands, run_commands
+from .scenarios import get_scenario, list_scenarios
 from .terraform import load_plan_json
 
 
-app = typer.Typer(no_args_is_help=True, help="Autonomous purple-teaming CLI for Terraform Azure IaC.")
+app = typer.Typer(no_args_is_help=True, help="Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.")
 sandbox_app = typer.Typer(no_args_is_help=True, help="Manage local sandbox backends.")
+scenarios_app = typer.Typer(no_args_is_help=True, help="Inspect supported attack scenarios.")
 app.add_typer(sandbox_app, name="sandbox")
+app.add_typer(scenarios_app, name="scenarios")
 console = Console()
 
 
@@ -48,10 +51,10 @@ def doctor(offline: bool = typer.Option(False, "--offline", help="Skip network a
 
 @app.command("init-demo")
 def init_demo(
-    name: str = typer.Argument(..., help="Demo name. Use azure-public-blob for v1."),
+    name: str = typer.Argument(..., help="Demo name. Run `nullstate scenarios list` to see options."),
     output: Path = typer.Option(Path("examples/azure-public-blob"), "--output", "-o", help="Directory to create."),
 ) -> None:
-    """Create an intentionally vulnerable Terraform demo."""
+    """Create an intentionally vulnerable IaC demo."""
     create_demo(name, output)
     console.print(f"Created demo at {output}")
 
@@ -71,8 +74,15 @@ def run(
         backend = get_backend(target)
     except KeyError as error:
         raise typer.BadParameter(str(error)) from error
-    if scenario != "azure-public-blob":
-        raise typer.BadParameter("V1 only supports scenario=azure-public-blob.")
+    try:
+        scenario_spec = get_scenario(scenario)
+    except KeyError as error:
+        raise typer.BadParameter(str(error)) from error
+    if scenario_spec.name != "azure-public-blob":
+        raise typer.BadParameter(
+            f"Scenario {scenario_spec.name!r} is scaffolded for {scenario_spec.backend}; "
+            "v1 execution currently supports only azure-public-blob."
+        )
     if backend.mode == "plan-only":
         offline = True
 
@@ -91,6 +101,7 @@ def run(
         workspace_dir=workspace_dir,
         target=backend.name,
         target_mode=backend.mode,
+        scenario=scenario_spec.name,
         offline=offline,
     )
 
@@ -182,6 +193,41 @@ def sandbox_list() -> None:
     table.add_column("Requirements")
     for backend in backends:
         table.add_row(backend.name, backend.mode, backend.target_iac, backend.status, ", ".join(backend.requirements) or "none")
+    console.print(table)
+
+
+@scenarios_app.command("list")
+def scenarios_list() -> None:
+    """List supported and scaffolded scenarios."""
+    scenarios = list_scenarios()
+    console.print("Scenarios: " + ", ".join(scenario.name for scenario in scenarios))
+    table = Table(title="nullstate scenarios")
+    table.add_column("Scenario")
+    table.add_column("Backend")
+    table.add_column("Mode")
+    table.add_column("Status")
+    table.add_column("Risk")
+    for scenario in scenarios:
+        table.add_row(scenario.name, scenario.backend, scenario.mode, scenario.status, scenario.risk)
+    console.print(table)
+
+
+@scenarios_app.command("status")
+def scenarios_status(name: str = typer.Argument(..., help="Scenario name.")) -> None:
+    """Show scenario details."""
+    try:
+        scenario = get_scenario(name)
+    except KeyError as error:
+        raise typer.BadParameter(str(error)) from error
+    table = Table(title=f"{scenario.name} scenario")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Backend", scenario.backend)
+    table.add_row("Mode", scenario.mode)
+    table.add_row("IaC targets", ", ".join(scenario.iac_targets))
+    table.add_row("Status", scenario.status)
+    table.add_row("Risk", scenario.risk)
+    table.add_row("Description", scenario.description)
     console.print(table)
 
 

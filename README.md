@@ -53,6 +53,7 @@ Sandbox discovery:
 python -m nullstate sandbox list
 python -m nullstate sandbox status localstack-azure
 python -m nullstate sandbox up localstack-azure --dry-run
+python -m nullstate scenarios list
 ```
 
 Open the latest report:
@@ -81,6 +82,21 @@ metadata_host = "localhost.localstack.cloud:4566"
 
 That keeps Terraform pointed at the LocalStack Azure emulator instead of real Azure.
 
+Docker Compose alternative:
+
+```powershell
+$env:LOCALSTACK_AUTH_TOKEN = "<token>"
+docker compose -f docker-compose.localstack-azure.yml up
+```
+
+Or create a local `.env` file next to the compose file:
+
+```env
+LOCALSTACK_AUTH_TOKEN=your-token-here
+```
+
+`.env` is ignored by Git. Do not commit the token.
+
 ## Model endpoint
 
 `nullstate` talks to OpenAI-compatible model servers:
@@ -103,6 +119,17 @@ Users do not need to write prompts. `nullstate` sends internal red-team and blue
 | `docker-compose` | digital twin | Docker Compose and app stacks | adapter scaffolded |
 | `microvm-onprem` | digital twin | Ansible, Linux hardening, libvirt/Proxmox-style Terraform | design-ready fallback |
 | `plan-only` | plan-only | any exported plan/parser | available |
+
+## Scenarios
+
+| Scenario | Backend | Status |
+|---|---|---|
+| `azure-public-blob` | `localstack-azure` | working offline demo; live LocalStack pending |
+| `aws-public-s3` | `localstack-aws` | scaffolded |
+| `k8s-privileged-pod` | `kind-kubernetes` | scaffolded |
+| `compose-exposed-admin` | `docker-compose` | scaffolded |
+| `onprem-ssh-password` | `microvm-onprem` | scaffolded |
+| `generic-plan-review` | `plan-only` | available |
 
 ## Artifacts
 

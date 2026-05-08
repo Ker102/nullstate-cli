@@ -56,3 +56,14 @@ The remediation sets:
 container_access_type = "private"
 allow_nested_items_to_be_public = false
 ```
+
+## Scenario roadmap
+
+| Scenario | Target | Sandbox | Execution status |
+|---|---|---|---|
+| `azure-public-blob` | Terraform AzureRM | LocalStack Azure | working offline demo; live execution pending |
+| `aws-public-s3` | Terraform AWS | LocalStack AWS | scaffolded |
+| `k8s-privileged-pod` | Kubernetes YAML/Helm/Kustomize | kind | scaffolded |
+| `compose-exposed-admin` | Docker Compose | isolated Docker network | scaffolded |
+| `onprem-ssh-password` | Ansible/cloud-init/libvirt/Proxmox-style IaC | VM/container-lab digital twin | scaffolded |
+| `generic-plan-review` | unsupported IaC exports | none | plan-only available |

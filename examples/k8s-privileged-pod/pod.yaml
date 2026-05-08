@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nullstate-privileged-pod
+spec:
+  containers:
+    - name: shell
+      image: alpine:latest
+      command: ["sleep", "3600"]
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: host-root
+          mountPath: /host
+  volumes:
+    - name: host-root
+      hostPath:
+        path: /
