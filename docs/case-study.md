@@ -15,6 +15,7 @@ Cloud and platform teams can ship IaC faster than security teams can manually va
 - No production cloud targets by default.
 - LocalStack Azure requires Docker and `LOCALSTACK_AUTH_TOKEN`.
 - The demo must still work if Docker, Terraform, or the model endpoint is unavailable.
+- AMD Developer Cloud / DigitalOcean GPU access may be delayed, so Fireworks-compatible managed inference is kept as a contingency.
 
 ## 4. Requirements
 
@@ -79,6 +80,8 @@ See [Runbook](runbook.md).
 ## 9. Cost analysis
 
 See [Cost Report](cost-report.md). V1 is designed to run locally, with AMD Developer Cloud used only for model-serving evidence.
+
+See [AMD Compute Strategy](compute-strategy.md) for the primary DigitalOcean/AMD path and Fireworks fallback.
 
 ## 10. Results
 

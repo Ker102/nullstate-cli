@@ -41,6 +41,14 @@ $env:NULLSTATE_LLM_API_KEY = "<optional>"
 
 Then run without `--offline`.
 
+## AMD Developer Cloud / DigitalOcean path
+
+Use [AMD Compute Strategy](compute-strategy.md) as the deployment checklist. Build the non-GPU DigitalOcean baseline first, then attach the MI300X-backed model endpoint when access is available.
+
+## Fireworks fallback
+
+If AMD GPU access is delayed, point `NULLSTATE_LLM_BASE_URL` at the managed endpoint and keep the same nullstate run flow. Label the evidence as managed inference, not private GPU-hosted inference.
+
 ## Artifact review before publishing
 
 Check:

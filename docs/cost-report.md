@@ -12,6 +12,7 @@ V1 is designed to keep cloud spend near zero by default. Offline mode runs local
 | Offline demo | 0 | no cloud or model endpoint |
 | LocalStack Azure | depends on LocalStack access | requires auth token |
 | AMD Developer Cloud | hackathon credits | used for MI300X model endpoint |
+| Fireworks fallback | provider dependent | contingency if GPU access is delayed |
 | GitHub Actions | low/free tier dependent | tests are lightweight |
 
 ## Controls
