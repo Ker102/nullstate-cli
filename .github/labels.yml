@@ -1,0 +1,21 @@
+- name: bug
+  color: d73a4a
+  description: Something is broken.
+- name: enhancement
+  color: 0366d6
+  description: New feature or improvement.
+- name: docs
+  color: 0e8a16
+  description: Documentation-only change.
+- name: chore
+  color: cfd3d7
+  description: Maintenance work.
+- name: security
+  color: ee0701
+  description: Security-sensitive change.
+- name: dependencies
+  color: 0366d6
+  description: Dependency updates.
+- name: priority:high
+  color: fbca04
+  description: High-priority work.

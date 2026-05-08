@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nullstate"
+description = "Autonomous purple-teaming CLI for Terraform Azure IaC."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "rich",
+  "typer",
+  "requests",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+  "pip-audit",
+  "ruff",
+  "mypy",
+  "types-requests",
+]
+
+[project.scripts]
+nullstate = "nullstate.cli:app"
+
+[tool.setuptools.dynamic]
+version = {attr = "nullstate.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.unittest]
+start-dir = "tests"

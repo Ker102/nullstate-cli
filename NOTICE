@@ -1,0 +1,4 @@
+nullstate
+Copyright 2026 nullstate contributors.
+
+This product includes integration guidance for LocalStack, Terraform, Azure, Kubernetes, Docker, and vLLM-compatible model servers. Those names are trademarks of their respective owners. nullstate does not bundle LocalStack or cloud provider software.
