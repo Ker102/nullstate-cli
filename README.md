@@ -2,6 +2,8 @@
 
 Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.
 
+![Nullstate terminal showcase](https://github.com/Ker102/nullstate-cli/releases/download/Media/Showcaseimage)
+
 `nullstate` runs a tight local security validation loop:
 
 1. Read Terraform/IaC input.
@@ -21,15 +23,23 @@ Static IaC scanners can identify risky configuration, but they do not always pro
 ## Architecture
 
 ```mermaid
-flowchart LR
-    IaC[Terraform and IaC input] --> Parser[Plan parser]
-    Parser --> Detector[Deterministic detector]
-    Detector --> Sandbox[Sandbox adapter]
-    Sandbox --> Red[Red-team agent]
-    Red --> Evidence[Exploit evidence]
-    Evidence --> Blue[Blue-team agent]
-    Blue --> Patch[Patch validator]
-    Patch --> Report[Report and metrics]
+flowchart TB
+    subgraph Analyze["Analyze and Sandbox"]
+        direction LR
+        IaC[Terraform and IaC input] --> Parser[Plan parser]
+        Parser --> Detector[Deterministic detector]
+        Detector --> Sandbox[Sandbox adapter]
+    end
+
+    subgraph Validate["Attack, Remediate, Validate"]
+        direction LR
+        Red[Red-team agent] --> Evidence[Exploit evidence]
+        Evidence --> Blue[Blue-team agent]
+        Blue --> Patch[Patch validator]
+        Patch --> Report[Report and metrics]
+    end
+
+    Sandbox --> Red
 ```
 
 See [Architecture](docs/architecture.md).
