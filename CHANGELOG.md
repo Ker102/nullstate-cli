@@ -14,3 +14,5 @@ All notable changes to this project will be documented here.
 - Added Docker Compose file for LocalStack Azure token-based startup.
 - Added offline deterministic run support for AWS, Kubernetes, Docker Compose, on-prem, and generic plan-review scenarios.
 - Added branded Nullstate CLI banner for demo recordings.
+- Added automatic scenario and target inference for `nullstate run`.
+- Added sandbox runtime probes to `nullstate sandbox status`.

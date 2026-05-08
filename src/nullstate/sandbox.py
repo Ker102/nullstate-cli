@@ -4,6 +4,8 @@ import subprocess
 from dataclasses import dataclass
 from typing import Literal
 
+import requests
+
 
 SandboxMode = Literal["executable", "digital-twin", "plan-only"]
 
@@ -59,6 +61,13 @@ class SandboxBackend:
         if self.name == "docker-compose":
             return [["docker", "compose", "down"]]
         return []
+
+
+@dataclass(frozen=True)
+class RuntimeProbe:
+    name: str
+    status: str
+    detail: str
 
 
 BACKENDS: tuple[SandboxBackend, ...] = (
@@ -136,3 +145,63 @@ def run_commands(commands: list[list[str]]) -> list[subprocess.CompletedProcess[
     for command in commands:
         completed.append(subprocess.run(command, text=True, check=False))
     return completed
+
+
+def probe_backend(backend: SandboxBackend) -> list[RuntimeProbe]:
+    if backend.name == "localstack-azure":
+        return [
+            _probe_docker("Runtime docker", ["name=localstack-azure", "ancestor=localstack/localstack-azure-alpha"]),
+            _probe_http("Runtime HTTP", "http://localhost.localstack.cloud:4566/_localstack/health"),
+        ]
+    if backend.name == "localstack-aws":
+        return [
+            _probe_docker("Runtime docker", ["name=localstack", "ancestor=localstack/localstack"]),
+            _probe_http("Runtime HTTP", "http://localhost.localstack.cloud:4566/_localstack/health"),
+        ]
+    if backend.name == "docker-compose":
+        return [_probe_docker("Runtime docker", ["label=com.docker.compose.project"])]
+    if backend.name == "kind-kubernetes":
+        return [_probe_command("Runtime kind", ["kind", "get", "clusters"])]
+    return [RuntimeProbe("Runtime", "not required", "This backend does not require a live sandbox runtime.")]
+
+
+def _probe_docker(name: str, filters: list[str]) -> RuntimeProbe:
+    details: list[str] = []
+    for item_filter in filters:
+        result = _run_probe_command(["docker", "ps", "--filter", item_filter, "--format", "{{.Names}}"])
+        if result.returncode != 0:
+            return RuntimeProbe(name, "unavailable", _clean_probe_error(result))
+        if result.stdout.strip():
+            details.extend(line.strip() for line in result.stdout.splitlines() if line.strip())
+    if details:
+        return RuntimeProbe(name, "running", ", ".join(sorted(set(details))))
+    return RuntimeProbe(name, "not found", "No matching running container was found.")
+
+
+def _probe_http(name: str, url: str) -> RuntimeProbe:
+    try:
+        response = requests.get(url, timeout=2)
+    except requests.RequestException as error:
+        return RuntimeProbe(name, "unreachable", str(error))
+    if response.ok:
+        return RuntimeProbe(name, "reachable", f"{url} returned HTTP {response.status_code}")
+    return RuntimeProbe(name, "unhealthy", f"{url} returned HTTP {response.status_code}")
+
+
+def _probe_command(name: str, command: list[str]) -> RuntimeProbe:
+    result = _run_probe_command(command)
+    if result.returncode == 0:
+        detail = result.stdout.strip() or "command completed"
+        return RuntimeProbe(name, "available", detail)
+    return RuntimeProbe(name, "unavailable", _clean_probe_error(result))
+
+
+def _run_probe_command(command: list[str]) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(command, text=True, capture_output=True, check=False, timeout=5)
+    except (FileNotFoundError, subprocess.TimeoutExpired) as error:
+        return subprocess.CompletedProcess(command, 1, "", str(error))
+
+
+def _clean_probe_error(result: subprocess.CompletedProcess[str]) -> str:
+    return (result.stderr or result.stdout or "probe failed").strip()
