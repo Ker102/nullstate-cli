@@ -21,7 +21,7 @@ from .report import render_report
 from .sandbox import get_backend, list_backends, probe_backend, render_commands, run_commands
 from .scenario_detection import infer_scenario
 from .scenarios import get_scenario, list_scenarios
-from .terraform import load_plan_json
+from .terraform import apply_saved_plan, load_plan_json
 
 
 app = typer.Typer(no_args_is_help=True, help="Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.")
@@ -92,7 +92,7 @@ def run(
     """Run detection, attack, remediation, and validation."""
     scenario_spec = _resolve_scenario(terraform_dir, scenario)
     backend = _resolve_backend(target, scenario_spec.backend)
-    if scenario_spec.name != "azure-public-blob" and not offline:
+    if not offline and not _scenario_supports_live_terraform(scenario_spec.name):
         raise typer.BadParameter(
             f"Scenario {scenario_spec.name!r} supports offline demo execution only for now. "
             "Use --offline until its live sandbox adapter is implemented."
@@ -141,6 +141,9 @@ def run(
     plan, commands = load_plan_json(workspace_dir, offline=offline)
     for result in commands:
         events.write("terraform", "Command completed", command=result.command, returncode=result.returncode)
+    if not offline:
+        for result in apply_saved_plan(workspace_dir):
+            events.write("terraform", "Command completed", command=result.command, returncode=result.returncode)
 
     findings = find_scenario_findings(scenario_spec.name, workspace_dir, plan)
     events.write("analysis", "IaC input analyzed", finding_count=len(findings))
@@ -244,7 +247,15 @@ def run(
     )
     events.write("blue-team", "IaC remediation generated", changed=patch_result.changed, agent=blue_result)
 
-    remediated_plan, _ = load_plan_json(workspace_dir, offline=True)
+    if offline:
+        remediated_plan, remediation_commands = load_plan_json(workspace_dir, offline=True)
+    else:
+        remediated_plan, remediation_commands = load_plan_json(workspace_dir, offline=False)
+    for result in remediation_commands:
+        events.write("terraform", "Command completed", command=result.command, returncode=result.returncode)
+    if not offline:
+        for result in apply_saved_plan(workspace_dir):
+            events.write("terraform", "Command completed", command=result.command, returncode=result.returncode)
     remaining_findings = find_scenario_findings(scenario_spec.name, workspace_dir, remediated_plan)
     after_attack = simulate_attack(remaining_findings, "after")
     events.write("validation", "Attack attempted after remediation", result=after_attack, remaining_findings=len(remaining_findings))
@@ -339,6 +350,7 @@ def sandbox_status(name: str = typer.Argument("plan-only", help="Sandbox backend
 def sandbox_up(
     name: str = typer.Argument("localstack-azure", help="Sandbox backend name."),
     dry_run: bool = typer.Option(False, "--dry-run", help="Print commands without running them."),
+    env_file: Path | None = typer.Option(None, "--env-file", help="Docker env file for sandbox secrets such as LOCALSTACK_AUTH_TOKEN."),
 ) -> None:
     """Start a sandbox backend."""
     try:
@@ -346,7 +358,7 @@ def sandbox_up(
     except KeyError as error:
         raise typer.BadParameter(str(error)) from error
 
-    commands = backend.up_commands()
+    commands = backend.up_commands(env_file=env_file)
     if dry_run or not commands:
         console.print(render_commands(commands))
         return
@@ -431,6 +443,10 @@ def _resolve_backend(target: str, scenario_backend: str):
         return get_backend(backend_name)
     except KeyError as error:
         raise typer.BadParameter(str(error)) from error
+
+
+def _scenario_supports_live_terraform(scenario_name: str) -> bool:
+    return scenario_name in {"azure-public-blob", "aws-public-s3"}
 
 
 def _resolve_agent_base_url(role: str, explicit: str | None) -> str | None:

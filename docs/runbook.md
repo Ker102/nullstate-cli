@@ -42,6 +42,13 @@ Then:
 python -m nullstate sandbox up localstack-azure
 ```
 
+If the token is stored in a local env file, keep the file untracked and pass it explicitly:
+
+```powershell
+python -m nullstate sandbox up localstack-azure --env-file .env.local
+python -m nullstate sandbox up localstack-aws --env-file .env.local
+```
+
 Docker Compose alternative:
 
 ```powershell
@@ -104,6 +111,8 @@ python -m nullstate run examples/azure-public-blob --offline --mock-agents
 ## AMD Developer Cloud / DigitalOcean path
 
 Use [AMD Compute Strategy](compute-strategy.md) as the deployment checklist. Build the non-GPU DigitalOcean baseline first, then attach the MI300X-backed model endpoint when access is available.
+
+Use [Model Serving Runbook](model-serving.md) for the current two-container Qwen3.5/Gemma 4 setup.
 
 ## Fireworks fallback
 
