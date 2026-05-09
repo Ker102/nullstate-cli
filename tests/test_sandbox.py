@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 import unittest
@@ -78,6 +79,50 @@ class SandboxTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("--env-file .env.local", completed.stdout)
         self.assertNotIn("-e LOCALSTACK_AUTH_TOKEN", completed.stdout)
+
+    def test_sandbox_env_file_defaults_to_local_env_files(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        from nullstate.cli import _resolve_sandbox_env_file
+
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+
+            self.assertIsNone(_resolve_sandbox_env_file(None, [".env.local", ".env"], cwd=root))
+
+            (root / ".env").write_text("LOCALSTACK_AUTH_TOKEN=test\n", encoding="utf-8")
+            self.assertEqual(_resolve_sandbox_env_file(None, [".env.local", ".env"], cwd=root), root / ".env")
+
+            (root / ".env.local").write_text("LOCALSTACK_AUTH_TOKEN=local\n", encoding="utf-8")
+            self.assertEqual(_resolve_sandbox_env_file(None, [".env.local", ".env"], cwd=root), root / ".env.local")
+
+            self.assertEqual(_resolve_sandbox_env_file(Path("custom.env"), [".env.local", ".env"], cwd=root), Path("custom.env"))
+
+    def test_sandbox_up_dry_run_uses_default_env_file_when_present(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            (root / ".env").write_text("LOCALSTACK_AUTH_TOKEN=test\n", encoding="utf-8")
+            env = os.environ.copy()
+            src_path = str(Path.cwd() / "src")
+            env["PYTHONPATH"] = src_path + os.pathsep + env.get("PYTHONPATH", "")
+
+            completed = subprocess.run(
+                [sys.executable, "-m", "nullstate", "sandbox", "up", "localstack-aws", "--dry-run"],
+                text=True,
+                capture_output=True,
+                check=False,
+                cwd=root,
+                env=env,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn("--env-file", completed.stdout)
+            self.assertIn(".env", completed.stdout)
+            self.assertIn("nullstate run examples/aws-public-s3", completed.stdout)
 
     def test_localstack_down_plan_stops_named_containers(self):
         azure = get_backend("localstack-azure")

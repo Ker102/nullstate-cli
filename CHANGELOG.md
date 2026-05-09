@@ -20,3 +20,4 @@ All notable changes to this project will be documented here.
 - Added role-specific red/blue model endpoint configuration and per-role vLLM metrics snapshots.
 - Added live Terraform apply/re-apply support for Terraform-backed LocalStack scenarios.
 - Added MI300X model-serving scripts for Qwen3.5 on SGLang and Gemma 4 on vLLM ROCm.
+- Added guided CLI workflow hints, `nullstate status`, automatic sandbox env-file discovery, and latest/nested report lookup.
