@@ -76,7 +76,8 @@ def run(
     terraform_dir: Path = typer.Argument(..., exists=True, file_okay=False, help="Terraform directory to test."),
     target: str = typer.Option("auto", "--target", help="Execution target. Use auto to infer from the scenario."),
     scenario: str = typer.Option("auto", "--scenario", help="Attack scenario. Use auto to infer from IaC."),
-    offline: bool = typer.Option(False, "--offline", help="Use static parser and mock agents."),
+    offline: bool = typer.Option(False, "--offline", help="Use static IaC parsing and skip Terraform/cloud runtime calls."),
+    mock_agents: bool = typer.Option(False, "--mock-agents", help="Use deterministic mock red/blue agents even when an endpoint is configured."),
     runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory for run artifacts."),
     blue_model: str = typer.Option("gemma-4-31b-it", "--blue-model", help="Blue-team model name."),
     red_model: str = typer.Option("qwen3-coder-next", "--red-model", help="Red-team model name."),
@@ -91,6 +92,8 @@ def run(
         )
     if backend.mode == "plan-only":
         offline = True
+    llm_base_url = os.getenv("NULLSTATE_LLM_BASE_URL")
+    use_mock_agents = mock_agents or not bool(llm_base_url)
 
     run_id = new_run_id()
     run_dir = runs_dir / run_id
@@ -116,6 +119,7 @@ def run(
         target_mode=backend.mode,
         scenario=scenario_spec.name,
         offline=offline,
+        mock_agents=use_mock_agents,
     )
 
     plan, commands = load_plan_json(workspace_dir, offline=offline)
@@ -127,8 +131,8 @@ def run(
     write_json(run_dir / "findings.json", [finding.to_dict() for finding in findings])
     before_metrics = collect_run_metrics(
         run_dir=run_dir,
-        base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
-        offline=offline,
+        base_url=llm_base_url,
+        offline=not bool(llm_base_url),
         stage="before",
     )
 
@@ -137,7 +141,7 @@ def run(
     red_result = red_agent.complete(
         "You are a red-team IaC security agent constrained to the generated local sandbox and run evidence.",
         f"Find an exploit for these findings: {[finding.to_dict() for finding in findings]}",
-        offline=offline,
+        offline=use_mock_agents,
     )
     before_attack = simulate_attack(findings, "before")
     events.write("red-team", "Attack attempted before remediation", result=before_attack, agent=red_result)
@@ -146,15 +150,15 @@ def run(
     blue_result = blue_agent.complete(
         "You are a blue-team IaC remediation agent.",
         f"Diagnose and patch these findings: {[finding.to_dict() for finding in findings]}",
-        offline=offline,
+        offline=use_mock_agents,
     )
 
     patch_result = remediate_scenario_files(scenario_spec.name, workspace_dir)
     (run_dir / "remediation.patch").write_text(patch_result.diff, encoding="utf-8")
     after_metrics = collect_run_metrics(
         run_dir=run_dir,
-        base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
-        offline=offline,
+        base_url=llm_base_url,
+        offline=not bool(llm_base_url),
         stage="after",
     )
     write_json(

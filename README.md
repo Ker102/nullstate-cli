@@ -155,7 +155,7 @@ $env:NULLSTATE_LLM_API_KEY = "<optional-token>"
 nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
 ```
 
-Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If the endpoint is missing, the agent layer falls back to deterministic mock responses, so local and LocalStack demos can still run without a model. Use `--offline` when you also want to skip Terraform/cloud runtime calls and use static IaC parsing only.
+Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If the endpoint is missing, the agent layer falls back to deterministic mock responses, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If `NULLSTATE_LLM_BASE_URL` is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
 
 ## Sandbox backends
 

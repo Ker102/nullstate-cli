@@ -76,6 +76,19 @@ Then run without `--offline`.
 
 If no model endpoint is configured, nullstate falls back to deterministic mock red/blue agent responses. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
 
+`--offline` controls Terraform/cloud execution, not model usage. With `NULLSTATE_LLM_BASE_URL` set, this still calls the configured endpoint while using static IaC parsing:
+
+```powershell
+$env:NULLSTATE_LLM_BASE_URL = "http://127.0.0.1:8001"
+python -m nullstate run examples/azure-public-blob --offline --blue-model nullstate-qwen3-4b --red-model nullstate-qwen3-4b
+```
+
+Use `--mock-agents` when you explicitly want no model calls:
+
+```powershell
+python -m nullstate run examples/azure-public-blob --offline --mock-agents
+```
+
 ## AMD Developer Cloud / DigitalOcean path
 
 Use [AMD Compute Strategy](compute-strategy.md) as the deployment checklist. Build the non-GPU DigitalOcean baseline first, then attach the MI300X-backed model endpoint when access is available.

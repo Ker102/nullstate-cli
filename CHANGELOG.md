@@ -16,3 +16,4 @@ All notable changes to this project will be documented here.
 - Added branded Nullstate CLI banner for demo recordings.
 - Added automatic scenario and target inference for `nullstate run`.
 - Added sandbox runtime probes to `nullstate sandbox status`.
+- Decoupled static/offline IaC mode from model usage; configured model endpoints are now used unless `--mock-agents` is passed.
