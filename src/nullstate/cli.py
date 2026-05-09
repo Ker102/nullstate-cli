@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -56,7 +57,11 @@ def doctor(offline: bool = typer.Option(False, "--offline", help="Skip network a
         for binary in ["docker", "terraform", "az"]:
             found = shutil.which(binary)
             table.add_row(binary, "ok" if found else "missing", found or "not on PATH")
-        table.add_row("LLM endpoint", "configured" if _llm_configured() else "missing", "NULLSTATE_LLM_BASE_URL")
+        table.add_row(
+            "LLM endpoint",
+            "configured" if _llm_configured() else "missing",
+            "NULLSTATE_LLM_BASE_URL or role-specific red/blue endpoint variables",
+        )
 
     console.print(table)
 
@@ -81,6 +86,8 @@ def run(
     runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory for run artifacts."),
     blue_model: str = typer.Option("gemma-4-31b-it", "--blue-model", help="Blue-team model name."),
     red_model: str = typer.Option("qwen3-coder-next", "--red-model", help="Red-team model name."),
+    red_base_url: str | None = typer.Option(None, "--red-base-url", help="OpenAI-compatible endpoint for red-team agent."),
+    blue_base_url: str | None = typer.Option(None, "--blue-base-url", help="OpenAI-compatible endpoint for blue-team agent."),
 ) -> None:
     """Run detection, attack, remediation, and validation."""
     scenario_spec = _resolve_scenario(terraform_dir, scenario)
@@ -92,8 +99,14 @@ def run(
         )
     if backend.mode == "plan-only":
         offline = True
-    llm_base_url = os.getenv("NULLSTATE_LLM_BASE_URL")
-    use_mock_agents = mock_agents or not bool(llm_base_url)
+    red_endpoint = _resolve_agent_base_url("red", red_base_url)
+    blue_endpoint = _resolve_agent_base_url("blue", blue_base_url)
+    red_api_key = _resolve_agent_api_key("red")
+    blue_api_key = _resolve_agent_api_key("blue")
+    use_red_mock = mock_agents or not bool(red_endpoint)
+    use_blue_mock = mock_agents or not bool(blue_endpoint)
+    use_mock_agents = use_red_mock and use_blue_mock
+    shared_endpoint = red_endpoint == blue_endpoint
 
     run_id = new_run_id()
     run_dir = runs_dir / run_id
@@ -120,6 +133,9 @@ def run(
         scenario=scenario_spec.name,
         offline=offline,
         mock_agents=use_mock_agents,
+        red_mock_agent=use_red_mock,
+        blue_mock_agent=use_blue_mock,
+        role_specific_endpoints=not shared_endpoint,
     )
 
     plan, commands = load_plan_json(workspace_dir, offline=offline)
@@ -129,38 +145,87 @@ def run(
     findings = find_scenario_findings(scenario_spec.name, workspace_dir, plan)
     events.write("analysis", "IaC input analyzed", finding_count=len(findings))
     write_json(run_dir / "findings.json", [finding.to_dict() for finding in findings])
-    before_metrics = collect_run_metrics(
-        run_dir=run_dir,
-        base_url=llm_base_url,
-        offline=not bool(llm_base_url),
-        stage="before",
-    )
+    if shared_endpoint:
+        before_metrics = collect_run_metrics(
+            run_dir=run_dir,
+            base_url=red_endpoint,
+            offline=not bool(red_endpoint),
+            stage="before",
+        )
+        endpoint_metrics: dict[str, dict[str, Any]] = {
+            "red": {"before": before_metrics},
+            "blue": {"before": before_metrics},
+        }
+    else:
+        red_before_metrics = collect_run_metrics(
+            run_dir=run_dir,
+            base_url=red_endpoint,
+            offline=not bool(red_endpoint),
+            stage="red-before",
+        )
+        endpoint_metrics = {"red": {"before": red_before_metrics}}
+        before_metrics = {
+            "mode": "role-specific",
+            "message": "See endpoints.red and endpoints.blue for role-specific endpoint metrics.",
+        }
 
     write_attack_script(run_dir / "attack.py", scenario_spec.name)
-    red_agent = LlmAgent("red", red_model)
+    red_agent = LlmAgent("red", red_model, base_url=red_endpoint, api_key=red_api_key)
     red_result = red_agent.complete(
         "You are a red-team IaC security agent constrained to the generated local sandbox and run evidence.",
         f"Find an exploit for these findings: {[finding.to_dict() for finding in findings]}",
-        offline=use_mock_agents,
+        offline=use_red_mock,
     )
+    if not shared_endpoint:
+        endpoint_metrics["red"]["after"] = collect_run_metrics(
+            run_dir=run_dir,
+            base_url=red_endpoint,
+            offline=not bool(red_endpoint),
+            stage="red-after",
+        )
     before_attack = simulate_attack(findings, "before")
     events.write("red-team", "Attack attempted before remediation", result=before_attack, agent=red_result)
 
-    blue_agent = LlmAgent("blue", blue_model)
+    if not shared_endpoint:
+        endpoint_metrics["blue"] = {
+            "before": collect_run_metrics(
+                run_dir=run_dir,
+                base_url=blue_endpoint,
+                offline=not bool(blue_endpoint),
+                stage="blue-before",
+            )
+        }
+
+    blue_agent = LlmAgent("blue", blue_model, base_url=blue_endpoint, api_key=blue_api_key)
     blue_result = blue_agent.complete(
         "You are a blue-team IaC remediation agent.",
         f"Diagnose and patch these findings: {[finding.to_dict() for finding in findings]}",
-        offline=use_mock_agents,
+        offline=use_blue_mock,
     )
+    if not shared_endpoint:
+        endpoint_metrics["blue"]["after"] = collect_run_metrics(
+            run_dir=run_dir,
+            base_url=blue_endpoint,
+            offline=not bool(blue_endpoint),
+            stage="blue-after",
+        )
 
     patch_result = remediate_scenario_files(scenario_spec.name, workspace_dir)
     (run_dir / "remediation.patch").write_text(patch_result.diff, encoding="utf-8")
-    after_metrics = collect_run_metrics(
-        run_dir=run_dir,
-        base_url=llm_base_url,
-        offline=not bool(llm_base_url),
-        stage="after",
-    )
+    if shared_endpoint:
+        after_metrics = collect_run_metrics(
+            run_dir=run_dir,
+            base_url=red_endpoint,
+            offline=not bool(red_endpoint),
+            stage="after",
+        )
+        endpoint_metrics["red"]["after"] = after_metrics
+        endpoint_metrics["blue"]["after"] = after_metrics
+    else:
+        after_metrics = {
+            "mode": "role-specific",
+            "message": "See endpoints.red and endpoints.blue for role-specific endpoint metrics.",
+        }
     write_json(
         run_dir / "metrics.json",
         {
@@ -169,6 +234,7 @@ def run(
                 "before": before_metrics,
                 "after": after_metrics,
             },
+            "endpoints": endpoint_metrics,
             "notes": (
                 "Token metrics come from OpenAI-compatible response usage when available. "
                 "Offline mock mode records zero token counts. User-authored prompts are not required; "
@@ -333,9 +399,11 @@ def _print_run_summary(run_dir: Path, findings, before_attack: dict[str, str], a
 
 
 def _llm_configured() -> bool:
-    import os
-
-    return bool(os.getenv("NULLSTATE_LLM_BASE_URL"))
+    return bool(
+        os.getenv("NULLSTATE_LLM_BASE_URL")
+        or os.getenv("NULLSTATE_RED_LLM_BASE_URL")
+        or os.getenv("NULLSTATE_BLUE_LLM_BASE_URL")
+    )
 
 
 def _print_banner() -> None:
@@ -363,6 +431,18 @@ def _resolve_backend(target: str, scenario_backend: str):
         return get_backend(backend_name)
     except KeyError as error:
         raise typer.BadParameter(str(error)) from error
+
+
+def _resolve_agent_base_url(role: str, explicit: str | None) -> str | None:
+    if explicit:
+        return explicit
+    role_env = f"NULLSTATE_{role.upper()}_LLM_BASE_URL"
+    return os.getenv(role_env) or os.getenv("NULLSTATE_LLM_BASE_URL")
+
+
+def _resolve_agent_api_key(role: str) -> str:
+    role_env = f"NULLSTATE_{role.upper()}_LLM_API_KEY"
+    return os.getenv(role_env) or os.getenv("NULLSTATE_LLM_API_KEY") or ""
 
 
 def _copy_terraform_workspace(source: Path, destination: Path) -> None:

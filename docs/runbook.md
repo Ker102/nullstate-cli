@@ -65,18 +65,30 @@ docker compose --env-file .env.local -f docker-compose.localstack-azure.yml up
 
 ## Model endpoint setup
 
-Set:
+For one model endpoint serving both red and blue roles, set:
 
 ```powershell
 $env:NULLSTATE_LLM_BASE_URL = "http://localhost:8000"
 $env:NULLSTATE_LLM_API_KEY = "<optional>"
 ```
 
-Then run without `--offline`.
+Then run normally.
 
-If no model endpoint is configured, nullstate falls back to deterministic mock red/blue agent responses. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
+For two containers or two SSH tunnels, set role-specific endpoints:
 
-`--offline` controls Terraform/cloud execution, not model usage. With `NULLSTATE_LLM_BASE_URL` set, this still calls the configured endpoint while using static IaC parsing:
+```powershell
+$env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
+$env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
+$env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
+$env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
+python -m nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
+```
+
+You can also pass `--red-base-url` and `--blue-base-url` for a single run. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+
+If no model endpoint is configured for a role, nullstate falls back to a deterministic mock agent response for that role. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
+
+`--offline` controls Terraform/cloud execution, not model usage. With a shared or role-specific endpoint set, this still calls the configured endpoint while using static IaC parsing:
 
 ```powershell
 $env:NULLSTATE_LLM_BASE_URL = "http://127.0.0.1:8001"
@@ -99,16 +111,19 @@ If AMD GPU access is delayed, point `NULLSTATE_LLM_BASE_URL` at the managed endp
 
 ## Metrics evidence
 
-When `NULLSTATE_LLM_BASE_URL` is set, nullstate tries to scrape:
+When a model endpoint is set, nullstate tries to scrape:
 
 ```text
 <NULLSTATE_LLM_BASE_URL>/metrics
+<NULLSTATE_RED_LLM_BASE_URL>/metrics
+<NULLSTATE_BLUE_LLM_BASE_URL>/metrics
 ```
 
 If the endpoint exposes vLLM Prometheus metrics, the run writes:
 
 - `vllm-metrics-before.prom`
 - `vllm-metrics-after.prom`
+- `vllm-metrics-red-before.prom` and related role-specific snapshots when red/blue endpoints differ
 - parsed counters inside `metrics.json`
 
 The CLI also attempts a local GPU snapshot with `amd-smi` first and `rocm-smi` second. If neither tool exists, `metrics.json` records `status: unavailable` instead of failing the run.

@@ -147,7 +147,7 @@ LOCALSTACK_AUTH_TOKEN=your-token-here
 
 ## Model endpoint
 
-`nullstate` talks to OpenAI-compatible model servers:
+`nullstate` talks to OpenAI-compatible model servers. The simplest setup is one endpoint serving both roles:
 
 ```powershell
 $env:NULLSTATE_LLM_BASE_URL = "http://<mi300x-host>:8000"
@@ -155,7 +155,19 @@ $env:NULLSTATE_LLM_API_KEY = "<optional-token>"
 nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
 ```
 
-Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If the endpoint is missing, the agent layer falls back to deterministic mock responses, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If `NULLSTATE_LLM_BASE_URL` is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
+For two vLLM/SGLang containers or two SSH tunnels, set role-specific endpoints:
+
+```powershell
+$env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
+$env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
+$env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
+$env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
+nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
+```
+
+The CLI also accepts `--red-base-url` and `--blue-base-url` for one-off runs. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+
+Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If an endpoint is missing for a role, that role falls back to a deterministic mock response, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If a shared or role-specific model endpoint is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
 
 ## Sandbox backends
 
@@ -188,6 +200,7 @@ Each run writes:
 - `runs/<run-id>/metrics.json`
 - `runs/<run-id>/vllm-metrics-before.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-after.prom` when `/metrics` is reachable
+- `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
 - `runs/<run-id>/attack.py`
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
