@@ -82,8 +82,10 @@ python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-al
 
 ```powershell
 nullstate doctor --offline
+nullstate status
 nullstate init-demo azure-public-blob --output examples/azure-public-blob
 nullstate run examples/azure-public-blob --offline
+nullstate report
 ```
 
 Run another offline scenario:
@@ -102,13 +104,19 @@ nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
 ```
 
-`run` defaults to `--scenario auto` and `--target auto`. The CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
+`status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
 
 Open the latest report:
 
 ```powershell
-Get-ChildItem runs -Directory | Sort-Object Name -Descending | Select-Object -First 1
-nullstate report <run-id>
+nullstate report
+```
+
+If you keep runs under a named folder, point report lookup at the parent:
+
+```powershell
+nullstate report --runs-dir runs/live-aws-model
+nullstate report 20260509-200601 --runs-dir runs
 ```
 
 ## Live LocalStack Azure Path
@@ -116,10 +124,11 @@ nullstate report <run-id>
 Use this after Docker, LocalStack Azure access, and the AzureRM provider are configured:
 
 ```powershell
-$env:LOCALSTACK_AUTH_TOKEN = "<token>"
 nullstate sandbox up localstack-azure
+nullstate sandbox status localstack-azure
 nullstate doctor
 nullstate run examples/azure-public-blob
+nullstate report
 ```
 
 The demo Terraform provider includes:
@@ -129,6 +138,8 @@ metadata_host = "localhost.localstack.cloud:4566"
 ```
 
 That keeps Terraform pointed at the LocalStack Azure emulator instead of real Azure.
+
+Keep `LOCALSTACK_AUTH_TOKEN` in the shell, `.env.local`, or `.env`. `nullstate sandbox up` auto-discovers `.env.local` first and `.env` second, and `--env-file` remains available for a custom path.
 
 Docker Compose alternative:
 
@@ -143,7 +154,7 @@ Or create a local `.env` file next to the compose file:
 LOCALSTACK_AUTH_TOKEN=your-token-here
 ```
 
-`.env` is ignored by Git. Do not commit the token.
+`.env` and `.env.local` are ignored by Git. Do not commit the token.
 
 ## Model endpoint
 

@@ -74,6 +74,59 @@ def init_demo(
     """Create an intentionally vulnerable IaC demo."""
     create_demo(name, output)
     console.print(f"Created demo at {output}")
+    _print_next_steps(
+        [
+            f"nullstate run {output} --offline",
+            "nullstate sandbox status localstack-azure",
+        ]
+    )
+
+
+@app.command()
+def status(
+    sandbox: str = typer.Option("localstack-azure", "--sandbox", help="Sandbox backend to inspect."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing run artifacts."),
+) -> None:
+    """Show current workflow state and next useful commands."""
+    _print_banner()
+    try:
+        backend = get_backend(sandbox)
+    except KeyError as error:
+        raise typer.BadParameter(str(error)) from error
+
+    latest_run = _latest_report_path(runs_dir)
+    env_file = _resolve_sandbox_env_file(None)
+    table = Table(title="nullstate status")
+    table.add_column("Check")
+    table.add_column("State")
+    table.add_column("Detail")
+    table.add_row(
+        "LLM endpoints",
+        "configured" if _llm_configured() else "missing",
+        _endpoint_status_detail(),
+    )
+    table.add_row(
+        "LocalStack env",
+        "file" if env_file else ("shell" if os.getenv("LOCALSTACK_AUTH_TOKEN") else "missing"),
+        str(env_file) if env_file else "LOCALSTACK_AUTH_TOKEN from shell or .env/.env.local",
+    )
+    table.add_row("Sandbox", backend.name, backend.status)
+    for probe in probe_backend(backend):
+        table.add_row(probe.name, probe.status, probe.detail)
+    table.add_row(
+        "Latest run",
+        latest_run.parent.name if latest_run else "none",
+        str(latest_run.parent if latest_run else runs_dir),
+    )
+    console.print(table)
+    _print_next_steps(
+        [
+            f"nullstate sandbox status {backend.name}",
+            f"nullstate sandbox up {backend.name}",
+            _example_run_command(backend.name),
+            "nullstate report",
+        ]
+    )
 
 
 @app.command()
@@ -274,6 +327,13 @@ def run(
     (run_dir / "report.md").write_text(report, encoding="utf-8")
 
     _print_run_summary(run_dir, findings, before_attack, after_attack)
+    _print_next_steps(
+        [
+            f"nullstate report {run_id} --runs-dir {runs_dir}",
+            f"nullstate report --runs-dir {runs_dir}",
+            f"nullstate status --runs-dir {runs_dir} --sandbox {backend.name}",
+        ]
+    )
 
 
 @sandbox_app.command("list")
@@ -346,6 +406,13 @@ def sandbox_status(name: str = typer.Argument("plan-only", help="Sandbox backend
     for probe in probe_backend(backend):
         table.add_row(probe.name, f"{probe.status}: {probe.detail}")
     console.print(table)
+    _print_next_steps(
+        [
+            f"nullstate sandbox up {backend.name}",
+            _example_run_command(backend.name),
+            "nullstate status",
+        ]
+    )
 
 
 @sandbox_app.command("up")
@@ -360,14 +427,33 @@ def sandbox_up(
     except KeyError as error:
         raise typer.BadParameter(str(error)) from error
 
-    commands = backend.up_commands(env_file=env_file)
+    resolved_env_file = _resolve_sandbox_env_file(env_file)
+    commands = backend.up_commands(env_file=resolved_env_file)
     if dry_run or not commands:
         console.print(render_commands(commands))
+        if resolved_env_file:
+            console.print(f"Using env file: {resolved_env_file}")
+        _print_next_steps(
+            [
+                f"nullstate sandbox status {backend.name}",
+                _example_run_command(backend.name),
+            ]
+        )
         return
     results = run_commands(commands)
     failed = [result for result in results if result.returncode != 0]
     if failed:
+        console.print("Sandbox start failed. Re-run with --dry-run to inspect commands.", style="bold red")
         raise typer.Exit(code=1)
+    console.print("Sandbox start commands completed.", style="bold green")
+    if resolved_env_file:
+        console.print(f"Used env file: {resolved_env_file}")
+    _print_next_steps(
+        [
+            f"nullstate sandbox status {backend.name}",
+            _example_run_command(backend.name),
+        ]
+    )
 
 
 @sandbox_app.command("down")
@@ -388,16 +474,21 @@ def sandbox_down(
     results = run_commands(commands)
     failed = [result for result in results if result.returncode != 0]
     if failed:
+        console.print("Sandbox stop failed. Re-run with --dry-run to inspect commands.", style="bold red")
         raise typer.Exit(code=1)
+    console.print("Sandbox stop commands completed.", style="bold green")
+    _print_next_steps(["nullstate sandbox status " + backend.name])
 
 
 @app.command()
-def report(run_id: str, runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs.")) -> None:
+def report(
+    run_id: str | None = typer.Argument(None, help="Run ID to open. Defaults to the latest run report."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+) -> None:
     """Print a previous run report."""
-    report_path = runs_dir / run_id / "report.md"
-    if not report_path.exists():
-        raise typer.BadParameter(f"Report not found: {report_path}")
-    console.print(report_path.read_text(encoding="utf-8"))
+    report_path = _resolve_report_path(run_id, runs_dir)
+    console.print(f"Report: {report_path}")
+    console.print(_console_safe_text(report_path.read_text(encoding="utf-8")), markup=False, highlight=False)
 
 
 def _print_run_summary(run_dir: Path, findings, before_attack: dict[str, str], after_attack: dict[str, str]) -> None:
@@ -420,8 +511,56 @@ def _llm_configured() -> bool:
     )
 
 
+def _endpoint_status_detail() -> str:
+    red = os.getenv("NULLSTATE_RED_LLM_BASE_URL")
+    blue = os.getenv("NULLSTATE_BLUE_LLM_BASE_URL")
+    shared = os.getenv("NULLSTATE_LLM_BASE_URL")
+    if red or blue:
+        return f"red={_redact_url(red)}, blue={_redact_url(blue)}"
+    if shared:
+        return f"shared={_redact_url(shared)}"
+    return "Set NULLSTATE_LLM_BASE_URL or role-specific red/blue endpoints."
+
+
+def _redact_url(value: str | None) -> str:
+    if not value:
+        return "missing"
+    return value.split("//", 1)[-1].split("/", 1)[0]
+
+
+def _console_safe_text(value: str, *, encoding: str | None = None) -> str:
+    target_encoding = encoding or getattr(console.file, "encoding", None) or "utf-8"
+    try:
+        value.encode(target_encoding)
+    except (LookupError, UnicodeError):
+        return value.encode(target_encoding, errors="replace").decode(target_encoding, errors="replace")
+    return value
+
+
 def _print_banner() -> None:
     console.print(BANNER, style="bold cyan")
+
+
+def _print_next_steps(commands: list[str]) -> None:
+    if not commands:
+        return
+    table = Table(title="Next")
+    table.add_column("Command")
+    for command in commands:
+        table.add_row(command)
+    console.print(table)
+
+
+def _example_run_command(backend_name: str) -> str:
+    examples = {
+        "localstack-azure": "examples/azure-public-blob",
+        "localstack-aws": "examples/aws-public-s3",
+        "kind-kubernetes": "examples/k8s-privileged-pod",
+        "docker-compose": "examples/compose-exposed-admin",
+        "microvm-onprem": "examples/onprem-ssh-password",
+        "plan-only": "examples/generic-plan-review",
+    }
+    return f"nullstate run {examples.get(backend_name, 'examples/azure-public-blob')}"
 
 
 def _resolve_scenario(terraform_dir: Path, scenario: str):
@@ -449,6 +588,22 @@ def _resolve_backend(target: str, scenario_backend: str):
 
 def _scenario_supports_live_terraform(scenario_name: str) -> bool:
     return scenario_name in {"azure-public-blob", "aws-public-s3"}
+
+
+def _resolve_sandbox_env_file(
+    explicit: Path | None,
+    candidates: list[str] | None = None,
+    *,
+    cwd: Path | None = None,
+) -> Path | None:
+    if explicit is not None:
+        return explicit
+    search_root = cwd or Path.cwd()
+    for candidate in candidates or [".env.local", ".env"]:
+        path = search_root / candidate
+        if path.is_file():
+            return path
+    return None
 
 
 def _localstack_azure_auth_env(backend_name: str, *, offline: bool) -> dict[str, str]:
@@ -488,3 +643,25 @@ def _copy_terraform_workspace(source: Path, destination: Path) -> None:
             "__pycache__",
         ),
     )
+
+
+def _resolve_report_path(run_id: str | None, runs_dir: Path) -> Path:
+    if run_id:
+        direct = runs_dir / run_id / "report.md"
+        if direct.exists():
+            return direct
+        matches = sorted(path for path in runs_dir.rglob("report.md") if path.parent.name == run_id)
+        if matches:
+            return matches[-1]
+        raise typer.BadParameter(f"Report not found for run {run_id!r} under {runs_dir}")
+    latest = _latest_report_path(runs_dir)
+    if latest is None:
+        raise typer.BadParameter(f"No reports found under {runs_dir}")
+    return latest
+
+
+def _latest_report_path(runs_dir: Path) -> Path | None:
+    reports = [path for path in runs_dir.rglob("report.md") if path.is_file()]
+    if not reports:
+        return None
+    return max(reports, key=lambda path: (path.parent.name, path.stat().st_mtime))
