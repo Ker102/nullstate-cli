@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONTAINER_NAME="${CONTAINER_NAME:-nullstate-red-qwen35}"
-IMAGE="${IMAGE:-lmsysorg/sglang:v0.5.9-rocm720-mi30x}"
-MODEL_ID="${MODEL_ID:-Qwen/Qwen3.5-9B}"
-SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-nullstate-qwen35-9b}"
+CONTAINER_NAME="${CONTAINER_NAME:-nullstate-red-qwen-vllm}"
+IMAGE="${IMAGE:-vllm/vllm-openai-rocm:latest}"
+MODEL_ID="${MODEL_ID:-Qwen/Qwen3-4B-Instruct-2507}"
+SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-nullstate-qwen3-4b}"
 HOST_PORT="${HOST_PORT:-8001}"
-CONTAINER_PORT="${CONTAINER_PORT:-30000}"
-MEM_FRACTION_STATIC="${MEM_FRACTION_STATIC:-0.8}"
-SGLANG_USE_AITER="${SGLANG_USE_AITER:-0}"
+CONTAINER_PORT="${CONTAINER_PORT:-8000}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-32768}"
+GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.40}"
 
 mkdir -p "${HOME}/.cache/huggingface"
 
@@ -19,6 +19,7 @@ docker run -d \
   --name "${CONTAINER_NAME}" \
   --ipc=host \
   --privileged \
+  --cap-add=CAP_SYS_ADMIN \
   --device=/dev/kfd \
   --device=/dev/dri \
   --group-add=video \
@@ -27,20 +28,17 @@ docker run -d \
   --shm-size 16G \
   -p "127.0.0.1:${HOST_PORT}:${CONTAINER_PORT}" \
   -e "HF_TOKEN=${HF_TOKEN:-}" \
-  -e "SGLANG_USE_AITER=${SGLANG_USE_AITER}" \
   -v "${HOME}/.cache/huggingface:/root/.cache/huggingface" \
   "${IMAGE}" \
-  python3 -m sglang.launch_server \
-    --model-path "${MODEL_ID}" \
+    --model "${MODEL_ID}" \
     --served-model-name "${SERVED_MODEL_NAME}" \
     --host 0.0.0.0 \
     --port "${CONTAINER_PORT}" \
-    --tp-size 1 \
-    --attention-backend triton \
-    --reasoning-parser qwen3 \
-    --tool-call-parser qwen3_coder \
-    --mem-fraction-static "${MEM_FRACTION_STATIC}" \
-    --trust-remote-code
+    --dtype bfloat16 \
+    --max-model-len "${MAX_MODEL_LEN}" \
+    --gpu-memory-utilization "${GPU_MEMORY_UTILIZATION}" \
+    --enable-force-include-usage \
+    --enable-prompt-tokens-details
 
 echo "Started ${CONTAINER_NAME} on 127.0.0.1:${HOST_PORT}"
 echo "Model: ${SERVED_MODEL_NAME} (${MODEL_ID})"
