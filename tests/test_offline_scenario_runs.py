@@ -82,6 +82,43 @@ class OfflineScenarioRunTests(unittest.TestCase):
                     self.assertIn("Exploit blocked after remediation", report)
                     self.assertTrue(patch.strip())
 
+    def test_run_infers_scenario_and_target_when_omitted(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            demo_dir = root / "aws-public-s3"
+            runs_dir = root / "runs"
+
+            init_completed = subprocess.run(
+                [sys.executable, "-m", "nullstate", "init-demo", "aws-public-s3", "--output", str(demo_dir)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(init_completed.returncode, 0, init_completed.stderr)
+
+            run_completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "run",
+                    str(demo_dir),
+                    "--offline",
+                    "--runs-dir",
+                    str(runs_dir),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(run_completed.returncode, 0, run_completed.stderr)
+            self.assertIn("Scenario: aws-public-s3", run_completed.stdout)
+            self.assertIn("Target: localstack-aws", run_completed.stdout)
+            run_dir = next(runs_dir.iterdir())
+            findings = json.loads((run_dir / "findings.json").read_text(encoding="utf-8"))
+            self.assertEqual(findings[0]["rule_id"], "AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,7 +17,8 @@ from .findings import find_scenario_findings
 from .metrics import collect_run_metrics
 from .remediation import remediate_scenario_files
 from .report import render_report
-from .sandbox import get_backend, list_backends, render_commands, run_commands
+from .sandbox import get_backend, list_backends, probe_backend, render_commands, run_commands
+from .scenario_detection import infer_scenario
 from .scenarios import get_scenario, list_scenarios
 from .terraform import load_plan_json
 
@@ -73,22 +74,17 @@ def init_demo(
 @app.command()
 def run(
     terraform_dir: Path = typer.Argument(..., exists=True, file_okay=False, help="Terraform directory to test."),
-    target: str = typer.Option("localstack-azure", "--target", help="Execution target."),
-    scenario: str = typer.Option("azure-public-blob", "--scenario", help="Attack scenario."),
-    offline: bool = typer.Option(False, "--offline", help="Use static parser and mock agents."),
+    target: str = typer.Option("auto", "--target", help="Execution target. Use auto to infer from the scenario."),
+    scenario: str = typer.Option("auto", "--scenario", help="Attack scenario. Use auto to infer from IaC."),
+    offline: bool = typer.Option(False, "--offline", help="Use static IaC parsing and skip Terraform/cloud runtime calls."),
+    mock_agents: bool = typer.Option(False, "--mock-agents", help="Use deterministic mock red/blue agents even when an endpoint is configured."),
     runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory for run artifacts."),
     blue_model: str = typer.Option("gemma-4-31b-it", "--blue-model", help="Blue-team model name."),
     red_model: str = typer.Option("qwen3-coder-next", "--red-model", help="Red-team model name."),
 ) -> None:
     """Run detection, attack, remediation, and validation."""
-    try:
-        backend = get_backend(target)
-    except KeyError as error:
-        raise typer.BadParameter(str(error)) from error
-    try:
-        scenario_spec = get_scenario(scenario)
-    except KeyError as error:
-        raise typer.BadParameter(str(error)) from error
+    scenario_spec = _resolve_scenario(terraform_dir, scenario)
+    backend = _resolve_backend(target, scenario_spec.backend)
     if scenario_spec.name != "azure-public-blob" and not offline:
         raise typer.BadParameter(
             f"Scenario {scenario_spec.name!r} supports offline demo execution only for now. "
@@ -96,6 +92,8 @@ def run(
         )
     if backend.mode == "plan-only":
         offline = True
+    llm_base_url = os.getenv("NULLSTATE_LLM_BASE_URL")
+    use_mock_agents = mock_agents or not bool(llm_base_url)
 
     run_id = new_run_id()
     run_dir = runs_dir / run_id
@@ -121,6 +119,7 @@ def run(
         target_mode=backend.mode,
         scenario=scenario_spec.name,
         offline=offline,
+        mock_agents=use_mock_agents,
     )
 
     plan, commands = load_plan_json(workspace_dir, offline=offline)
@@ -128,21 +127,21 @@ def run(
         events.write("terraform", "Command completed", command=result.command, returncode=result.returncode)
 
     findings = find_scenario_findings(scenario_spec.name, workspace_dir, plan)
-    events.write("analysis", "Terraform plan analyzed", finding_count=len(findings))
+    events.write("analysis", "IaC input analyzed", finding_count=len(findings))
     write_json(run_dir / "findings.json", [finding.to_dict() for finding in findings])
     before_metrics = collect_run_metrics(
         run_dir=run_dir,
-        base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
-        offline=offline,
+        base_url=llm_base_url,
+        offline=not bool(llm_base_url),
         stage="before",
     )
 
     write_attack_script(run_dir / "attack.py", scenario_spec.name)
     red_agent = LlmAgent("red", red_model)
     red_result = red_agent.complete(
-        "You are a red-team cloud security agent constrained to LocalStack Azure.",
+        "You are a red-team IaC security agent constrained to the generated local sandbox and run evidence.",
         f"Find an exploit for these findings: {[finding.to_dict() for finding in findings]}",
-        offline=offline,
+        offline=use_mock_agents,
     )
     before_attack = simulate_attack(findings, "before")
     events.write("red-team", "Attack attempted before remediation", result=before_attack, agent=red_result)
@@ -151,15 +150,15 @@ def run(
     blue_result = blue_agent.complete(
         "You are a blue-team IaC remediation agent.",
         f"Diagnose and patch these findings: {[finding.to_dict() for finding in findings]}",
-        offline=offline,
+        offline=use_mock_agents,
     )
 
     patch_result = remediate_scenario_files(scenario_spec.name, workspace_dir)
     (run_dir / "remediation.patch").write_text(patch_result.diff, encoding="utf-8")
     after_metrics = collect_run_metrics(
         run_dir=run_dir,
-        base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
-        offline=offline,
+        base_url=llm_base_url,
+        offline=not bool(llm_base_url),
         stage="after",
     )
     write_json(
@@ -177,7 +176,7 @@ def run(
             ),
         },
     )
-    events.write("blue-team", "Terraform remediation generated", changed=patch_result.changed, agent=blue_result)
+    events.write("blue-team", "IaC remediation generated", changed=patch_result.changed, agent=blue_result)
 
     remediated_plan, _ = load_plan_json(workspace_dir, offline=True)
     remaining_findings = find_scenario_findings(scenario_spec.name, workspace_dir, remediated_plan)
@@ -265,6 +264,8 @@ def sandbox_status(name: str = typer.Argument("plan-only", help="Sandbox backend
     table.add_row("Description", backend.description)
     table.add_row("Requirements", ", ".join(backend.requirements) or "none")
     table.add_row("Status", backend.status)
+    for probe in probe_backend(backend):
+        table.add_row(probe.name, f"{probe.status}: {probe.detail}")
     console.print(table)
 
 
@@ -339,6 +340,29 @@ def _llm_configured() -> bool:
 
 def _print_banner() -> None:
     console.print(BANNER, style="bold cyan")
+
+
+def _resolve_scenario(terraform_dir: Path, scenario: str):
+    if scenario == "auto":
+        inferred = infer_scenario(terraform_dir)
+        if inferred is None:
+            raise typer.BadParameter(
+                "Could not infer a scenario from the IaC directory. "
+                "Pass --scenario explicitly or run `nullstate scenarios list`."
+            )
+        return inferred
+    try:
+        return get_scenario(scenario)
+    except KeyError as error:
+        raise typer.BadParameter(str(error)) from error
+
+
+def _resolve_backend(target: str, scenario_backend: str):
+    backend_name = scenario_backend if target == "auto" else target
+    try:
+        return get_backend(backend_name)
+    except KeyError as error:
+        raise typer.BadParameter(str(error)) from error
 
 
 def _copy_terraform_workspace(source: Path, destination: Path) -> None:
