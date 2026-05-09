@@ -23,6 +23,7 @@ flowchart LR
 
 - The deterministic detector is the source of truth for demo reliability.
 - The red/blue agents receive internal role instructions and scenario evidence; users do not need to prompt the model manually.
+- `run` defaults to `--scenario auto` and `--target auto`; explicit values remain available for demos and tests.
 - Offline mode uses a static Terraform parser so demos still work without LocalStack, Terraform, or GPUs.
 - Online mode follows Terraform automation commands: `init`, `plan -out=tfplan`, and `show -json tfplan`.
 - Sandbox backends are explicit adapters: executable, digital twin, or plan-only.

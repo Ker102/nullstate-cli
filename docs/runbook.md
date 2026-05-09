@@ -11,12 +11,14 @@ python -m nullstate run examples/azure-public-blob --offline
 Run every offline scenario before recording:
 
 ```powershell
-python -m nullstate run examples/aws-public-s3 --offline --target localstack-aws --scenario aws-public-s3
-python -m nullstate run examples/k8s-privileged-pod --offline --target kind-kubernetes --scenario k8s-privileged-pod
-python -m nullstate run examples/compose-exposed-admin --offline --target docker-compose --scenario compose-exposed-admin
-python -m nullstate run examples/onprem-ssh-password --offline --target microvm-onprem --scenario onprem-ssh-password
-python -m nullstate run examples/generic-plan-review --offline --target plan-only --scenario generic-plan-review
+python -m nullstate run examples/aws-public-s3 --offline
+python -m nullstate run examples/k8s-privileged-pod --offline
+python -m nullstate run examples/compose-exposed-admin --offline
+python -m nullstate run examples/onprem-ssh-password --offline
+python -m nullstate run examples/generic-plan-review --offline
 ```
+
+`run` defaults to `--scenario auto` and `--target auto`. Keep explicit `--scenario` and `--target` for recorded demos where you want to show a particular adapter path.
 
 ## Sandbox discovery
 
@@ -71,6 +73,21 @@ $env:NULLSTATE_LLM_API_KEY = "<optional>"
 ```
 
 Then run without `--offline`.
+
+If no model endpoint is configured, nullstate falls back to deterministic mock red/blue agent responses. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
+
+`--offline` controls Terraform/cloud execution, not model usage. With `NULLSTATE_LLM_BASE_URL` set, this still calls the configured endpoint while using static IaC parsing:
+
+```powershell
+$env:NULLSTATE_LLM_BASE_URL = "http://127.0.0.1:8001"
+python -m nullstate run examples/azure-public-blob --offline --blue-model nullstate-qwen3-4b --red-model nullstate-qwen3-4b
+```
+
+Use `--mock-agents` when you explicitly want no model calls:
+
+```powershell
+python -m nullstate run examples/azure-public-blob --offline --mock-agents
+```
 
 ## AMD Developer Cloud / DigitalOcean path
 

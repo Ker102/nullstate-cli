@@ -8,7 +8,7 @@ Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.
 
 1. Read Terraform/IaC input.
 2. Detect exploitable misconfigurations.
-3. Route the scenario to a sandbox backend.
+3. Infer the scenario and route it to a sandbox backend.
 4. Let a red-team agent attempt the attack.
 5. Let a blue-team agent explain and remediate.
 6. Validate the attack is blocked.
@@ -89,8 +89,8 @@ nullstate run examples/azure-public-blob --offline
 Run another offline scenario:
 
 ```powershell
-nullstate run examples/aws-public-s3 --offline --target localstack-aws --scenario aws-public-s3
-nullstate run examples/k8s-privileged-pod --offline --target kind-kubernetes --scenario k8s-privileged-pod
+nullstate run examples/aws-public-s3 --offline
+nullstate run examples/k8s-privileged-pod --offline
 ```
 
 Sandbox discovery:
@@ -101,6 +101,8 @@ nullstate sandbox status localstack-azure
 nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
 ```
+
+`run` defaults to `--scenario auto` and `--target auto`. The CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
 
 Open the latest report:
 
@@ -117,7 +119,7 @@ Use this after Docker, LocalStack Azure access, and the AzureRM provider are con
 $env:LOCALSTACK_AUTH_TOKEN = "<token>"
 nullstate sandbox up localstack-azure
 nullstate doctor
-nullstate run examples/azure-public-blob --target localstack-azure --scenario azure-public-blob
+nullstate run examples/azure-public-blob
 ```
 
 The demo Terraform provider includes:
@@ -153,7 +155,7 @@ $env:NULLSTATE_LLM_API_KEY = "<optional-token>"
 nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
 ```
 
-Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If the endpoint is missing, use `--offline` for deterministic mock agents.
+Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If the endpoint is missing, the agent layer falls back to deterministic mock responses, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If `NULLSTATE_LLM_BASE_URL` is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
 
 ## Sandbox backends
 

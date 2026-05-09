@@ -56,6 +56,18 @@ class SandboxTests(unittest.TestCase):
         self.assertIn("docker run", completed.stdout)
         self.assertIn("localstack/localstack-azure-alpha", completed.stdout)
 
+    def test_sandbox_status_cli_includes_runtime_probe_rows(self):
+        completed = subprocess.run(
+            [sys.executable, "-m", "nullstate", "sandbox", "status", "localstack-azure"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("Runtime docker", completed.stdout)
+        self.assertIn("Runtime HTTP", completed.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
