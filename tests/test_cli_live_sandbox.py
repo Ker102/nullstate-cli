@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from nullstate.cli import _localstack_azure_auth_env
+
 
 FAKE_TERRAFORM = r'''
 import json
@@ -60,6 +62,15 @@ sys.exit(1)
 
 
 class CliLiveSandboxTests(unittest.TestCase):
+    def test_localstack_azure_auth_env_uses_dummy_credentials(self):
+        env = _localstack_azure_auth_env("localstack-azure", offline=False)
+
+        self.assertEqual(env["ARM_SUBSCRIPTION_ID"], "00000000-0000-0000-0000-000000000000")
+        self.assertEqual(env["ARM_TENANT_ID"], "00000000-0000-0000-0000-000000000000")
+        self.assertIn("ARM_CLIENT_SECRET", env)
+        self.assertEqual(_localstack_azure_auth_env("localstack-azure", offline=True), {})
+        self.assertEqual(_localstack_azure_auth_env("localstack-aws", offline=False), {})
+
     def test_live_localstack_aws_run_applies_before_and_after_remediation(self):
         with TemporaryDirectory() as raw_tmp:
             root = Path(raw_tmp)

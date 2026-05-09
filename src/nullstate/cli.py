@@ -99,6 +99,8 @@ def run(
         )
     if backend.mode == "plan-only":
         offline = True
+    for key, value in _localstack_azure_auth_env(backend.name, offline=offline).items():
+        os.environ.setdefault(key, value)
     red_endpoint = _resolve_agent_base_url("red", red_base_url)
     blue_endpoint = _resolve_agent_base_url("blue", blue_base_url)
     red_api_key = _resolve_agent_api_key("red")
@@ -447,6 +449,18 @@ def _resolve_backend(target: str, scenario_backend: str):
 
 def _scenario_supports_live_terraform(scenario_name: str) -> bool:
     return scenario_name in {"azure-public-blob", "aws-public-s3"}
+
+
+def _localstack_azure_auth_env(backend_name: str, *, offline: bool) -> dict[str, str]:
+    if offline or backend_name != "localstack-azure":
+        return {}
+    null_uuid = "00000000-0000-0000-0000-000000000000"
+    return {
+        "ARM_CLIENT_ID": null_uuid,
+        "ARM_CLIENT_SECRET": "nullstate-localstack",
+        "ARM_TENANT_ID": null_uuid,
+        "ARM_SUBSCRIPTION_ID": null_uuid,
+    }
 
 
 def _resolve_agent_base_url(role: str, explicit: str | None) -> str | None:
