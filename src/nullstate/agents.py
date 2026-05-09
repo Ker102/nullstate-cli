@@ -72,9 +72,17 @@ class LlmAgent:
         )
 
     def _offline_response(self, user_prompt: str) -> str:
+        if "AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED" in user_prompt:
+            if self.role == "red":
+                return "Offline red team selected an anonymous S3 read hypothesis for the public access block exposure."
+            return "Offline blue team recommended enabling all S3 public access block controls."
+        if "AZURE_STORAGE_PUBLIC_BLOB" in user_prompt:
+            if self.role == "red":
+                return "Offline red team selected the anonymous Azure Blob read exploit for the detected public container."
+            return (
+                "Offline blue team confirmed the exposure and recommended setting container_access_type to private "
+                "and allow_nested_items_to_be_public to false."
+            )
         if self.role == "red":
-            return "Offline red team selected the anonymous Azure Blob read exploit for the detected public container."
-        return (
-            "Offline blue team confirmed the exposure and recommended setting container_access_type to private "
-            "and allow_nested_items_to_be_public to false."
-        )
+            return "Offline red team selected an exploit hypothesis for the detected exposure."
+        return "Offline blue team confirmed the exposure and recommended the deterministic remediation."

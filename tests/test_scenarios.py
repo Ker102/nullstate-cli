@@ -50,7 +50,11 @@ class ScenarioTests(unittest.TestCase):
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertTrue((output / "main.tf").exists())
-            self.assertIn("aws_s3_bucket_public_access_block", (output / "main.tf").read_text(encoding="utf-8"))
+            text = (output / "main.tf").read_text(encoding="utf-8")
+            self.assertIn("aws_s3_bucket_public_access_block", text)
+            self.assertIn('bucket_prefix = "nullstate-public-logs-"', text)
+            self.assertIn("s3_use_path_style           = true", text)
+            self.assertIn('s3 = "http://s3.localhost.localstack.cloud:4566"', text)
 
 
 if __name__ == "__main__":
