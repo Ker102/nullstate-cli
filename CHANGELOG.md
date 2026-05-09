@@ -18,3 +18,5 @@ All notable changes to this project will be documented here.
 - Added sandbox runtime probes to `nullstate sandbox status`.
 - Decoupled static/offline IaC mode from model usage; configured model endpoints are now used unless `--mock-agents` is passed.
 - Added role-specific red/blue model endpoint configuration and per-role vLLM metrics snapshots.
+- Added live Terraform apply/re-apply support for Terraform-backed LocalStack scenarios.
+- Added MI300X model-serving scripts for Qwen3.5 on SGLang and Gemma 4 on vLLM ROCm.
