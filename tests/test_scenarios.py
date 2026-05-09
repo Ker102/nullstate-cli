@@ -56,6 +56,32 @@ class ScenarioTests(unittest.TestCase):
             self.assertIn("s3_use_path_style           = true", text)
             self.assertIn('s3 = "http://s3.localhost.localstack.cloud:4566"', text)
 
+    def test_azure_demo_uses_unique_resource_names_for_rerunnable_live_sandboxes(self):
+        with TemporaryDirectory() as raw_tmp:
+            output = Path(raw_tmp) / "azure-public-blob"
+
+            completed = subprocess.run(
+                [sys.executable, "-m", "nullstate", "init-demo", "azure-public-blob", "--output", str(output)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            text = (output / "main.tf").read_text(encoding="utf-8")
+            self.assertIn('random_string" "suffix"', text)
+            self.assertIn('name     = "rg-nullstate-${random_string.suffix.result}"', text)
+            self.assertIn('name                             = "nullstate${random_string.suffix.result}"', text)
+            self.assertNotIn('name     = "rg-nullstate-demo"', text)
+            self.assertNotIn('name                             = "nullstatedemo"', text)
+
+    def test_checked_in_azure_example_uses_unique_resource_names_for_live_runs(self):
+        text = Path("examples/azure-public-blob/main.tf").read_text(encoding="utf-8")
+
+        self.assertIn('random_string" "suffix"', text)
+        self.assertIn('name     = "rg-nullstate-${random_string.suffix.result}"', text)
+        self.assertIn('name                             = "nullstate${random_string.suffix.result}"', text)
+
 
 if __name__ == "__main__":
     unittest.main()

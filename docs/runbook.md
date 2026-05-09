@@ -5,7 +5,9 @@
 ```powershell
 python -m pip install -e .
 python -m nullstate doctor --offline
+python -m nullstate status
 python -m nullstate run examples/azure-public-blob --offline
+python -m nullstate report
 ```
 
 Run every offline scenario before recording:
@@ -23,10 +25,13 @@ python -m nullstate run examples/generic-plan-review --offline
 ## Sandbox discovery
 
 ```powershell
+python -m nullstate status
 python -m nullstate sandbox list
 python -m nullstate sandbox status localstack-azure
 python -m nullstate sandbox up localstack-azure --dry-run
 ```
+
+Most operator commands print a `Next` table with likely follow-up commands. Use `python -m nullstate status` when you are unsure what is configured, whether the sandbox probe is reachable, or which run report is newest.
 
 ## LocalStack Azure setup
 
@@ -40,12 +45,19 @@ Then:
 
 ```powershell
 python -m nullstate sandbox up localstack-azure
+python -m nullstate sandbox status localstack-azure
 ```
 
-If the token is stored in a local env file, keep the file untracked and pass it explicitly:
+If the token is stored in a local env file, keep the file untracked. The CLI auto-discovers `.env.local` first and `.env` second:
 
 ```powershell
-python -m nullstate sandbox up localstack-azure --env-file .env.local
+python -m nullstate sandbox up localstack-azure
+python -m nullstate sandbox up localstack-aws
+```
+
+Use `--env-file` only when the env file lives somewhere else:
+
+```powershell
 python -m nullstate sandbox up localstack-aws --env-file .env.local
 ```
 
@@ -69,6 +81,26 @@ docker compose --env-file .env.local -f docker-compose.localstack-azure.yml up
 ```
 
 `env_file:` inside a Compose service is different: it injects variables into a container. For this token, we need Compose interpolation so the compose file can replace `${LOCALSTACK_AUTH_TOKEN}` before starting the service.
+
+## Reports and run lookup
+
+Open the newest report under the default `runs/` folder:
+
+```powershell
+python -m nullstate report
+```
+
+Open the newest report in a named evidence folder:
+
+```powershell
+python -m nullstate report --runs-dir runs/live-aws-model
+```
+
+Open a known run ID even when it is nested under a named evidence folder:
+
+```powershell
+python -m nullstate report 20260509-200601 --runs-dir runs
+```
 
 ## Model endpoint setup
 
