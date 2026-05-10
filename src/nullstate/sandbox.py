@@ -21,8 +21,9 @@ class SandboxBackend:
     status: str
     available_without_runtime: bool = False
 
-    def up_commands(self, env_file: Path | None = None) -> list[list[str]]:
+    def up_commands(self, env_file: Path | None = None, container_name: str | None = None) -> list[list[str]]:
         if self.name == "localstack-azure":
+            resolved_container_name = container_name or "localstack-azure"
             return [
                 ["docker", "pull", "localstack/localstack-azure-alpha"],
                 [
@@ -30,7 +31,7 @@ class SandboxBackend:
                     "run",
                     "-d",
                     "--name",
-                    "localstack-azure",
+                    resolved_container_name,
                     "-p",
                     "127.0.0.1:4566:4566",
                     "-v",
@@ -42,6 +43,7 @@ class SandboxBackend:
                 ],
             ]
         if self.name == "localstack-aws":
+            resolved_container_name = container_name or "localstack"
             return [
                 ["docker", "pull", "localstack/localstack"],
                 [
@@ -49,7 +51,7 @@ class SandboxBackend:
                     "run",
                     "-d",
                     "--name",
-                    "localstack",
+                    resolved_container_name,
                     "-p",
                     "127.0.0.1:4566:4566",
                     *_localstack_auth_args(env_file),
@@ -63,6 +65,13 @@ class SandboxBackend:
         if self.name == "microvm-onprem":
             return [["nullstate", "sandbox", "plan", "microvm-onprem"]]
         return []
+
+    def default_container_name(self) -> str | None:
+        if self.name == "localstack-azure":
+            return "localstack-azure"
+        if self.name == "localstack-aws":
+            return "localstack"
+        return None
 
     def down_commands(self) -> list[list[str]]:
         if self.name == "localstack-azure":

@@ -37,6 +37,28 @@ class SandboxTests(unittest.TestCase):
         self.assertIn("LOCALSTACK_AUTH_TOKEN", rendered)
         self.assertIn("--name localstack", rendered)
 
+    def test_localstack_aws_up_plan_accepts_alternate_container_name(self):
+        backend = get_backend("localstack-aws")
+        commands = backend.up_commands(container_name="localstack-20260510")
+
+        rendered = "\n".join(" ".join(command) for command in commands)
+        self.assertIn("--name localstack-20260510", rendered)
+        self.assertNotIn("--name localstack ", rendered)
+
+    def test_sandbox_container_name_changes_when_default_exists(self):
+        from nullstate.cli import _resolve_sandbox_container_name
+
+        backend = get_backend("localstack-aws")
+
+        self.assertEqual(
+            _resolve_sandbox_container_name(backend, container_exists=lambda _: False, suffix="20260510"),
+            ("localstack", False),
+        )
+        self.assertEqual(
+            _resolve_sandbox_container_name(backend, container_exists=lambda _: True, suffix="20260510"),
+            ("localstack-20260510", True),
+        )
+
     def test_plan_only_backend_has_no_external_runtime(self):
         backend = get_backend("plan-only")
 
