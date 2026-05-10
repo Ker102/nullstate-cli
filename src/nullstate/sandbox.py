@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Literal
 
 import requests
@@ -20,30 +21,40 @@ class SandboxBackend:
     status: str
     available_without_runtime: bool = False
 
-    def up_commands(self) -> list[list[str]]:
+    def up_commands(self, env_file: Path | None = None) -> list[list[str]]:
         if self.name == "localstack-azure":
             return [
                 ["docker", "pull", "localstack/localstack-azure-alpha"],
                 [
                     "docker",
                     "run",
-                    "--rm",
-                    "-it",
+                    "-d",
+                    "--name",
+                    "localstack-azure",
                     "-p",
-                    "4566:4566",
+                    "127.0.0.1:4566:4566",
                     "-v",
                     "/var/run/docker.sock:/var/run/docker.sock",
                     "-v",
                     "~/.localstack/volume:/var/lib/localstack",
-                    "-e",
-                    "LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN:?}",
+                    *_localstack_auth_args(env_file),
                     "localstack/localstack-azure-alpha",
                 ],
             ]
         if self.name == "localstack-aws":
             return [
                 ["docker", "pull", "localstack/localstack"],
-                ["docker", "run", "--rm", "-it", "-p", "4566:4566", "localstack/localstack"],
+                [
+                    "docker",
+                    "run",
+                    "-d",
+                    "--name",
+                    "localstack",
+                    "-p",
+                    "127.0.0.1:4566:4566",
+                    *_localstack_auth_args(env_file),
+                    "localstack/localstack",
+                ],
             ]
         if self.name == "kind-kubernetes":
             return [["kind", "create", "cluster", "--name", "nullstate"]]
@@ -54,8 +65,10 @@ class SandboxBackend:
         return []
 
     def down_commands(self) -> list[list[str]]:
-        if self.name in {"localstack-azure", "localstack-aws"}:
-            return [["docker", "ps", "--filter", "ancestor=localstack", "--format", "{{.ID}}"]]
+        if self.name == "localstack-azure":
+            return [["docker", "rm", "-f", "localstack-azure"]]
+        if self.name == "localstack-aws":
+            return [["docker", "rm", "-f", "localstack"]]
         if self.name == "kind-kubernetes":
             return [["kind", "delete", "cluster", "--name", "nullstate"]]
         if self.name == "docker-compose":
@@ -84,7 +97,7 @@ BACKENDS: tuple[SandboxBackend, ...] = (
         mode="executable",
         target_iac="Terraform AWS",
         description="Runs AWS-style cloud scenarios against the LocalStack AWS emulator.",
-        requirements=["Docker", "Terraform", "AWS provider tooling"],
+        requirements=["Docker", "LOCALSTACK_AUTH_TOKEN", "Terraform", "AWS provider tooling"],
         status="adapter scaffolded",
     ),
     SandboxBackend(
@@ -145,6 +158,12 @@ def run_commands(commands: list[list[str]]) -> list[subprocess.CompletedProcess[
     for command in commands:
         completed.append(subprocess.run(command, text=True, check=False))
     return completed
+
+
+def _localstack_auth_args(env_file: Path | None) -> list[str]:
+    if env_file is not None:
+        return ["--env-file", str(env_file)]
+    return ["-e", "LOCALSTACK_AUTH_TOKEN"]
 
 
 def probe_backend(backend: SandboxBackend) -> list[RuntimeProbe]:

@@ -82,8 +82,10 @@ python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-al
 
 ```powershell
 nullstate doctor --offline
+nullstate status
 nullstate init-demo azure-public-blob --output examples/azure-public-blob
 nullstate run examples/azure-public-blob --offline
+nullstate report
 ```
 
 Run another offline scenario:
@@ -102,13 +104,19 @@ nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
 ```
 
-`run` defaults to `--scenario auto` and `--target auto`. The CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
+`status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
 
 Open the latest report:
 
 ```powershell
-Get-ChildItem runs -Directory | Sort-Object Name -Descending | Select-Object -First 1
-nullstate report <run-id>
+nullstate report
+```
+
+If you keep runs under a named folder, point report lookup at the parent:
+
+```powershell
+nullstate report --runs-dir runs/live-aws-model
+nullstate report 20260509-200601 --runs-dir runs
 ```
 
 ## Live LocalStack Azure Path
@@ -116,10 +124,11 @@ nullstate report <run-id>
 Use this after Docker, LocalStack Azure access, and the AzureRM provider are configured:
 
 ```powershell
-$env:LOCALSTACK_AUTH_TOKEN = "<token>"
 nullstate sandbox up localstack-azure
+nullstate sandbox status localstack-azure
 nullstate doctor
 nullstate run examples/azure-public-blob
+nullstate report
 ```
 
 The demo Terraform provider includes:
@@ -129,6 +138,8 @@ metadata_host = "localhost.localstack.cloud:4566"
 ```
 
 That keeps Terraform pointed at the LocalStack Azure emulator instead of real Azure.
+
+Keep `LOCALSTACK_AUTH_TOKEN` in the shell, `.env.local`, or `.env`. `nullstate sandbox up` auto-discovers `.env.local` first and `.env` second, and `--env-file` remains available for a custom path.
 
 Docker Compose alternative:
 
@@ -143,11 +154,11 @@ Or create a local `.env` file next to the compose file:
 LOCALSTACK_AUTH_TOKEN=your-token-here
 ```
 
-`.env` is ignored by Git. Do not commit the token.
+`.env` and `.env.local` are ignored by Git. Do not commit the token.
 
 ## Model endpoint
 
-`nullstate` talks to OpenAI-compatible model servers:
+`nullstate` talks to OpenAI-compatible model servers. The simplest setup is one endpoint serving both roles:
 
 ```powershell
 $env:NULLSTATE_LLM_BASE_URL = "http://<mi300x-host>:8000"
@@ -155,7 +166,19 @@ $env:NULLSTATE_LLM_API_KEY = "<optional-token>"
 nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
 ```
 
-Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If the endpoint is missing, the agent layer falls back to deterministic mock responses, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If `NULLSTATE_LLM_BASE_URL` is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
+For two vLLM/SGLang containers or two SSH tunnels, set role-specific endpoints:
+
+```powershell
+$env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
+$env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
+$env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
+$env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
+nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
+```
+
+The CLI also accepts `--red-base-url` and `--blue-base-url` for one-off runs. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+
+Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If an endpoint is missing for a role, that role falls back to a deterministic mock response, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If a shared or role-specific model endpoint is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
 
 ## Sandbox backends
 
@@ -188,6 +211,7 @@ Each run writes:
 - `runs/<run-id>/metrics.json`
 - `runs/<run-id>/vllm-metrics-before.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-after.prom` when `/metrics` is reachable
+- `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
 - `runs/<run-id>/attack.py`
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
@@ -200,6 +224,7 @@ Each run writes:
 - [Threat model](docs/threat-model.md)
 - [CI/CD](docs/ci-cd.md)
 - [Runbook](docs/runbook.md)
+- [Model serving runbook](docs/model-serving.md)
 - [AMD compute strategy](docs/compute-strategy.md)
 - [Failure modes](docs/failure-modes.md)
 - [Cost report](docs/cost-report.md)

@@ -12,6 +12,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "=4.14.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
@@ -21,13 +25,19 @@ provider "azurerm" {
   metadata_host   = "localhost.localstack.cloud:4566"
 }
 
+resource "random_string" "suffix" {
+  length  = 8
+  upper   = false
+  special = false
+}
+
 resource "azurerm_resource_group" "demo" {
-  name     = "rg-nullstate-demo"
+  name     = "rg-nullstate-${random_string.suffix.result}"
   location = "westeurope"
 }
 
 resource "azurerm_storage_account" "demo" {
-  name                             = "nullstatedemo"
+  name                             = "nullstate${random_string.suffix.result}"
   resource_group_name              = azurerm_resource_group.demo.name
   location                         = azurerm_resource_group.demo.location
   account_tier                     = "Standard"
@@ -70,17 +80,18 @@ provider "aws" {
   region                      = "us-east-1"
   access_key                  = "test"
   secret_key                  = "test"
+  s3_use_path_style           = true
   skip_credentials_validation = true
   skip_metadata_api_check     = true
   skip_requesting_account_id  = true
 
   endpoints {
-    s3 = "http://localhost.localstack.cloud:4566"
+    s3 = "http://s3.localhost.localstack.cloud:4566"
   }
 }
 
 resource "aws_s3_bucket" "public_logs" {
-  bucket = "nullstate-public-logs"
+  bucket_prefix = "nullstate-public-logs-"
 }
 
 resource "aws_s3_bucket_public_access_block" "public_logs" {

@@ -5,7 +5,9 @@
 ```powershell
 python -m pip install -e .
 python -m nullstate doctor --offline
+python -m nullstate status
 python -m nullstate run examples/azure-public-blob --offline
+python -m nullstate report
 ```
 
 Run every offline scenario before recording:
@@ -23,10 +25,13 @@ python -m nullstate run examples/generic-plan-review --offline
 ## Sandbox discovery
 
 ```powershell
+python -m nullstate status
 python -m nullstate sandbox list
 python -m nullstate sandbox status localstack-azure
 python -m nullstate sandbox up localstack-azure --dry-run
 ```
+
+Most operator commands print a `Next` table with likely follow-up commands. Use `python -m nullstate status` when you are unsure what is configured, whether the sandbox probe is reachable, or which run report is newest.
 
 ## LocalStack Azure setup
 
@@ -40,6 +45,20 @@ Then:
 
 ```powershell
 python -m nullstate sandbox up localstack-azure
+python -m nullstate sandbox status localstack-azure
+```
+
+If the token is stored in a local env file, keep the file untracked. The CLI auto-discovers `.env.local` first and `.env` second:
+
+```powershell
+python -m nullstate sandbox up localstack-azure
+python -m nullstate sandbox up localstack-aws
+```
+
+Use `--env-file` only when the env file lives somewhere else:
+
+```powershell
+python -m nullstate sandbox up localstack-aws --env-file .env.local
 ```
 
 Docker Compose alternative:
@@ -63,20 +82,52 @@ docker compose --env-file .env.local -f docker-compose.localstack-azure.yml up
 
 `env_file:` inside a Compose service is different: it injects variables into a container. For this token, we need Compose interpolation so the compose file can replace `${LOCALSTACK_AUTH_TOKEN}` before starting the service.
 
+## Reports and run lookup
+
+Open the newest report under the default `runs/` folder:
+
+```powershell
+python -m nullstate report
+```
+
+Open the newest report in a named evidence folder:
+
+```powershell
+python -m nullstate report --runs-dir runs/live-aws-model
+```
+
+Open a known run ID even when it is nested under a named evidence folder:
+
+```powershell
+python -m nullstate report 20260509-200601 --runs-dir runs
+```
+
 ## Model endpoint setup
 
-Set:
+For one model endpoint serving both red and blue roles, set:
 
 ```powershell
 $env:NULLSTATE_LLM_BASE_URL = "http://localhost:8000"
 $env:NULLSTATE_LLM_API_KEY = "<optional>"
 ```
 
-Then run without `--offline`.
+Then run normally.
 
-If no model endpoint is configured, nullstate falls back to deterministic mock red/blue agent responses. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
+For two containers or two SSH tunnels, set role-specific endpoints:
 
-`--offline` controls Terraform/cloud execution, not model usage. With `NULLSTATE_LLM_BASE_URL` set, this still calls the configured endpoint while using static IaC parsing:
+```powershell
+$env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
+$env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
+$env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
+$env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
+python -m nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
+```
+
+You can also pass `--red-base-url` and `--blue-base-url` for a single run. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+
+If no model endpoint is configured for a role, nullstate falls back to a deterministic mock agent response for that role. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
+
+`--offline` controls Terraform/cloud execution, not model usage. With a shared or role-specific endpoint set, this still calls the configured endpoint while using static IaC parsing:
 
 ```powershell
 $env:NULLSTATE_LLM_BASE_URL = "http://127.0.0.1:8001"
@@ -93,22 +144,27 @@ python -m nullstate run examples/azure-public-blob --offline --mock-agents
 
 Use [AMD Compute Strategy](compute-strategy.md) as the deployment checklist. Build the non-GPU DigitalOcean baseline first, then attach the MI300X-backed model endpoint when access is available.
 
+Use [Model Serving Runbook](model-serving.md) for the current two-container Qwen3.5/Gemma 4 setup.
+
 ## Fireworks fallback
 
 If AMD GPU access is delayed, point `NULLSTATE_LLM_BASE_URL` at the managed endpoint and keep the same nullstate run flow. Label the evidence as managed inference, not private GPU-hosted inference.
 
 ## Metrics evidence
 
-When `NULLSTATE_LLM_BASE_URL` is set, nullstate tries to scrape:
+When a model endpoint is set, nullstate tries to scrape:
 
 ```text
 <NULLSTATE_LLM_BASE_URL>/metrics
+<NULLSTATE_RED_LLM_BASE_URL>/metrics
+<NULLSTATE_BLUE_LLM_BASE_URL>/metrics
 ```
 
 If the endpoint exposes vLLM Prometheus metrics, the run writes:
 
 - `vllm-metrics-before.prom`
 - `vllm-metrics-after.prom`
+- `vllm-metrics-red-before.prom` and related role-specific snapshots when red/blue endpoints differ
 - parsed counters inside `metrics.json`
 
 The CLI also attempts a local GPU snapshot with `amd-smi` first and `rocm-smi` second. If neither tool exists, `metrics.json` records `status: unavailable` instead of failing the run.

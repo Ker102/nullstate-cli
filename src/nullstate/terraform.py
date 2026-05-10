@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from dataclasses import dataclass
@@ -21,8 +22,24 @@ class CommandResult:
 
 
 def run_command(command: list[str], cwd: Path) -> CommandResult:
-    completed = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
-    return CommandResult(command=command, returncode=completed.returncode, stdout=completed.stdout, stderr=completed.stderr)
+    resolved_command = _resolve_terraform_command(command)
+    completed = subprocess.run(resolved_command, cwd=cwd, text=True, capture_output=True, check=False)
+    return CommandResult(command=resolved_command, returncode=completed.returncode, stdout=completed.stdout, stderr=completed.stderr)
+
+
+def _resolve_terraform_command(command: list[str]) -> list[str]:
+    if command[0] != "terraform":
+        return command
+    override = os.getenv("NULLSTATE_TERRAFORM_COMMAND")
+    if not override:
+        return command
+    try:
+        prefix = json.loads(override)
+    except json.JSONDecodeError as error:
+        raise RuntimeError("NULLSTATE_TERRAFORM_COMMAND must be a JSON array of command parts.") from error
+    if not isinstance(prefix, list) or not all(isinstance(part, str) for part in prefix):
+        raise RuntimeError("NULLSTATE_TERRAFORM_COMMAND must be a JSON array of command parts.")
+    return [*prefix, *command[1:]]
 
 
 def load_plan_json(terraform_dir: Path, offline: bool) -> tuple[dict[str, Any], list[CommandResult]]:
@@ -49,6 +66,13 @@ def load_plan_json(terraform_dir: Path, offline: bool) -> tuple[dict[str, Any], 
         raise RuntimeError(show.stderr or show.stdout)
 
     return json.loads(show.stdout), commands
+
+
+def apply_saved_plan(terraform_dir: Path) -> list[CommandResult]:
+    apply = run_command(["terraform", "apply", "-auto-approve", "-input=false", "tfplan"], terraform_dir)
+    if not apply.ok:
+        raise RuntimeError(apply.stderr or apply.stdout)
+    return [apply]
 
 
 def static_plan_from_tf(terraform_dir: Path) -> dict[str, Any]:
