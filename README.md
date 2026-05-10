@@ -9,10 +9,11 @@ Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.
 1. Read Terraform/IaC input.
 2. Detect exploitable misconfigurations.
 3. Infer the scenario and route it to a sandbox backend.
-4. Let a red-team agent attempt the attack.
-5. Let a blue-team agent explain and remediate.
-6. Validate the attack is blocked.
-7. Write case-study-ready evidence and metrics.
+4. Let a red-team agent reason about the attack.
+5. Execute a constrained generated attack script against the local target.
+6. Let a blue-team agent explain and remediate.
+7. Validate the attack is blocked.
+8. Write case-study-ready evidence and metrics.
 
 The hackathon V1 has offline deterministic demos for Azure, AWS, Kubernetes, Docker Compose, on-prem baselines, and generic plan review. Live sandbox execution is being added incrementally, starting with LocalStack Azure.
 
@@ -46,7 +47,7 @@ See [Architecture](docs/architecture.md).
 
 ## Security model
 
-V1 does not target real cloud environments by default. Sandboxes are explicit, run artifacts are local, and remediation happens in a copied run workspace rather than mutating the original Terraform directory. See [Security Model](docs/security-model.md) and [Threat Model](docs/threat-model.md).
+V1 does not target real cloud environments by default. Sandboxes are explicit, run artifacts are local, and remediation happens in a copied run workspace rather than mutating the original Terraform directory. The red tool runner is constrained to generated `attack.py` scripts inside the run directory and records command, stdout, stderr, return code, target URL, and timestamps in `events.jsonl`. See [Security Model](docs/security-model.md) and [Threat Model](docs/threat-model.md).
 
 ## Installation
 
@@ -216,6 +217,8 @@ Each run writes:
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
 
+`events.jsonl` includes `red-tool` entries for the allowlisted attack command before and after remediation.
+
 ## Documentation
 
 - [Case study](docs/case-study.md)
@@ -243,6 +246,6 @@ The GitHub release title can match the tag or use a readable title such as `null
 
 ## Status
 
-Working now: offline deterministic demos for all listed scenarios, deterministic remediation, sandbox registry, report artifacts, metrics artifacts, branded CLI output, and DevSecOps repo structure.
+Working now: offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, metrics artifacts, branded CLI output, and DevSecOps repo structure.
 
 Experimental: live LocalStack Azure execution and non-Azure live sandbox adapters.

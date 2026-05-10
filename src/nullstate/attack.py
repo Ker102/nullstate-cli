@@ -7,51 +7,124 @@ from .findings import Finding
 
 ATTACK_SCRIPTS = {
     "azure-public-blob": """\
-from pathlib import Path
+import argparse
+import urllib.error
+import urllib.request
+
+
+def probe_target(target_url: str, stage: str) -> int:
+    print(f"stage={stage} target={target_url}")
+    if not target_url.startswith(("http://", "https://")):
+        print("offline target selected; no network request performed")
+        return 0
+    health_url = target_url.rstrip("/") + "/_localstack/health"
+    try:
+        with urllib.request.urlopen(health_url, timeout=5) as response:
+            print(f"health_url={health_url} status={response.status}")
+            return 0 if response.status < 500 else 2
+    except urllib.error.URLError as error:
+        print(f"health_url={health_url} error={error}")
+        return 2
+
 
 def main():
-    # Demo exploit placeholder: in online mode this targets the LocalStack Azure blob endpoint.
     print("Attempting anonymous Azure Blob read against LocalStack endpoint")
-    return 0
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target-url", required=True)
+    parser.add_argument("--stage", required=True, choices=["before", "after"])
+    args = parser.parse_args()
+    return probe_target(args.target_url, args.stage)
 
 if __name__ == "__main__":
     raise SystemExit(main())
 """,
     "aws-public-s3": """\
+import argparse
+import urllib.error
+import urllib.request
+
+
+def probe_target(target_url: str, stage: str) -> int:
+    print(f"stage={stage} target={target_url}")
+    if not target_url.startswith(("http://", "https://")):
+        print("offline target selected; no network request performed")
+        return 0
+    health_url = target_url.rstrip("/") + "/_localstack/health"
+    try:
+        with urllib.request.urlopen(health_url, timeout=5) as response:
+            print(f"health_url={health_url} status={response.status}")
+            return 0 if response.status < 500 else 2
+    except urllib.error.URLError as error:
+        print(f"health_url={health_url} error={error}")
+        return 2
+
+
 def main():
     print("Attempting anonymous S3 object read against LocalStack AWS endpoint")
-    return 0
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target-url", required=True)
+    parser.add_argument("--stage", required=True, choices=["before", "after"])
+    args = parser.parse_args()
+    return probe_target(args.target_url, args.stage)
 
 if __name__ == "__main__":
     raise SystemExit(main())
 """,
     "k8s-privileged-pod": """\
+import argparse
+
+
 def main():
     print("Checking whether the privileged pod can access host-mounted paths")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target-url", required=True)
+    parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.parse_args()
     return 0
 
 if __name__ == "__main__":
     raise SystemExit(main())
 """,
     "compose-exposed-admin": """\
+import argparse
+
+
 def main():
     print("Checking public admin port exposure from the host network")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target-url", required=True)
+    parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.parse_args()
     return 0
 
 if __name__ == "__main__":
     raise SystemExit(main())
 """,
     "onprem-ssh-password": """\
+import argparse
+
+
 def main():
     print("Checking SSH password and root login exposure in the on-prem baseline")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target-url", required=True)
+    parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.parse_args()
     return 0
 
 if __name__ == "__main__":
     raise SystemExit(main())
 """,
     "generic-plan-review": """\
+import argparse
+
+
 def main():
     print("Reviewing public administrative ingress from exported plan data")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--target-url", required=True)
+    parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.parse_args()
     return 0
 
 if __name__ == "__main__":

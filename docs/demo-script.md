@@ -3,7 +3,7 @@
 ## 60-Second Version
 
 1. "This is `nullstate`, an autonomous purple-team CLI for Terraform Azure."
-2. "It reads IaC, spins a local security scenario, lets a red agent exploit it, lets a blue agent patch it, then validates the fix."
+2. "It reads IaC, spins a local security scenario, lets a red model reason about the attack, executes an allowlisted attack script, lets a blue agent patch it, then validates the fix."
 3. Run:
 
 ```powershell
@@ -17,7 +17,8 @@ python -m nullstate report
    - Red before: success
    - Red after: blocked
    - Artifact path
-5. Show the report output and the run directory path. The same report can be reopened with `python -m nullstate report` or `python -m nullstate report <run-id> --runs-dir runs`.
+5. Show `events.jsonl` and point out the `red-tool` entries. They include command, stdout, stderr, return code, target URL, and timestamps.
+6. Show the report output and the run directory path. The same report can be reopened with `python -m nullstate report` or `python -m nullstate report <run-id> --runs-dir runs`.
 
 ## MI300X Talking Points
 
@@ -26,6 +27,7 @@ python -m nullstate report
 - The deterministic core keeps the security verdict reproducible; the model adds reasoning, explanation, and remediation context.
 - Users do not manually prompt the model; nullstate sends role-specific agent instructions and evidence.
 - Token metrics come from model API usage fields and vLLM Prometheus metrics when available.
+- The red command runner is intentionally constrained to generated `attack.py` scripts inside the run directory.
 
 ## Fallback Path
 

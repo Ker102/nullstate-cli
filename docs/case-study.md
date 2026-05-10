@@ -2,7 +2,7 @@
 
 ## 1. Executive summary
 
-I built `nullstate` to prove that infrastructure security validation can move beyond static scanning into a repeatable red-team/blue-team loop. The platform reads Terraform Azure infrastructure, detects an exploitable Azure Blob exposure, simulates an attacker, applies a blue-team remediation, reruns the attack, and writes an evidence report. The prototype uses Python, Terraform plan JSON, LocalStack-style sandbox adapters, OpenAI-compatible model endpoints, and deterministic fallback logic. The main engineering decision was to keep the security verdict deterministic while using models for adversarial reasoning, explanation, and remediation context. The result is a hackathon-ready CLI with reproducible artifacts and a path toward private MI300X-hosted model analysis.
+I built `nullstate` to prove that infrastructure security validation can move beyond static scanning into a repeatable red-team/blue-team loop. The platform reads Terraform infrastructure, detects exploitable cloud storage exposure, asks a red model to reason about the attack, executes a constrained generated attack script, applies a blue-team remediation, reruns validation, and writes an evidence report. The prototype uses Python, Terraform plan JSON, LocalStack-style sandbox adapters, OpenAI-compatible model endpoints, and deterministic fallback logic. The main engineering decision was to keep the security verdict deterministic while using models for adversarial reasoning, explanation, and remediation context. The result is a hackathon-ready CLI with reproducible artifacts and a path toward private MI300X-hosted model analysis.
 
 ## 2. Problem
 
@@ -24,6 +24,7 @@ Cloud and platform teams can ship IaC faster than security teams can manually va
 - Analyze Terraform Azure IaC.
 - Detect public Azure Blob container exposure.
 - Simulate red-team attack before remediation.
+- Execute a constrained generated attack script and log command evidence.
 - Generate Terraform remediation.
 - Validate attack is blocked after remediation.
 - Write report, findings, events, patch, and metrics artifacts.
@@ -62,7 +63,7 @@ See [Security Model](security-model.md) and [Threat Model](threat-model.md).
 |---|---|---|
 | Accidental real-cloud attack | LocalStack/plan-only defaults | CLI target model |
 | Secret leakage | `.env.example`, `.gitignore`, SECURITY.md | repo files |
-| Unsafe agent execution | allowlisted sandbox backends | sandbox registry |
+| Unsafe agent execution | generated `attack.py` only, no arbitrary shell | `red-tool` events |
 | Unreviewed main changes | PR template and CI checks | `.github/` |
 
 ## 7. Deployment pipeline
@@ -89,7 +90,7 @@ See [AMD Compute Strategy](compute-strategy.md) for the primary DigitalOcean/AMD
 
 - Offline CLI demo runs end to end.
 - Unit test suite covers findings, remediation, reports, metrics, and sandbox registry.
-- Run artifacts include report, findings, events, attack script, patch, workspace copy, and metrics.
+- Run artifacts include report, findings, events, constrained attack command output, attack script, patch, workspace copy, and metrics.
 - Offline deterministic scenario demos cover AWS, Kubernetes, Docker Compose, on-prem digital twins, and generic plan-only review.
 
 ## 11. Tradeoffs
@@ -108,6 +109,7 @@ See [Failure Modes](failure-modes.md).
 ## 13. What I would improve next
 
 - Add real LocalStack Azure exploit execution.
+- Expand the allowlisted red command runner with richer scenario-specific scripts.
 - Add AWS, Kubernetes, and Docker Compose scenario detectors.
 - Add streamed time-to-first-token metrics.
 - Add AMD GPU-hosted model evidence with vLLM `/metrics` and `amd-smi` or `rocm-smi` snapshots.

@@ -15,6 +15,7 @@ from rich.table import Table
 from .agents import LlmAgent
 from .artifacts import EventLog, new_run_id, write_json
 from .attack import simulate_attack, write_attack_script
+from .attack_runner import run_attack_script
 from .demo import create_demo
 from .findings import find_scenario_findings
 from .metrics import collect_run_metrics
@@ -229,7 +230,9 @@ def run(
             "message": "See endpoints.red and endpoints.blue for role-specific endpoint metrics.",
         }
 
-    write_attack_script(run_dir / "attack.py", scenario_spec.name)
+    attack_script_path = run_dir / "attack.py"
+    attack_target_url = _attack_target_url(backend.name, scenario_spec.name, offline=offline)
+    write_attack_script(attack_script_path, scenario_spec.name)
     red_agent = LlmAgent("red", red_model, base_url=red_endpoint, api_key=red_api_key)
     red_result = red_agent.complete(
         "You are a red-team IaC security agent constrained to the generated local sandbox and run evidence.",
@@ -243,7 +246,15 @@ def run(
             offline=not bool(red_endpoint),
             stage="red-after",
         )
+    before_tool = run_attack_script(
+        attack_script_path,
+        run_dir=run_dir,
+        target_url=attack_target_url,
+        stage="before",
+    )
+    events.write("red-tool", "Allowlisted attack command completed", **before_tool.to_dict())
     before_attack = simulate_attack(findings, "before")
+    before_attack = _with_tool_evidence(before_attack, before_tool)
     events.write("red-team", "Attack attempted before remediation", result=before_attack, agent=red_result)
 
     if not shared_endpoint:
@@ -314,7 +325,15 @@ def run(
         for result in apply_saved_plan(workspace_dir):
             events.write("terraform", "Command completed", command=result.command, returncode=result.returncode)
     remaining_findings = find_scenario_findings(scenario_spec.name, workspace_dir, remediated_plan)
+    after_tool = run_attack_script(
+        attack_script_path,
+        run_dir=run_dir,
+        target_url=attack_target_url,
+        stage="after",
+    )
+    events.write("red-tool", "Allowlisted attack command completed", **after_tool.to_dict())
     after_attack = simulate_attack(remaining_findings, "after")
+    after_attack = _with_tool_evidence(after_attack, after_tool)
     events.write("validation", "Attack attempted after remediation", result=after_attack, remaining_findings=len(remaining_findings))
 
     report = render_report(
@@ -590,6 +609,30 @@ def _example_run_command(backend_name: str) -> str:
         "plan-only": "examples/generic-plan-review",
     }
     return f"nullstate run {examples.get(backend_name, 'examples/azure-public-blob')}"
+
+
+def _attack_target_url(backend_name: str, scenario_name: str, *, offline: bool) -> str:
+    if offline:
+        return f"offline://{scenario_name}"
+    if backend_name in {"localstack-aws", "localstack-azure"}:
+        return "http://localhost.localstack.cloud:4566"
+    return f"local://{backend_name}/{scenario_name}"
+
+
+def _with_tool_evidence(attack: dict[str, str], tool_result) -> dict[str, str]:
+    detail = attack.get("detail", "No detail recorded.")
+    enriched = dict(attack)
+    enriched["detail"] = (
+        f"{detail} Allowlisted tool command returned {tool_result.returncode}: "
+        f"`{_summarize_tool_command(tool_result.command)}` target={tool_result.target_url}."
+    )
+    return enriched
+
+
+def _summarize_tool_command(command: list[str]) -> str:
+    if len(command) >= 2 and Path(command[1]).name == "attack.py":
+        return "python attack.py " + " ".join(command[2:])
+    return " ".join(command)
 
 
 def _resolve_scenario(terraform_dir: Path, scenario: str):

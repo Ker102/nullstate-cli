@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 import unittest
@@ -58,6 +59,16 @@ class CliTests(unittest.TestCase):
             self.assertIn('container_access_type = "container"', (demo_dir / "main.tf").read_text(encoding="utf-8"))
             self.assertIn("Next", run_completed.stdout)
             self.assertIn("nullstate report", run_completed.stdout)
+            events = [
+                json.loads(line)
+                for line in (reports[0].parent / "events.jsonl").read_text(encoding="utf-8").splitlines()
+            ]
+            red_tool_events = [event for event in events if event["phase"] == "red-tool"]
+            self.assertEqual(len(red_tool_events), 2)
+            self.assertEqual(red_tool_events[0]["data"]["stage"], "before")
+            self.assertEqual(red_tool_events[1]["data"]["stage"], "after")
+            self.assertIn("command", red_tool_events[0]["data"])
+            self.assertIn("target_url", red_tool_events[0]["data"])
 
     def test_report_without_run_id_opens_latest_nested_report(self):
         with TemporaryDirectory() as raw_tmp:

@@ -40,6 +40,18 @@ V1 defaults to offline mode or LocalStack-style local endpoints. Real cloud exec
 
 LocalStack and other sandboxes are runtime dependencies, not vendored binaries. Operators should pull trusted images and avoid running arbitrary red-team code outside generated run workspaces.
 
+## Red-team command execution
+
+The V1 red command runner is constrained by design:
+
+- It only runs the generated `attack.py` file.
+- `attack.py` must live directly inside the run directory.
+- The command is launched with the current Python interpreter, not an arbitrary shell.
+- The only dynamic inputs are `--target-url` and `--stage`.
+- The event log records command, stdout, stderr, return code, target URL, start time, end time, and duration.
+
+This allows demos to show real command execution against local sandbox endpoints without giving the model unrestricted tool access.
+
 ## CI/CD security
 
 - PR checks run tests, lint, type checks, and dependency audit.
@@ -57,6 +69,7 @@ Artifacts must be reviewed before publishing. Do not publish tokens, real tenant
 - Some sandbox adapters are scaffolds, not full execution backends.
 - LocalStack Azure requires external setup and auth token.
 - Offline metrics report zero token usage because no model is called.
+- The generated attack scripts are intentionally narrow probes; richer exploit scripts should remain allowlisted and sandbox-scoped.
 
 ## Future improvements
 
