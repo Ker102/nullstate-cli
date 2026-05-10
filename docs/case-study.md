@@ -1,131 +1,293 @@
-# nullstate Case Study
+# nullstate: Autonomous Purple-Team IaC Sandbox on AMD MI300X
 
 ## 1. Executive summary
 
-I built `nullstate` to prove that infrastructure security validation can move beyond static scanning into a repeatable red-team/blue-team loop. The platform reads Terraform infrastructure, detects exploitable cloud storage exposure, asks a red model to reason about the attack, executes a constrained generated attack script, applies a blue-team remediation, reruns validation, and writes an evidence report. The prototype uses Python, Terraform plan JSON, LocalStack-style sandbox adapters, OpenAI-compatible model endpoints, and deterministic fallback logic. The main engineering decision was to keep the security verdict deterministic while using models for adversarial reasoning, explanation, and remediation context. The result is a hackathon-ready CLI with reproducible artifacts and a path toward private MI300X-hosted model analysis.
+I built `nullstate` during the AMD x lablab.ai hackathon to test whether infrastructure security validation could move beyond static IaC findings into a repeatable red-team/blue-team loop. The CLI reads Terraform projects, starts a local sandbox target, detects dangerous cloud storage exposure, asks a red-team model to reason about the attack path, executes a constrained generated attack script against the local target, asks a blue-team model to explain remediation, applies a deterministic Terraform patch, reruns validation, and writes judge-ready evidence artifacts. The final demo used LocalStack sandboxes, Terraform automation commands, a Python Typer/Rich CLI, OpenAI-compatible vLLM endpoints, ROCm, and an AMD Instinct MI300X GPU droplet. The key engineering decision was to make the security verdict deterministic while using the model for adversarial reasoning, explanation, and report quality. The result was a working hackathon prototype with final AWS and Azure runs showing vulnerable infrastructure, exploit evidence, patched Terraform, and blocked attack paths.
 
 ## 2. Problem
 
-Cloud and platform teams can ship IaC faster than security teams can manually validate it. Static scanners identify possible risk, but they often do not prove whether a misconfiguration is exploitable or whether a fix actually blocks the path. The operator needs a local-first workflow that can run without production credentials, preserve evidence, and produce a case-study-quality report.
+IaC scanners are useful, but they often stop at "this configuration looks risky." A platform or security engineer still has to answer harder operational questions:
+
+- Is the finding actually exploitable in this context?
+- What evidence proves the exposure?
+- What exact Terraform change remediates it?
+- Did the attack path fail after the patch?
+- Can this be demonstrated without touching production cloud accounts?
+
+`nullstate` targets that gap. The user should be able to point the CLI at an IaC project and get a reproducible evidence trail: finding, attack reasoning, remediation, validation, and a report that a security, cloud, or DevSecOps reviewer can inspect.
 
 ## 3. Context and constraints
 
-- 48-hour hackathon timeline.
-- Local or AMD Developer Cloud model serving.
-- No production cloud targets by default.
-- LocalStack Azure requires Docker and `LOCALSTACK_AUTH_TOKEN`.
-- The demo must still work if Docker, Terraform, or the model endpoint is unavailable.
-- AMD Developer Cloud / DigitalOcean GPU access may be delayed, so Fireworks-compatible managed inference is kept as a contingency.
+- Hackathon build window: roughly 48 hours.
+- Final submission pressure: working evidence needed before the deadline, not a broad but unfinished platform.
+- Cloud target: local sandboxes first, no real Azure or AWS credentials by default.
+- Model target: self-hosted endpoint on AMD MI300X through vLLM/ROCm.
+- Runtime target: LocalStack for AWS and Azure-style scenarios.
+- UX target: CLI-first instead of a full web application.
+- Security constraint: do not expose vLLM, LocalStack, cloud tokens, Terraform state, or `.env` values publicly.
+- Reliability constraint: model output must not be the source of truth for the pass/fail verdict.
 
 ## 4. Requirements
 
 ### Functional requirements
 
-- Analyze Terraform Azure IaC.
-- Detect public Azure Blob container exposure.
-- Simulate red-team attack before remediation.
-- Execute a constrained generated attack script and log command evidence.
-- Generate Terraform remediation.
-- Validate attack is blocked after remediation.
-- Write report, findings, events, patch, and metrics artifacts.
-- Provide pluggable sandbox backends for cloud, Kubernetes, Docker, on-prem digital twins, and plan-only mode.
+- Analyze Terraform IaC.
+- Infer or accept a scenario target.
+- Start and inspect local sandbox backends.
+- Detect high-risk public cloud storage exposure.
+- Generate red-team attack reasoning with a self-hosted model endpoint.
+- Execute a constrained generated attack script before and after remediation.
+- Log attack command, stdout, stderr, return code, target URL, and timestamps into `events.jsonl`.
+- Generate blue-team remediation explanation with a self-hosted model endpoint.
+- Apply deterministic Terraform remediation.
+- Re-run validation after remediation.
+- Produce `report.md`, `findings.json`, `events.jsonl`, `metrics.json`, `attack.py`, and `remediation.patch`.
+- Support offline/mock mode so the demo can still run without GPU or sandbox access.
 
 ### Non-functional requirements
 
 - No real cloud execution by default.
-- No secrets in repo.
-- Reproducible offline demo.
-- Clear CI/CD and contribution workflow.
-- Evidence suitable for recruiters, engineers, and hackathon judges.
+- No arbitrary red-agent shell execution in V1; red command execution is limited to generated run-directory `attack.py` scripts.
+- Commands should be understandable under hackathon demo pressure.
+- Run artifacts should be suitable for later case-study evidence.
+- Secrets and provider state must be kept out of Git.
+- CI/CD should use PR checks, dependency review, CodeQL, and branch protection.
 
 ## 5. Architecture
 
-See [Architecture](architecture.md).
-
 ```mermaid
 flowchart LR
-    IaC[Terraform / IaC input] --> Parser[Plan parser]
-    Parser --> Detector[Deterministic detector]
-    Detector --> Sandbox[Sandbox adapter]
-    Sandbox --> Red[Red-team agent]
-    Red --> Evidence[Exploit evidence]
-    Evidence --> Blue[Blue-team agent]
-    Blue --> Patch[Terraform patch]
-    Patch --> Validate[Validation attack]
-    Validate --> Report[Report and metrics]
+    A[Terraform IaC input] --> B[Terraform init / plan / show JSON]
+    B --> C[Deterministic detector]
+    C --> D[Sandbox adapter]
+    D --> E[Red-team model reasoning]
+    E --> F[Attack evidence]
+    F --> G[Blue-team model remediation]
+    G --> H[Deterministic Terraform patch]
+    H --> I[Re-plan and apply]
+    I --> J[Validation attack]
+    J --> K[Report and metrics artifacts]
 ```
 
-## 6. Security model
+The CLI separates reliable security decisions from model-generated explanation:
 
-See [Security Model](security-model.md) and [Threat Model](threat-model.md).
+- Terraform automation runs `terraform init -input=false`, `terraform plan -out=tfplan -input=false`, `terraform show -json tfplan`, and `terraform apply -auto-approve -input=false tfplan` for live runs.
+- The deterministic detector identifies supported exposures from Terraform configuration and plan JSON.
+- The red-team model receives the finding evidence and writes attack reasoning.
+- The blue-team model receives the finding evidence and writes remediation guidance.
+- The deterministic remediation engine applies the Terraform patch.
+- The validator checks whether findings remain and records the post-remediation attack result.
+
+## 6. What the red agent actually does today
+
+This is important to describe accurately.
+
+The red model itself does not receive shell access. It receives an internal system prompt and scenario findings, then returns attack reasoning such as anonymous S3 reads or Azure Blob `curl` requests.
+
+After the reasoning step, `nullstate` executes only the generated `attack.py` script inside the run directory through a constrained runner. The runner invokes the current Python interpreter directly, passes only `--target-url` and `--stage`, and records command, stdout, stderr, return code, target URL, start time, end time, and duration into `events.jsonl`.
+
+This is intentionally narrower than a free-form agent shell. It gives the demo real command evidence against local sandbox endpoints while preserving a reliable and auditable boundary.
+
+## 7. Security model
 
 | Risk | Control | Evidence |
 |---|---|---|
-| Accidental real-cloud attack | LocalStack/plan-only defaults | CLI target model |
-| Secret leakage | `.env.example`, `.gitignore`, SECURITY.md | repo files |
-| Unsafe agent execution | generated `attack.py` only, no arbitrary shell | `red-tool` events |
-| Unreviewed main changes | PR template and CI checks | `.github/` |
+| Accidental real cloud attack | LocalStack and plan-only targets by default | sandbox adapters and run commands |
+| Model makes unsafe recommendation | deterministic detector and remediation remain source of truth | `findings.json`, `remediation.patch` |
+| Arbitrary exploit execution | generated `attack.py` only, no arbitrary shell | `red-tool` events, `src/nullstate/attack_runner.py` |
+| Secret leakage | `.env` and Terraform state ignored; screenshots must be redacted | repo hygiene and submission checklist |
+| Public model endpoint exposure | vLLM bound through SSH tunnel, not public ingress | droplet setup and tunnel workflow |
+| Unreviewed code changes | PR workflow, branch protection, CI checks | GitHub PRs and checks |
 
-## 7. Deployment pipeline
+## 8. Deployment and DevSecOps workflow
 
-See [CI/CD](ci-cd.md).
+The project was built with a branch and PR workflow instead of direct main edits:
 
 ```text
-branch -> PR -> tests/lint/type/audit -> review -> squash merge -> tag -> release
+feature branch
+-> PR
+-> unit tests, lint, type checks, dependency/security checks
+-> review/merge
+-> release tag / release notes
 ```
 
-## 8. Operations
+Repository practices added during the build:
 
-See [Runbook](runbook.md).
+- Python package metadata and console entrypoint.
+- Structured docs: architecture, runbook, threat model, security model, CI/CD, cost notes, and failure modes.
+- GitHub Actions for quality checks.
+- CodeQL and dependency review.
+- Dependabot-style dependency hygiene.
+- Case-study evidence checklist kept out of Git.
+- Release-oriented workflow with tagged submission artifacts.
 
-Operational evidence includes CLI run artifacts, model endpoint type, vLLM Prometheus snapshots when available, and local `amd-smi` or `rocm-smi` output when GPU tools are present.
+## 9. Final demo results
 
-## 9. Cost analysis
+### AWS public S3 scenario
 
-See [Cost Report](cost-report.md). V1 is designed to run locally, with AMD Developer Cloud used only for model-serving evidence.
+Run artifact:
 
-See [AMD Compute Strategy](compute-strategy.md) for the primary DigitalOcean/AMD path and Fireworks fallback.
+```text
+runs/final-aws-gemma26b/20260510-170931
+```
 
-## 10. Results
+Finding:
 
-- Offline CLI demo runs end to end.
-- Unit test suite covers findings, remediation, reports, metrics, and sandbox registry.
-- Run artifacts include report, findings, events, constrained attack command output, attack script, patch, workspace copy, and metrics.
-- Offline deterministic scenario demos cover AWS, Kubernetes, Docker Compose, on-prem digital twins, and generic plan-only review.
+```text
+HIGH AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED
+Resource: aws_s3_bucket_public_access_block.public_logs
+Evidence: block_public_acls, block_public_policy, ignore_public_acls, and restrict_public_buckets were disabled.
+```
 
-## 11. Tradeoffs
+Remediation patch:
+
+```diff
+-  block_public_acls       = false
+-  block_public_policy     = false
+-  ignore_public_acls      = false
+-  restrict_public_buckets = false
++  block_public_acls       = true
++  block_public_policy     = true
++  ignore_public_acls      = true
++  restrict_public_buckets = true
+```
+
+Result:
+
+```text
+Red before: success
+Red after: blocked
+Verdict: Exploit blocked after remediation
+```
+
+Model metrics from `metrics.json`:
+
+| Role | Model | Completion tokens | Latency | Output speed |
+|---|---:|---:|---:|---:|
+| Red | `nullstate-gemma4-26b-a4b` | 942 | 9.018s | 104.452 tok/s |
+| Blue | `nullstate-gemma4-26b-a4b` | 640 | 3.977s | 160.937 tok/s |
+
+### Azure public Blob scenario
+
+Run artifact:
+
+```text
+runs/final-azure-gemma26b/20260510-174858
+```
+
+Finding:
+
+```text
+HIGH AZURE_STORAGE_PUBLIC_BLOB
+Resource: azurerm_storage_container.secrets
+Evidence: container_access_type is "container"; storage account allows nested items to be public.
+```
+
+Remediation patch:
+
+```diff
+-  allow_nested_items_to_be_public  = true
++  allow_nested_items_to_be_public  = false
+
+-  container_access_type = "container"
++  container_access_type = "private"
+```
+
+Result:
+
+```text
+Red before: success
+Red after: blocked
+Verdict: Exploit blocked after remediation
+```
+
+Model metrics from `metrics.json`:
+
+| Role | Model | Completion tokens | Latency | Output speed |
+|---|---:|---:|---:|---:|
+| Red | `nullstate-gemma4-26b-a4b` | 709 | 4.112s | 172.424 tok/s |
+| Blue | `nullstate-gemma4-26b-a4b` | 794 | 4.548s | 174.586 tok/s |
+
+## 10. Evidence artifacts
+
+Each run creates:
+
+- `events.jsonl`: timeline of Terraform, analysis, red-tool command execution, red-team, blue-team, and validation events.
+- `findings.json`: structured finding data.
+- `attack.py`: generated scenario attack artifact.
+- `remediation.patch`: deterministic Terraform diff.
+- `metrics.json`: model call token counts, latency, throughput, and endpoint metrics.
+- `report.md`: human-readable case-study report.
+- `workspace/`: copied Terraform workspace for reproducibility.
+
+Screenshots to add before publishing:
+
+- `nullstate` root command showing logo and next commands.
+- `nullstate run` summary for AWS or Azure.
+- `report.md` showing `Exploit blocked after remediation`.
+- DigitalOcean MI300X droplet GPU page.
+- vLLM `/v1/models` response for `nullstate-gemma4-26b-a4b`.
+- vLLM `/metrics` or `metrics.json` token throughput evidence.
+- GitHub PR/checks/release page.
+
+## 11. Cost analysis
+
+The main cost driver was the AMD MI300X GPU droplet used for model serving. LocalStack and Terraform ran locally, and the CLI did not require paid cloud resources for AWS or Azure infrastructure. The cost-control decision was to keep real cloud execution out of scope and use the GPU only long enough to collect model-serving evidence and final run metrics.
+
+Final portfolio version should include:
+
+- Total DigitalOcean credits used.
+- Droplet runtime hours.
+- Whether the droplet was destroyed after evidence collection.
+- Any failed boot/model attempts that consumed GPU time.
+
+## 12. Tradeoffs
 
 | Decision | Alternative | Why chosen | Downside |
 |---|---|---|---|
-| CLI first | Web app first | faster, stronger technical demo | less visual polish |
-| Deterministic detector | pure LLM scanner | reliable verdict | narrower first rule set |
-| LocalStack Azure v1 | real Azure | safer and repeatable | emulator feature gaps |
-| Adapter registry | one sandbox hardcoded | future multi-IaC support | some adapters are scaffolds |
+| CLI-first product | Next.js dashboard | Faster to build, better for terminal evidence | Less visual for non-technical judges |
+| Deterministic security core | Pure LLM scanner | Reliable pass/fail and reproducible patching | Narrower scenario coverage in V1 |
+| LocalStack sandbox | Real AWS/Azure | Safer and no production credentials | Emulator differences and setup friction |
+| One large model for red and blue | Separate red/blue models | Avoided dual-container VRAM/runtime failures | Less role specialization |
+| OpenAI-compatible endpoint | Provider-specific SDK | Works with vLLM, SGLang, or managed fallback | Requires endpoint setup knowledge |
+| Constrained red runner | Free-form shell agent | Real command evidence without arbitrary tool access | Scripts are narrow and scenario-specific |
 
-## 12. Failure modes and lessons learned
+## 13. Failure modes and lessons learned
 
-See [Failure Modes](failure-modes.md).
+- DigitalOcean account access blocked early setup, so GPU work started later than planned.
+- LocalStack containers can leave port `4566` reserved; the CLI now gives a specific recovery hint.
+- Editable Python installs break when the repo path changes; production installs should use the package entrypoint.
+- Running two model containers on one MI300X caused VRAM pressure and cache allocation failures.
+- ROCm AITER fused-MoE paths failed for one Gemma startup attempt, so the final path used a single larger model endpoint.
+- SGLang/Qwen3.5 experimentation was deprioritized after runtime import issues.
+- Model metrics from a local Windows run cannot capture `amd-smi` directly unless collected on the droplet; endpoint metrics and droplet screenshots fill that evidence gap.
 
-## 13. What I would improve next
+## 14. What I would improve next
 
-- Add real LocalStack Azure exploit execution.
-- Expand the allowlisted red command runner with richer scenario-specific scripts.
-- Add AWS, Kubernetes, and Docker Compose scenario detectors.
-- Add streamed time-to-first-token metrics.
-- Add AMD GPU-hosted model evidence with vLLM `/metrics` and `amd-smi` or `rocm-smi` snapshots.
-- Add SBOM and signed release provenance.
+- Expand allowlisted `attack.py` scripts into richer scenario-specific exploit probes.
+- Add per-scenario command allowlists beyond Python scripts when needed.
+- Add `nullstate run --auto-sandbox` for known local targets.
+- Add custom LocalStack port support so AWS and Azure sandboxes can run side by side.
+- Add an artifact scrubber before publishing reports.
+- Add SBOM, package signing, and release provenance.
+- Add more Azure, AWS, Kubernetes, Docker Compose, and on-prem digital-twin scenarios.
+- Build a portfolio demo page with embedded screenshots, architecture diagram, and video.
 
-## 14. Repository and demo links
+## 15. Repository and demo links
 
-- GitHub repo: pending publish.
-- Demo: `python -m nullstate run examples/azure-public-blob --offline`
+- GitHub: <https://github.com/Ker102/nullstate-cli>
+- Suggested portfolio slug: `/case-studies/nullstate-autonomous-purple-team-iac-sandbox`
+- Demo video: pending
+- Final AWS report: `runs/final-aws-gemma26b/20260510-170931/report.md`
+- Final Azure report: `runs/final-azure-gemma26b/20260510-174858/report.md`
 
-## 15. Interview explanation
+## 16. Interview explanation
 
-I built `nullstate` because static IaC scanning alone does not prove exploitability or remediation effectiveness. The architecture uses deterministic plan analysis, sandbox adapters, and red/blue model roles to create a local purple-team loop. The most important security decision was to avoid production cloud execution by default. The hardest tradeoff was keeping the hackathon scope narrow while making the adapter model credible for future IaC targets.
+I built `nullstate` because IaC security tools often identify misconfigurations without proving exploitability or remediation effectiveness. The architecture uses Terraform plan analysis, LocalStack sandboxes, deterministic detection, constrained attack script execution, and self-hosted model agents to create a repeatable purple-team loop. The most important security decision was to keep the pass/fail verdict deterministic and limit red command execution to generated `attack.py` scripts instead of arbitrary shell access. The hardest tradeoff was choosing reliability over full autonomy under hackathon time pressure. If I rebuilt it, I would expand the constrained runner into richer per-scenario allowlists with deeper network probes against the local sandbox.
 
-## 16. Resume bullets
+## 17. Resume bullets
 
-- Built a Python DevSecOps CLI that validates Terraform Azure misconfigurations through a local red-team/blue-team loop.
-- Implemented deterministic IaC detection, Terraform remediation, sandbox backend abstractions, and evidence artifacts.
-- Designed a secure GitHub workflow with tests, dependency audit, CodeQL, dependency review, and structured PR templates.
+- Built `nullstate`, a Python DevSecOps CLI that validates Terraform IaC through a local red-team/blue-team loop with deterministic remediation and evidence artifacts.
+- Served a large model on AMD MI300X with vLLM/ROCm and captured token, latency, throughput, and endpoint metrics for final AWS and Azure sandbox runs.
+- Implemented Terraform analysis, LocalStack sandbox workflows, structured run artifacts, report generation, CI checks, threat model, runbook, and release-oriented PR workflow.
+- Produced final demo evidence showing public S3 and Azure Blob exposures remediated and revalidated as blocked attack paths.

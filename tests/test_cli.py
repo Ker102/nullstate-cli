@@ -7,6 +7,19 @@ from tempfile import TemporaryDirectory
 
 
 class CliTests(unittest.TestCase):
+    def test_root_command_prints_launch_screen(self):
+        completed = subprocess.run(
+            [sys.executable, "-m", "nullstate"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("Autonomous Purple-Team Sandbox", completed.stdout)
+        self.assertIn("nullstate status", completed.stdout)
+        self.assertIn("nullstate sandbox up localstack-aws", completed.stdout)
+
     def test_doctor_offline_exits_successfully(self):
         completed = subprocess.run(
             [sys.executable, "-m", "nullstate", "doctor", "--offline"],

@@ -1,25 +1,48 @@
 # nullstate
 
-Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.
+Local-first purple-teaming CLI for infrastructure-as-code sandboxes.
 
 ![Nullstate terminal showcase](https://github.com/Ker102/nullstate-cli/releases/download/Media/Showcaseimage)
 
-`nullstate` runs a tight local security validation loop:
+`nullstate` turns Terraform security review into a repeatable attack, patch, and validation loop. It combines a deterministic IaC security core with model-assisted red-team and blue-team reasoning from OpenAI-compatible endpoints such as vLLM on AMD MI300X.
+
+The V1 demo proves public cloud-storage exposure in local sandboxes, applies Terraform remediation, reruns validation, and writes evidence artifacts that can be reviewed by security, cloud, and DevSecOps teams.
+
+## What it does
 
 1. Read Terraform/IaC input.
-2. Detect exploitable misconfigurations.
+2. Detect supported exploitable misconfigurations.
 3. Infer the scenario and route it to a sandbox backend.
-4. Let a red-team agent reason about the attack.
+4. Ask a red-team model to reason about the attack path.
 5. Execute a constrained generated attack script against the local target.
-6. Let a blue-team agent explain and remediate.
-7. Validate the attack is blocked.
-8. Write case-study-ready evidence and metrics.
+6. Ask a blue-team model to explain remediation.
+7. Apply a deterministic Terraform patch.
+8. Validate the attack path is blocked.
+9. Write case-study-ready evidence and metrics.
 
-The hackathon V1 has offline deterministic demos for Azure, AWS, Kubernetes, Docker Compose, on-prem baselines, and generic plan review. Live sandbox execution is being added incrementally, starting with LocalStack Azure.
+Hackathon V1 includes live LocalStack runs for AWS S3 and Azure Blob scenarios, plus offline deterministic demos for Kubernetes, Docker Compose, on-prem baselines, and generic plan review.
 
 ## Why this exists
 
 Static IaC scanners can identify risky configuration, but they do not always prove whether an attacker can use it or whether a remediation blocks the path. `nullstate` turns IaC security review into a repeatable purple-team loop with local-first sandboxes and sanitized evidence artifacts.
+
+## Demo result
+
+Final AMD MI300X/vLLM demo runs used `nullstate-gemma4-26b-a4b` for both red and blue roles:
+
+| Scenario | Target | Finding | Result |
+|---|---|---|---|
+| `aws-public-s3` | LocalStack AWS | S3 public access block disabled | `Red before: success`, `Red after: blocked` |
+| `azure-public-blob` | LocalStack Azure | Anonymous Blob container access | `Red before: success`, `Red after: blocked` |
+
+Representative model metrics:
+
+| Run | Role | Completion tokens | Latency | Output speed |
+|---|---|---:|---:|---:|
+| AWS S3 | Red | 942 | 9.018s | 104.452 tok/s |
+| AWS S3 | Blue | 640 | 3.977s | 160.937 tok/s |
+| Azure Blob | Red | 709 | 4.112s | 172.424 tok/s |
+| Azure Blob | Blue | 794 | 4.548s | 174.586 tok/s |
 
 ## Architecture
 
@@ -82,6 +105,7 @@ python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-al
 ## Quickstart
 
 ```powershell
+nullstate
 nullstate doctor --offline
 nullstate status
 nullstate init-demo azure-public-blob --output examples/azure-public-blob
@@ -120,15 +144,25 @@ nullstate report --runs-dir runs/live-aws-model
 nullstate report 20260509-200601 --runs-dir runs
 ```
 
-## Live LocalStack Azure Path
+## Live LocalStack demo path
 
-Use this after Docker, LocalStack Azure access, and the AzureRM provider are configured:
+Use this after Docker, Terraform, LocalStack access, and model endpoint variables are configured.
+
+AWS:
+
+```powershell
+nullstate sandbox up localstack-aws
+nullstate sandbox status localstack-aws
+nullstate run examples/aws-public-s3 --target localstack-aws
+nullstate report
+```
+
+Azure:
 
 ```powershell
 nullstate sandbox up localstack-azure
 nullstate sandbox status localstack-azure
-nullstate doctor
-nullstate run examples/azure-public-blob
+nullstate run examples/azure-public-blob --target localstack-azure
 nullstate report
 ```
 
@@ -141,6 +175,14 @@ metadata_host = "localhost.localstack.cloud:4566"
 That keeps Terraform pointed at the LocalStack Azure emulator instead of real Azure.
 
 Keep `LOCALSTACK_AUTH_TOKEN` in the shell, `.env.local`, or `.env`. `nullstate sandbox up` auto-discovers `.env.local` first and `.env` second, and `--env-file` remains available for a custom path.
+
+If Docker reports that `127.0.0.1:4566` is already allocated, a leftover LocalStack container is probably reserving the shared edge port. Run:
+
+```powershell
+nullstate sandbox down localstack-aws
+nullstate sandbox down localstack-azure
+docker ps -a --filter name=localstack
+```
 
 Docker Compose alternative:
 
@@ -185,8 +227,8 @@ Users do not need to write prompts. `nullstate` sends internal red-team and blue
 
 | Backend | Mode | IaC target | Status |
 |---|---|---|---|
-| `localstack-azure` | executable | Terraform AzureRM | v1 demo target |
-| `localstack-aws` | executable | Terraform AWS | adapter scaffolded |
+| `localstack-azure` | executable | Terraform AzureRM | live demo target |
+| `localstack-aws` | executable | Terraform AWS | live demo target |
 | `kind-kubernetes` | executable | Kubernetes YAML, Helm, Kustomize | adapter scaffolded |
 | `docker-compose` | digital twin | Docker Compose and app stacks | adapter scaffolded |
 | `microvm-onprem` | digital twin | Ansible, Linux hardening, libvirt/Proxmox-style Terraform | design-ready fallback |
@@ -196,8 +238,8 @@ Users do not need to write prompts. `nullstate` sends internal red-team and blue
 
 | Scenario | Backend | Status |
 |---|---|---|
-| `azure-public-blob` | `localstack-azure` | offline demo available; live LocalStack pending |
-| `aws-public-s3` | `localstack-aws` | offline demo available; live LocalStack AWS pending |
+| `azure-public-blob` | `localstack-azure` | live LocalStack demo available |
+| `aws-public-s3` | `localstack-aws` | live LocalStack demo available |
 | `k8s-privileged-pod` | `kind-kubernetes` | offline demo available; live kind pending |
 | `compose-exposed-admin` | `docker-compose` | offline demo available; live Docker probe pending |
 | `onprem-ssh-password` | `microvm-onprem` | offline demo available; microVM digital twin pending |
@@ -246,6 +288,6 @@ The GitHub release title can match the tag or use a readable title such as `null
 
 ## Status
 
-Working now: offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, metrics artifacts, branded CLI output, and DevSecOps repo structure.
+Working now: live LocalStack AWS/Azure storage scenarios, offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
 
-Experimental: live LocalStack Azure execution and non-Azure live sandbox adapters.
+Experimental: richer scenario-specific attack scripts, live Kubernetes/Compose/on-prem adapters, SBOM/signing, and automatic artifact scrubbing.
