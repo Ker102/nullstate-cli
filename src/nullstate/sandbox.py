@@ -73,7 +73,9 @@ class SandboxBackend:
             return "localstack"
         return None
 
-    def down_commands(self) -> list[list[str]]:
+    def down_commands(self, container_names: list[str] | None = None) -> list[list[str]]:
+        if container_names:
+            return [["docker", "rm", "-f", *container_names]]
         if self.name == "localstack-azure":
             return [["docker", "rm", "-f", "localstack-azure"]]
         if self.name == "localstack-aws":
@@ -83,6 +85,13 @@ class SandboxBackend:
         if self.name == "docker-compose":
             return [["docker", "compose", "down"]]
         return []
+
+    def container_image(self) -> str | None:
+        if self.name == "localstack-azure":
+            return "localstack/localstack-azure-alpha"
+        if self.name == "localstack-aws":
+            return "localstack/localstack"
+        return None
 
 
 @dataclass(frozen=True)

@@ -153,6 +153,35 @@ class SandboxTests(unittest.TestCase):
         self.assertEqual(azure.down_commands(), [["docker", "rm", "-f", "localstack-azure"]])
         self.assertEqual(aws.down_commands(), [["docker", "rm", "-f", "localstack"]])
 
+    def test_localstack_down_plan_accepts_discovered_container_names(self):
+        aws = get_backend("localstack-aws")
+
+        self.assertEqual(
+            aws.down_commands(container_names=["localstack", "localstack-20260510103849"]),
+            [["docker", "rm", "-f", "localstack", "localstack-20260510103849"]],
+        )
+
+    def test_sandbox_down_discovers_backend_containers(self):
+        from nullstate.cli import _resolve_sandbox_down_commands
+
+        aws = get_backend("localstack-aws")
+
+        commands, detail = _resolve_sandbox_down_commands(
+            aws,
+            container_lister=lambda _: ["localstack", "localstack-20260510103849"],
+        )
+
+        self.assertEqual(commands, [["docker", "rm", "-f", "localstack", "localstack-20260510103849"]])
+        self.assertIn("localstack-20260510103849", detail)
+
+    def test_sandbox_down_accepts_explicit_localstack_container_name(self):
+        from nullstate.cli import _resolve_explicit_sandbox_container_down_commands
+
+        self.assertEqual(
+            _resolve_explicit_sandbox_container_down_commands("localstack-20260510103849"),
+            [["docker", "rm", "-f", "localstack-20260510103849"]],
+        )
+
     def test_sandbox_status_cli_includes_runtime_probe_rows(self):
         completed = subprocess.run(
             [sys.executable, "-m", "nullstate", "sandbox", "status", "localstack-azure"],
