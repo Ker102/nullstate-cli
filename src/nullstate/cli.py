@@ -26,7 +26,11 @@ from .scenarios import get_scenario, list_scenarios
 from .terraform import apply_saved_plan, load_plan_json
 
 
-app = typer.Typer(no_args_is_help=True, help="Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.")
+app = typer.Typer(
+    invoke_without_command=True,
+    no_args_is_help=False,
+    help="Autonomous purple-teaming CLI for infrastructure-as-code sandboxes.",
+)
 sandbox_app = typer.Typer(no_args_is_help=True, help="Manage local sandbox backends.")
 scenarios_app = typer.Typer(no_args_is_help=True, help="Inspect supported attack scenarios.")
 app.add_typer(sandbox_app, name="sandbox")
@@ -42,6 +46,36 @@ BANNER = r"""
 Nullstate
 Autonomous Purple-Team Sandbox
 """
+
+
+@app.callback()
+def main(ctx: typer.Context) -> None:
+    """Show the nullstate launch screen when no command is provided."""
+    if ctx.invoked_subcommand is not None:
+        return
+    _print_banner()
+    console.print(
+        Panel(
+            "\n".join(
+                [
+                    "Autonomous purple-team validation for IaC sandboxes.",
+                    "",
+                    "Workflow: start a sandbox, run a scenario, review the report, then clean up.",
+                ]
+            ),
+            title="nullstate",
+            border_style="cyan",
+        )
+    )
+    _print_next_steps(
+        [
+            "nullstate status",
+            "nullstate sandbox list",
+            "nullstate sandbox up localstack-aws",
+            "nullstate run examples/aws-public-s3 --target localstack-aws",
+            "nullstate report",
+        ]
+    )
 
 
 @app.command()
@@ -452,6 +486,7 @@ def sandbox_up(
     failed = [result for result in results if result.returncode != 0]
     if failed:
         console.print("Sandbox start failed. Re-run with --dry-run to inspect commands.", style="bold red")
+        _print_sandbox_start_failure_hints(backend)
         raise typer.Exit(code=1)
     console.print("Sandbox start commands completed.", style="bold green")
     if renamed_container and container_name:
@@ -689,7 +724,35 @@ def _list_sandbox_containers(backend) -> list[str]:
     if result.returncode != 0:
         return []
     names = sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
-    return [name for name in names if name == base_name or name.startswith(f"{base_name}-")]
+    return [
+        name
+        for name in names
+        if name == base_name
+        or name.startswith(f"{base_name}-")
+        or (name.startswith("nullstate-cli-localstack-") and base_name in name)
+    ]
+
+
+def _print_sandbox_start_failure_hints(backend) -> None:
+    if backend.name not in {"localstack-aws", "localstack-azure"}:
+        return
+    console.print(
+        Panel(
+            "\n".join(
+                [
+                    "If Docker reported `Bind for 127.0.0.1:4566 failed` or `port is already allocated`,",
+                    "a leftover LocalStack container is probably still reserving the shared edge port.",
+                    "",
+                    f"Try: nullstate sandbox down {backend.name}",
+                    "Then retry: nullstate sandbox up " + backend.name,
+                    "",
+                    "To inspect manually: docker ps -a --filter name=localstack",
+                ]
+            ),
+            title="Port 4566 Hint",
+            border_style="yellow",
+        )
+    )
 
 
 def _is_localstack_container_name(container_name: str) -> bool:

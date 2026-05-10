@@ -2,14 +2,15 @@
 
 ## 60-Second Version
 
-1. "This is `nullstate`, an autonomous purple-team CLI for Terraform Azure."
-2. "It reads IaC, spins a local security scenario, lets a red agent exploit it, lets a blue agent patch it, then validates the fix."
+1. "This is `nullstate`, a local-first purple-team CLI for Terraform security validation."
+2. "It reads IaC, runs a local sandbox scenario, uses a model for red/blue reasoning, applies a deterministic Terraform patch, and validates that the attack path is blocked."
 3. Run:
 
 ```powershell
+python -m nullstate
 python -m nullstate status
-python -m nullstate run examples/azure-public-blob --offline
-python -m nullstate report
+python -m nullstate run examples/aws-public-s3 --target localstack-aws --runs-dir runs/final-aws-gemma26b --red-model nullstate-gemma4-26b-a4b --blue-model nullstate-gemma4-26b-a4b
+python -m nullstate report --runs-dir runs/final-aws-gemma26b
 ```
 
 4. Show the terminal summary:
@@ -33,13 +34,24 @@ If LocalStack Azure or the model endpoint is unavailable, use `--offline`. The s
 
 ## Live Sandbox Shot
 
-When LocalStack is configured, show the guided sequence:
+When LocalStack is configured, show the guided sequence. Run AWS and Azure sequentially because both use LocalStack edge port `4566`.
 
 ```powershell
+python -m nullstate sandbox up localstack-aws
+python -m nullstate sandbox status localstack-aws
+python -m nullstate run examples/aws-public-s3 --target localstack-aws --runs-dir runs/final-aws-gemma26b --red-model nullstate-gemma4-26b-a4b --blue-model nullstate-gemma4-26b-a4b
+python -m nullstate report --runs-dir runs/final-aws-gemma26b
+
+python -m nullstate sandbox down localstack-aws
+
 python -m nullstate sandbox up localstack-azure
 python -m nullstate sandbox status localstack-azure
-python -m nullstate run examples/azure-public-blob
-python -m nullstate report
+python -m nullstate run examples/azure-public-blob --target localstack-azure --runs-dir runs/final-azure-gemma26b --red-model nullstate-gemma4-26b-a4b --blue-model nullstate-gemma4-26b-a4b
+python -m nullstate report --runs-dir runs/final-azure-gemma26b
 ```
 
 Keep `LOCALSTACK_AUTH_TOKEN` in `.env.local`, `.env`, or the shell. Do not show token values in the recording.
+
+## Accuracy Note
+
+Do not say the red model currently runs arbitrary shell commands. In V1, the model produces red-team attack reasoning and the deterministic scenario runner records the attack status. The next version should add an allowlisted exploit runner that executes approved commands against local sandbox endpoints and logs command, stdout, stderr, return code, and target URL.
