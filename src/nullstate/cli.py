@@ -478,11 +478,25 @@ def sandbox_down(
     try:
         backend = get_backend(name)
     except KeyError as error:
-        raise typer.BadParameter(str(error)) from error
+        commands = _resolve_explicit_sandbox_container_down_commands(name)
+        if not commands:
+            raise typer.BadParameter(str(error)) from error
+        if dry_run:
+            console.print(render_commands(commands))
+            return
+        results = run_commands(commands)
+        failed = [result for result in results if result.returncode != 0]
+        if failed:
+            console.print("Sandbox stop failed. Re-run with --dry-run to inspect commands.", style="bold red")
+            raise typer.Exit(code=1)
+        console.print(f"Sandbox container stopped: {name}", style="bold green")
+        return
 
-    commands = backend.down_commands()
+    commands, target_detail = _resolve_sandbox_down_commands(backend)
     if dry_run or not commands:
         console.print(render_commands(commands))
+        if target_detail:
+            console.print(target_detail)
         return
     results = run_commands(commands)
     failed = [result for result in results if result.returncode != 0]
@@ -490,6 +504,8 @@ def sandbox_down(
         console.print("Sandbox stop failed. Re-run with --dry-run to inspect commands.", style="bold red")
         raise typer.Exit(code=1)
     console.print("Sandbox stop commands completed.", style="bold green")
+    if target_detail:
+        console.print(target_detail)
     _print_next_steps(["nullstate sandbox status " + backend.name])
 
 
@@ -643,6 +659,47 @@ def _docker_container_exists(container_name: str) -> bool:
         check=False,
     )
     return result.returncode == 0 and container_name in {line.strip() for line in result.stdout.splitlines()}
+
+
+def _resolve_sandbox_down_commands(backend, *, container_lister=None) -> tuple[list[list[str]], str]:
+    lister = container_lister or _list_sandbox_containers
+    container_names = lister(backend)
+    if container_names:
+        return backend.down_commands(container_names=container_names), "Target containers: " + ", ".join(container_names)
+    return backend.down_commands(), ""
+
+
+def _resolve_explicit_sandbox_container_down_commands(container_name: str) -> list[list[str]]:
+    if _is_localstack_container_name(container_name):
+        return [["docker", "rm", "-f", container_name]]
+    return []
+
+
+def _list_sandbox_containers(backend) -> list[str]:
+    base_name = backend.default_container_name()
+    image = backend.container_image()
+    if not base_name or not image:
+        return []
+    result = subprocess.run(
+        ["docker", "ps", "-a", "--filter", f"name={base_name}", "--filter", f"ancestor={image}", "--format", "{{.Names}}"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return []
+    names = sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
+    return [name for name in names if name == base_name or name.startswith(f"{base_name}-")]
+
+
+def _is_localstack_container_name(container_name: str) -> bool:
+    return (
+        container_name == "localstack"
+        or container_name.startswith("localstack-")
+        or container_name == "localstack-azure"
+        or container_name.startswith("localstack-azure-")
+        or container_name.startswith("nullstate-cli-localstack-")
+    )
 
 
 def _localstack_azure_auth_env(backend_name: str, *, offline: bool) -> dict[str, str]:
