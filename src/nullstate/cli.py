@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import shutil
+import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -428,9 +430,15 @@ def sandbox_up(
         raise typer.BadParameter(str(error)) from error
 
     resolved_env_file = _resolve_sandbox_env_file(env_file)
-    commands = backend.up_commands(env_file=resolved_env_file)
+    container_name, renamed_container = _resolve_sandbox_container_name(backend)
+    commands = backend.up_commands(env_file=resolved_env_file, container_name=container_name)
     if dry_run or not commands:
         console.print(render_commands(commands))
+        if renamed_container and container_name:
+            console.print(
+                f"Default container name already exists; planned new container name: {container_name}",
+                style="yellow",
+            )
         if resolved_env_file:
             console.print(f"Using env file: {resolved_env_file}")
         _print_next_steps(
@@ -446,6 +454,11 @@ def sandbox_up(
         console.print("Sandbox start failed. Re-run with --dry-run to inspect commands.", style="bold red")
         raise typer.Exit(code=1)
     console.print("Sandbox start commands completed.", style="bold green")
+    if renamed_container and container_name:
+        console.print(
+            f"Default container name already existed; started new container: {container_name}",
+            style="yellow",
+        )
     if resolved_env_file:
         console.print(f"Used env file: {resolved_env_file}")
     _print_next_steps(
@@ -604,6 +617,32 @@ def _resolve_sandbox_env_file(
         if path.is_file():
             return path
     return None
+
+
+def _resolve_sandbox_container_name(
+    backend,
+    *,
+    container_exists=None,
+    suffix: str | None = None,
+) -> tuple[str | None, bool]:
+    base_name = backend.default_container_name()
+    if base_name is None:
+        return None, False
+    exists = container_exists or _docker_container_exists
+    if not exists(base_name):
+        return base_name, False
+    resolved_suffix = suffix or datetime.now(UTC).strftime("%Y%m%d%H%M%S")
+    return f"{base_name}-{resolved_suffix}", True
+
+
+def _docker_container_exists(container_name: str) -> bool:
+    result = subprocess.run(
+        ["docker", "ps", "-a", "--filter", f"name=^/{container_name}$", "--format", "{{.Names}}"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0 and container_name in {line.strip() for line in result.stdout.splitlines()}
 
 
 def _localstack_azure_auth_env(backend_name: str, *, offline: bool) -> dict[str, str]:
