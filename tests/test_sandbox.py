@@ -174,6 +174,29 @@ class SandboxTests(unittest.TestCase):
         self.assertEqual(commands, [["docker", "rm", "-f", "localstack", "localstack-20260510103849"]])
         self.assertIn("localstack-20260510103849", detail)
 
+    def test_sandbox_down_discovers_compose_style_localstack_container(self):
+        from nullstate.cli import _list_sandbox_containers
+
+        azure = get_backend("localstack-azure")
+
+        def fake_run(*args, **kwargs):
+            return subprocess.CompletedProcess(
+                args[0],
+                0,
+                "localstack-azure\nnullstate-cli-localstack-azure-1\nunrelated-localstack\n",
+                "",
+            )
+
+        original_run = subprocess.run
+        try:
+            subprocess.run = fake_run
+            self.assertEqual(
+                _list_sandbox_containers(azure),
+                ["localstack-azure", "nullstate-cli-localstack-azure-1"],
+            )
+        finally:
+            subprocess.run = original_run
+
     def test_sandbox_down_accepts_explicit_localstack_container_name(self):
         from nullstate.cli import _resolve_explicit_sandbox_container_down_commands
 
