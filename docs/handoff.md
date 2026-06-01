@@ -60,12 +60,18 @@ Working features:
 - Free local HTML dashboard:
   - `nullstate dashboard`
   - writes `runs/<id>/dashboard.html`
+- AWS S3 runtime probe foundation:
+  - AWS demo now creates an `aws_s3_object` evidence object
+  - AWS demo includes a public read bucket policy for `evidence.txt`
+  - generated AWS `attack.py` parses `attack-manifest.json`
+  - generated AWS `attack.py` attempts anonymous HTTP GET against candidate S3 object URLs
+  - `report.md` includes a `Runtime Command Evidence` section
 
 Important limitation:
 
-- The constrained red runner is real, but AWS/Azure `attack.py` scripts are still shallow probes.
+- The constrained red runner is real. AWS now has a first real object-read probe path. Azure is still shallow.
 - The before/after success verdict is still mostly deterministic via `simulate_attack()`.
-- Enterprise-grade exploit validation still requires real sandbox object/blob read probes.
+- Enterprise-grade exploit validation still requires a live LocalStack AWS confirmation and Azure blob probe work.
 
 ## Important docs
 
@@ -98,7 +104,7 @@ Result:
 ```text
 Ruff passed
 mypy passed
-63 tests OK
+65 tests OK
 ```
 
 Smoke run also passed:
@@ -119,23 +125,21 @@ Generated:
 Next highest-value feature:
 
 ```text
-Real AWS S3 runtime exploit probe
+Azure Blob runtime probe where LocalStack Azure supports it
 ```
 
-Current AWS example only disables public access block. That is risky but not sufficient to prove anonymous reads by itself.
+The AWS implementation now has the Terraform evidence object, public-read policy, manifest-backed candidate URL generation, and report runtime evidence section. It still needs a real LocalStack live confirmation when Docker/LocalStack credentials are available.
 
 Next implementation should:
 
-1. Add a Terraform evidence object to `examples/aws-public-s3/main.tf`.
-2. Add public read configuration if LocalStack supports it reliably.
-3. Update `attack.py` AWS template to try anonymous HTTP GET against LocalStack S3.
-4. Use `attack-manifest.json` resource hints for bucket/object candidates.
-5. Log stdout with candidate URL, HTTP status, and body excerpt.
-6. Update report language to distinguish:
+1. Test AWS live LocalStack behavior if available.
+2. Add Azure Blob object/blob evidence only if LocalStack Azure supports it reliably.
+3. Update Azure `attack.py` to attempt anonymous HTTP GET/list against blob URLs.
+4. Update report language to distinguish:
    - observed runtime exploit evidence
    - deterministic simulation
    - inconclusive emulator result
-7. Keep safety boundaries:
+5. Keep safety boundaries:
    - local endpoints only
    - no arbitrary shell
    - no real cloud credentials
@@ -143,10 +147,10 @@ Next implementation should:
 
 Recommended next tests:
 
-- Unit test AWS attack script template parses manifest and builds candidate URLs.
+- Live LocalStack AWS run proves whether public object read can be observed.
+- Unit test Azure attack script template parses manifest and builds blob candidate URLs.
 - Offline run still passes.
-- LocalStack live AWS run proves whether public object read can be observed.
-- Report includes runtime command evidence.
+- Report classifies runtime evidence as observed/inconclusive/simulated.
 
 ## Product direction
 

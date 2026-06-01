@@ -392,6 +392,10 @@ def run(
         after_attack=after_attack,
         patch_diff=patch_result.diff,
         model_notes=f"Red: {red_result.model}. Blue: {blue_result.model}. {blue_result.content}",
+        runtime_evidence={
+            "before": before_tool.to_dict(),
+            "after": after_tool.to_dict(),
+        },
     )
     (run_dir / "report.md").write_text(report, encoding="utf-8")
 

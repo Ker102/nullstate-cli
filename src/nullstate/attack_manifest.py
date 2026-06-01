@@ -28,9 +28,12 @@ def write_attack_manifest(
 def _resource_hints(scenario_name: str, workspace_dir: Path) -> dict[str, str]:
     terraform_text = "\n".join(path.read_text(encoding="utf-8") for path in sorted(workspace_dir.glob("*.tf")))
     if scenario_name == "aws-public-s3":
+        bucket_name = _tfstate_attribute(workspace_dir, "aws_s3_bucket", "public_logs", ("bucket", "id"))
+        object_key = _tfstate_attribute(workspace_dir, "aws_s3_object", "evidence", ("key",))
         hints = {
+            "bucket_name": bucket_name,
             "bucket_hint": _first_assignment(terraform_text, "bucket") or _first_assignment(terraform_text, "bucket_prefix"),
-            "object_key": _first_assignment(terraform_text, "key") or "evidence.txt",
+            "object_key": object_key or _first_assignment(terraform_text, "key") or "evidence.txt",
         }
         return {key: value for key, value in hints.items() if value}
     if scenario_name == "azure-public-blob":
@@ -41,6 +44,31 @@ def _resource_hints(scenario_name: str, workspace_dir: Path) -> dict[str, str]:
         }
         return {key: value for key, value in hints.items() if value}
     return {}
+
+
+def _tfstate_attribute(
+    workspace_dir: Path,
+    resource_type: str,
+    resource_name: str,
+    candidate_keys: tuple[str, ...],
+) -> str | None:
+    state_path = workspace_dir / "terraform.tfstate"
+    if not state_path.is_file():
+        return None
+    try:
+        payload = json.loads(state_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    for resource in payload.get("resources") or []:
+        if resource.get("type") != resource_type or resource.get("name") != resource_name:
+            continue
+        for instance in resource.get("instances") or []:
+            attributes = instance.get("attributes") or {}
+            for key in candidate_keys:
+                value = attributes.get(key)
+                if isinstance(value, str) and value:
+                    return value
+    return None
 
 
 def _first_assignment(text: str, key: str, *, resource_type: str | None = None) -> str | None:

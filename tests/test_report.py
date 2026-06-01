@@ -23,6 +23,20 @@ class ReportTests(unittest.TestCase):
             after_attack={"status": "blocked", "detail": "Anonymous read denied"},
             patch_diff="--- a/main.tf\n+++ b/main.tf\n",
             model_notes="offline mock blue team",
+            runtime_evidence={
+                "before": {
+                    "command": ["python", "attack.py", "--stage", "before"],
+                    "returncode": 0,
+                    "target_url": "http://localhost.localstack.cloud:4566",
+                    "stdout": "candidate_url=http://example/bucket/evidence.txt\nstatus=200\n",
+                },
+                "after": {
+                    "command": ["python", "attack.py", "--stage", "after"],
+                    "returncode": 2,
+                    "target_url": "http://localhost.localstack.cloud:4566",
+                    "stdout": "status=403\nruntime_exploit_observed=false\n",
+                },
+            },
         )
 
         self.assertIn("# nullstate Run Report", report)
@@ -30,6 +44,9 @@ class ReportTests(unittest.TestCase):
         self.assertIn("Anonymous read returned secret.txt", report)
         self.assertIn("Anonymous read denied", report)
         self.assertIn("offline mock blue team", report)
+        self.assertIn("## Runtime Command Evidence", report)
+        self.assertIn("candidate_url=http://example/bucket/evidence.txt", report)
+        self.assertIn("runtime_exploit_observed=false", report)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,12 @@
 import json
+import threading
 import sys
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from nullstate.attack import write_attack_script
 from nullstate.attack_runner import run_attack_script
 
 
@@ -98,6 +101,62 @@ class AttackRunnerTests(unittest.TestCase):
                     stage="before",
                     manifest_path=outside_manifest,
                 )
+
+    def test_generated_aws_attack_script_reads_public_evidence_object(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), _EvidenceObjectHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with TemporaryDirectory() as raw_tmp:
+                run_dir = Path(raw_tmp)
+                attack_script = run_dir / "attack.py"
+                write_attack_script(attack_script, "aws-public-s3")
+                manifest = run_dir / "attack-manifest.json"
+                manifest.write_text(
+                    json.dumps(
+                        {
+                            "resources": {
+                                "bucket_name": "public-bucket",
+                                "object_key": "evidence.txt",
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                result = run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url=f"http://127.0.0.1:{server.server_port}",
+                    stage="before",
+                    manifest_path=manifest,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("candidate_url=", result.stdout)
+                self.assertIn("/public-bucket/evidence.txt", result.stdout)
+                self.assertIn("status=200", result.stdout)
+                self.assertIn("body_excerpt=nullstate public evidence", result.stdout)
+        finally:
+            server.shutdown()
+            server.server_close()
+
+
+class _EvidenceObjectHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/public-bucket/evidence.txt":
+            body = b"nullstate public evidence"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        self.send_response(404)
+        self.end_headers()
+
+    def log_message(self, format, *args):
+        return
 
 
 if __name__ == "__main__":

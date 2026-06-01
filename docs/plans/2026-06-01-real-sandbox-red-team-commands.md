@@ -32,13 +32,15 @@ Updated 2026-06-01:
   - `run-bundle.json`
   - `nullstate dashboard`
   - `dashboard.html`
+- Completed locally: Task 3 AWS S3 evidence object and runtime HTTP object probe.
+- Completed locally: Task 5 initial report runtime command evidence section.
 - Not pushed: the branch is ahead of origin with local-only commits.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
 
 Next task to execute:
 
 ```text
-Task 3: Make AWS S3 Scenario Actually Read Sandbox Evidence
+Task 4: Make Azure Blob Scenario Use Real Blob Probe Where Supported
 ```
 
 ## Target State
@@ -162,7 +164,7 @@ python -m unittest tests.test_attack_runner -v
 
 ## Task 3: Make AWS S3 Scenario Actually Read Sandbox Evidence
 
-Status: next.
+Status: completed locally.
 
 **Files:**
 - Modify: `examples/aws-public-s3/main.tf`
@@ -208,6 +210,8 @@ LocalStack public S3 semantics may differ from AWS. If public policy behavior is
 
 ## Task 4: Make Azure Blob Scenario Use Real Blob Probe Where Supported
 
+Status: next.
+
 **Files:**
 - Modify: `examples/azure-public-blob/main.tf`
 - Modify: `src/nullstate/attack.py`
@@ -228,6 +232,8 @@ Do not overclaim Azure runtime exploitation if the emulator cannot prove it reli
 ---
 
 ## Task 5: Report Runtime Evidence Separately
+
+Status: partially completed locally. Reports now include a `Runtime Command Evidence` section with before/after command, return code, target, and stdout excerpt. Remaining improvement: classify evidence as observed, inconclusive, or deterministic simulation in report wording.
 
 **Files:**
 - Modify: `src/nullstate/report.py`

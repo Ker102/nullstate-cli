@@ -101,6 +101,32 @@ resource "aws_s3_bucket_public_access_block" "public_logs" {
   ignore_public_acls      = false
   restrict_public_buckets = false
 }
+
+resource "aws_s3_object" "evidence" {
+  bucket       = aws_s3_bucket.public_logs.id
+  key          = "evidence.txt"
+  content      = "nullstate public S3 evidence"
+  content_type = "text/plain"
+}
+
+resource "aws_s3_bucket_policy" "public_read" {
+  bucket = aws_s3_bucket.public_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "NullstatePublicReadEvidence"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.public_logs.arn}/evidence.txt"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.public_logs]
+}
 """
 
 K8S_PRIVILEGED_POD_YAML = """\
