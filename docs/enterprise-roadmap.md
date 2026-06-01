@@ -173,6 +173,31 @@ Start with a hybrid of Path A and Path B:
 4. Offer paid assessment or implementation services first.
 5. Convert repeated service needs into Team/Enterprise features.
 
+## Product architecture: CLI, local GUI, and paid platform
+
+The CLI should remain the open-source execution engine. It runs locally or in CI, creates run artifacts, and can export a portable run bundle.
+
+The free local GUI should be a single-user viewer/operator surface. It can read local `runs/` folders, generate dashboards, and trigger common CLI actions such as run, report, bundle, and sandbox commands. It should not require cloud login and should not include team, compliance, alerting, or managed-model features.
+
+The paid cloud or self-hosted app should ingest run bundles and provide team dashboards, hosted model calls, centralized evidence history, support workflows, scheduled automation, alerting, integrations, RBAC, audit logs, and compliance exports.
+
+The initial bundle artifact is `run-bundle.json`. It is the contract between the open-source CLI, free local dashboard, CI uploads, support bundles, and the future paid platform.
+
+## CI and managed model inference
+
+CI should support two model modes:
+
+- Customer-provided model mode: users store `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` in CI secrets.
+- Nullstate-managed model mode: users store `NULLSTATE_CLOUD_TOKEN`, and the CLI uses Nullstate Cloud for red/blue model reasoning.
+
+The managed model mode belongs in the paid platform because usage can be metered by organization, project, run, model, tokens, latency, and estimated cost.
+
+## Support, automation, and alerts
+
+Paid users should have an in-app support and feedback panel. A support ticket should be able to attach a sanitized run bundle, product version, run ID, scenario, and dashboard link.
+
+Automation should support scheduled scans against connected repos or uploaded IaC sources. Alert rules should cover new critical findings, observed exploit evidence, remediation failure, CI policy failure, stale unresolved risk, and model endpoint failures. Email and webhooks should be first; Slack, Teams, Jira, GitHub Issues, and SIEM integrations can follow.
+
 ## Brand Direction
 
 ### Name

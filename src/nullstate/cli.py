@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import webbrowser
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,8 @@ from .artifacts import EventLog, new_run_id, write_json
 from .attack import simulate_attack, write_attack_script
 from .attack_manifest import write_attack_manifest
 from .attack_runner import run_attack_script
+from .bundle import BUNDLE_FILENAME, write_run_bundle
+from .dashboard import write_run_dashboard
 from .demo import create_demo
 from .findings import find_scenario_findings
 from .metrics import collect_run_metrics
@@ -396,6 +399,8 @@ def run(
     _print_next_steps(
         [
             f"nullstate report {run_id} --runs-dir {runs_dir}",
+            f"nullstate bundle {run_id} --runs-dir {runs_dir}",
+            f"nullstate dashboard {run_id} --runs-dir {runs_dir}",
             f"nullstate report --runs-dir {runs_dir}",
             f"nullstate status --runs-dir {runs_dir} --sandbox {backend.name}",
         ]
@@ -583,6 +588,48 @@ def report(
     report_path = _resolve_report_path(run_id, runs_dir)
     console.print(f"Report: {report_path}")
     console.print(_console_safe_text(report_path.read_text(encoding="utf-8")), markup=False, highlight=False)
+
+
+@app.command()
+def bundle(
+    run_id: str | None = typer.Argument(None, help="Run ID to bundle. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+) -> None:
+    """Create a portable run bundle for dashboards, CI, support, or future cloud upload."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    payload = write_run_bundle(run_dir)
+    bundle_path = run_dir / BUNDLE_FILENAME
+    console.print(f"Bundle: {bundle_path}")
+    console.print(
+        f"Run {payload['run']['id']} · scenario={payload['run'].get('scenario')} · "
+        f"verdict={payload['run'].get('verdict')} · findings={payload['run'].get('finding_count')}"
+    )
+    _print_next_steps(
+        [
+            f"nullstate dashboard {payload['run']['id']} --runs-dir {runs_dir}",
+            f"nullstate report {payload['run']['id']} --runs-dir {runs_dir}",
+        ]
+    )
+
+
+@app.command()
+def dashboard(
+    run_id: str | None = typer.Argument(None, help="Run ID to render. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    open_browser: bool = typer.Option(False, "--open", help="Open the generated dashboard in the default browser."),
+) -> None:
+    """Generate a free local single-run HTML dashboard."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    dashboard_path = write_run_dashboard(run_dir)
+    console.print(f"Dashboard: {dashboard_path}")
+    if open_browser:
+        webbrowser.open(dashboard_path.resolve().as_uri())
+    _print_next_steps(
+        [
+            f"nullstate bundle {run_dir.name} --runs-dir {runs_dir}",
+            f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
 
 
 def _print_run_summary(run_dir: Path, findings, before_attack: dict[str, str], after_attack: dict[str, str]) -> None:
@@ -871,6 +918,10 @@ def _resolve_report_path(run_id: str | None, runs_dir: Path) -> Path:
     if latest is None:
         raise typer.BadParameter(f"No reports found under {runs_dir}")
     return latest
+
+
+def _resolve_run_dir(run_id: str | None, runs_dir: Path) -> Path:
+    return _resolve_report_path(run_id, runs_dir).parent
 
 
 def _latest_report_path(runs_dir: Path) -> Path | None:

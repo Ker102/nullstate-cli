@@ -354,6 +354,10 @@ Each run writes:
 
 `nullstate report` opens the latest report by default, including reports nested under named run directories.
 
+`nullstate bundle` writes `run-bundle.json`, the portable evidence contract for local dashboards, CI upload, support bundles, and future Nullstate Cloud ingestion.
+
+`nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login.
+
 ## Security Boundaries
 
 The important boundaries are:

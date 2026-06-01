@@ -144,6 +144,13 @@ nullstate report --runs-dir runs/live-aws-model
 nullstate report 20260509-200601 --runs-dir runs
 ```
 
+Create a portable run bundle or a free local HTML dashboard:
+
+```powershell
+nullstate bundle
+nullstate dashboard --open
+```
+
 ## Live LocalStack demo path
 
 Use this after Docker, Terraform, LocalStack access, and model endpoint variables are configured.
@@ -257,6 +264,8 @@ Each run writes:
 - `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
 - `runs/<run-id>/attack.py`
 - `runs/<run-id>/attack-manifest.json`
+- `runs/<run-id>/run-bundle.json` when `nullstate bundle` or `nullstate dashboard` is run
+- `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
 

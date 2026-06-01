@@ -218,6 +218,8 @@ Each run creates:
 - `remediation.patch`: deterministic Terraform diff.
 - `metrics.json`: model call token counts, latency, throughput, and endpoint metrics.
 - `report.md`: human-readable case-study report.
+- `run-bundle.json`: portable evidence contract for local dashboards, support bundles, CI upload, and future cloud ingestion.
+- `dashboard.html`: free local single-run dashboard for non-terminal review.
 - `workspace/`: copied Terraform workspace for reproducibility.
 
 Screenshots to add before publishing:
