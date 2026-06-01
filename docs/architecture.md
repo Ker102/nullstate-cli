@@ -12,11 +12,12 @@ flowchart LR
     B --> C[Deterministic exposure detector]
     C --> S[Sandbox adapter]
     S --> D[Red-team agent instructions]
-    D --> E[Exploit evidence]
-    E --> F[Blue-team agent instructions]
-    F --> G[Deterministic remediation]
-    G --> H[Validation attack]
-    H --> I[Run report and metrics]
+    D --> E[Constrained attack.py runner]
+    E --> F[Exploit evidence]
+    F --> G[Blue-team agent instructions]
+    G --> H[Deterministic remediation]
+    H --> I[Validation attack]
+    I --> J[Run report and metrics]
 ```
 
 ## Design Choices
@@ -27,6 +28,7 @@ flowchart LR
 - Offline mode uses a static Terraform parser so demos still work without LocalStack, Terraform, or GPUs.
 - Online mode follows Terraform automation commands: `init`, `plan -out=tfplan`, and `show -json tfplan`.
 - Sandbox backends are explicit adapters: executable, digital twin, or plan-only.
+- The red tool runner executes only generated run-directory `attack.py` scripts and logs command evidence into `events.jsonl`.
 
 ## Sandbox adapters
 
@@ -62,8 +64,8 @@ allow_nested_items_to_be_public = false
 
 | Scenario | Target | Sandbox | Execution status |
 |---|---|---|---|
-| `azure-public-blob` | Terraform AzureRM | LocalStack Azure | offline demo available; live execution pending |
-| `aws-public-s3` | Terraform AWS | LocalStack AWS | offline demo available; live execution pending |
+| `azure-public-blob` | Terraform AzureRM | LocalStack Azure | live demo available |
+| `aws-public-s3` | Terraform AWS | LocalStack AWS | live demo available |
 | `k8s-privileged-pod` | Kubernetes YAML/Helm/Kustomize | kind | offline demo available; live execution pending |
 | `compose-exposed-admin` | Docker Compose | isolated Docker network | offline demo available; live probe pending |
 | `onprem-ssh-password` | Ansible/cloud-init/libvirt/Proxmox-style IaC | VM/container-lab digital twin | offline demo available; microVM digital twin pending |

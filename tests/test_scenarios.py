@@ -25,6 +25,10 @@ class ScenarioTests(unittest.TestCase):
         self.assertEqual(scenario.mode, "digital-twin")
         self.assertIn("Ansible", scenario.iac_targets)
 
+    def test_storage_scenarios_report_live_localstack_status(self):
+        self.assertEqual(get_scenario("aws-public-s3").status, "live LocalStack demo available")
+        self.assertEqual(get_scenario("azure-public-blob").status, "live LocalStack demo available")
+
     def test_scenarios_list_cli_prints_exact_names(self):
         completed = subprocess.run(
             [sys.executable, "-m", "nullstate", "scenarios", "list"],

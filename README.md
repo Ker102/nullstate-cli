@@ -66,7 +66,7 @@ flowchart TB
     Sandbox --> Red
 ```
 
-See [Architecture](docs/architecture.md).
+See [Architecture](docs/architecture.md) and [Technical Walkthrough](docs/technical-walkthrough.md).
 
 ## Security model
 
@@ -264,6 +264,7 @@ Each run writes:
 ## Documentation
 
 - [Case study](docs/case-study.md)
+- [Technical walkthrough](docs/technical-walkthrough.md)
 - [Architecture](docs/architecture.md)
 - [Security model](docs/security-model.md)
 - [Threat model](docs/threat-model.md)
