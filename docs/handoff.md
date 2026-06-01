@@ -4,6 +4,8 @@ Last updated: 2026-06-01
 
 ## Read this first
 
+This file is written for a fresh agent with no conversation history and no MCP tools. Everything needed to continue should be discoverable from local repo files and normal terminal commands.
+
 The repository is currently under a hackathon freeze rule:
 
 - Do not merge anything into `main`.
@@ -15,11 +17,21 @@ The repository is currently under a hackathon freeze rule:
 Recent local-only commits:
 
 ```text
+ccc613e fix: block AWS evidence read after remediation
+0c26efe feat: add AWS runtime evidence probe
+baa782b docs: add project handoff
 7117340 feat: add run bundles and local dashboard
 55775a7 feat: add attack manifest foundation
 ```
 
-These two commits have not been pushed.
+These commits have not been pushed at the time of this handoff. Confirm with:
+
+```powershell
+git status --short --branch
+git log --oneline -8
+```
+
+Do not rely on MCP state, chat memory, or remote PR metadata. Use local files and Git only unless the user explicitly provides other tooling.
 
 ## Project goal
 
@@ -124,6 +136,29 @@ Generated:
 - `run-bundle.json`
 - `dashboard.html`
 
+Live LocalStack AWS validation also passed locally:
+
+```powershell
+python -m nullstate sandbox up localstack-aws
+python -m nullstate run examples/aws-public-s3 --target localstack-aws --scenario aws-public-s3 --runs-dir runs/live-real-red-aws-blocked
+python -m nullstate sandbox down localstack-aws
+```
+
+Observed result:
+
+```text
+Before remediation:
+- HTTP 200
+- body_excerpt=nullstate public S3 evidence
+- runtime_exploit_observed=true
+
+After remediation:
+- HTTP 404
+- runtime_exploit_observed=false
+```
+
+Run artifacts are under `runs/` and may be ignored by Git. If this repository is opened on another device, reproduce the validation with the commands above instead of assuming the run directory exists.
+
 ## Where to continue
 
 Next highest-value feature:
@@ -153,6 +188,8 @@ Recommended next tests:
 - Unit test Azure attack script template parses manifest and builds blob candidate URLs.
 - Offline run still passes.
 - Report classifies runtime evidence as observed/inconclusive/simulated.
+
+If Azure LocalStack support is unavailable or unreliable, do not overclaim Azure runtime exploitation. Prefer clear report language such as `runtime probe inconclusive; deterministic IaC validation still blocked the configured exposure`.
 
 ## Product direction
 
