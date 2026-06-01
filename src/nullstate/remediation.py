@@ -76,6 +76,8 @@ def _remediate_azure_text(text: str) -> str:
 def _remediate_aws_text(text: str) -> str:
     for key in ("block_public_acls", "block_public_policy", "ignore_public_acls", "restrict_public_buckets"):
         text = re.sub(rf"({key}\s*=\s*)false", r"\1true", text)
+    text = _remove_resource_blocks(text, "aws_s3_bucket_policy")
+    text = _remove_resource_blocks(text, "aws_s3_object", resource_name="evidence")
     return text
 
 
@@ -129,6 +131,24 @@ def _update_resource_blocks(text: str, resource_type: str, updater) -> str:
         output.append(updater(body))
         output.append("}")
         cursor = closing_index + 1
+    output.append(text[cursor:])
+    return "".join(output)
+
+
+def _remove_resource_blocks(text: str, resource_type: str, *, resource_name: str | None = None) -> str:
+    name_pattern = re.escape(resource_name) if resource_name else r'[^"]+'
+    pattern = re.compile(rf'resource\s+"{re.escape(resource_type)}"\s+"{name_pattern}"\s*\{{', re.MULTILINE)
+    output: list[str] = []
+    cursor = 0
+    for match in pattern.finditer(text):
+        opening_index = match.end() - 1
+        closing_index = _find_matching_brace(text, opening_index)
+        if closing_index == -1:
+            continue
+        output.append(text[cursor:match.start()])
+        cursor = closing_index + 1
+        if cursor < len(text) and text[cursor] == "\n":
+            cursor += 1
     output.append(text[cursor:])
     return "".join(output)
 

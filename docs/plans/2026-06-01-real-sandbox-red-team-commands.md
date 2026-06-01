@@ -33,6 +33,7 @@ Updated 2026-06-01:
   - `nullstate dashboard`
   - `dashboard.html`
 - Completed locally: Task 3 AWS S3 evidence object and runtime HTTP object probe.
+- Completed live validation: LocalStack AWS before-remediation GET returned HTTP 200 with evidence body; after-remediation GET returned HTTP 404 and `runtime_exploit_observed=false`.
 - Completed locally: Task 5 initial report runtime command evidence section.
 - Not pushed: the branch is ahead of origin with local-only commits.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
@@ -201,6 +202,21 @@ The script should print:
 - before stage: command returns `0` only if object read returns a 2xx response
 - after stage: command returns non-zero or prints denied/unavailable
 - report includes actual stdout evidence
+
+Live validation result:
+
+```text
+runs/live-real-red-aws-blocked/20260601-133226
+
+Before remediation:
+- status=200
+- body_excerpt=nullstate public S3 evidence
+- runtime_exploit_observed=true
+
+After remediation:
+- status=404
+- runtime_exploit_observed=false
+```
 
 **Risk:**
 
