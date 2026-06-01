@@ -15,6 +15,7 @@ from rich.table import Table
 from .agents import LlmAgent
 from .artifacts import EventLog, new_run_id, write_json
 from .attack import simulate_attack, write_attack_script
+from .attack_manifest import write_attack_manifest
 from .attack_runner import run_attack_script
 from .demo import create_demo
 from .findings import find_scenario_findings
@@ -265,8 +266,16 @@ def run(
         }
 
     attack_script_path = run_dir / "attack.py"
+    attack_manifest_path = run_dir / "attack-manifest.json"
     attack_target_url = _attack_target_url(backend.name, scenario_spec.name, offline=offline)
     write_attack_script(attack_script_path, scenario_spec.name)
+    write_attack_manifest(
+        attack_manifest_path,
+        scenario_name=scenario_spec.name,
+        backend_name=backend.name,
+        target_url=attack_target_url,
+        workspace_dir=workspace_dir,
+    )
     red_agent = LlmAgent("red", red_model, base_url=red_endpoint, api_key=red_api_key)
     red_result = red_agent.complete(
         "You are a red-team IaC security agent constrained to the generated local sandbox and run evidence.",
@@ -285,6 +294,7 @@ def run(
         run_dir=run_dir,
         target_url=attack_target_url,
         stage="before",
+        manifest_path=attack_manifest_path,
     )
     events.write("red-tool", "Allowlisted attack command completed", **before_tool.to_dict())
     before_attack = simulate_attack(findings, "before")
@@ -364,6 +374,7 @@ def run(
         run_dir=run_dir,
         target_url=attack_target_url,
         stage="after",
+        manifest_path=attack_manifest_path,
     )
     events.write("red-tool", "Allowlisted attack command completed", **after_tool.to_dict())
     after_attack = simulate_attack(remaining_findings, "after")

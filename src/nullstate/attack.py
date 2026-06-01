@@ -32,6 +32,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target-url", required=True)
     parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.add_argument("--manifest")
     args = parser.parse_args()
     return probe_target(args.target_url, args.stage)
 
@@ -64,6 +65,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target-url", required=True)
     parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.add_argument("--manifest")
     args = parser.parse_args()
     return probe_target(args.target_url, args.stage)
 
@@ -79,6 +81,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target-url", required=True)
     parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.add_argument("--manifest")
     parser.parse_args()
     return 0
 
@@ -94,6 +97,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target-url", required=True)
     parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.add_argument("--manifest")
     parser.parse_args()
     return 0
 
@@ -109,6 +113,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target-url", required=True)
     parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.add_argument("--manifest")
     parser.parse_args()
     return 0
 
@@ -124,6 +129,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--target-url", required=True)
     parser.add_argument("--stage", required=True, choices=["before", "after"])
+    parser.add_argument("--manifest")
     parser.parse_args()
     return 0
 
@@ -152,3 +158,5 @@ def simulate_attack(findings: list[Finding], stage: str) -> dict[str, str]:
     if stage == "before":
         return {"status": "blocked", "detail": "No exploitable scenario condition was found."}
     return {"status": "blocked", "detail": "Attack path denied after deterministic remediation."}
+
+

@@ -34,11 +34,13 @@ def run_attack_script(
     run_dir: Path,
     target_url: str,
     stage: str,
+    manifest_path: Path | None = None,
     timeout_seconds: int = 30,
 ) -> AttackToolResult:
     resolved_script = script_path.resolve()
     resolved_run_dir = run_dir.resolve()
     _validate_attack_script(resolved_script, resolved_run_dir)
+    resolved_manifest = _validate_attack_manifest(manifest_path, resolved_run_dir)
 
     command = [
         sys.executable,
@@ -48,6 +50,8 @@ def run_attack_script(
         "--stage",
         stage,
     ]
+    if resolved_manifest is not None:
+        command.extend(["--manifest", str(resolved_manifest)])
     started_at = datetime.now(UTC).isoformat()
     started = time.monotonic()
     completed = subprocess.run(
@@ -79,3 +83,16 @@ def _validate_attack_script(script_path: Path, run_dir: Path) -> None:
         raise ValueError("Attack scripts must live directly inside the run directory.")
     if not script_path.is_file():
         raise ValueError(f"Attack script not found: {script_path}")
+
+
+def _validate_attack_manifest(manifest_path: Path | None, run_dir: Path) -> Path | None:
+    if manifest_path is None:
+        return None
+    resolved_manifest = manifest_path.resolve()
+    if resolved_manifest.name != "attack-manifest.json":
+        raise ValueError("Only generated attack-manifest.json manifests are allowed.")
+    if resolved_manifest.parent != run_dir:
+        raise ValueError("Attack manifests must live directly inside the run directory.")
+    if not resolved_manifest.is_file():
+        raise ValueError(f"Attack manifest not found: {resolved_manifest}")
+    return resolved_manifest

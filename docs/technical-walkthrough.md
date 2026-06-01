@@ -245,7 +245,10 @@ src/nullstate/attack_runner.py
 
 ```text
 runs/<run-id>/attack.py
+runs/<run-id>/attack-manifest.json
 ```
+
+The manifest records the scenario, backend, target URL, and resource hints that scenario probes can use without giving the model arbitrary command construction power.
 
 Then the constrained runner executes only that generated script. It enforces these boundaries:
 
@@ -253,7 +256,7 @@ Then the constrained runner executes only that generated script. It enforces the
 - script must live directly inside the current run directory
 - execution uses the current Python interpreter
 - no arbitrary shell command is accepted
-- dynamic inputs are limited to `--target-url` and `--stage`
+- dynamic inputs are limited to `--target-url`, `--stage`, and the generated run-directory `attack-manifest.json`
 
 The runner records command evidence before and after remediation:
 
@@ -262,7 +265,7 @@ The runner records command evidence before and after remediation:
   "phase": "red-tool",
   "message": "Allowlisted attack command completed",
   "data": {
-    "command": ["python", "attack.py", "--target-url", "...", "--stage", "before"],
+    "command": ["python", "attack.py", "--target-url", "...", "--stage", "before", "--manifest", "..."],
     "target_url": "...",
     "stage": "before",
     "returncode": 0,
@@ -343,6 +346,7 @@ Each run writes:
 | `events.jsonl` | Full event timeline |
 | `findings.json` | Structured vulnerability findings |
 | `attack.py` | Generated constrained attack artifact |
+| `attack-manifest.json` | Scenario, backend, target URL, and resource hints for constrained probes |
 | `remediation.patch` | Terraform remediation diff |
 | `metrics.json` | Model calls, token counts, latency, endpoint metrics |
 | `report.md` | Human-readable summary |

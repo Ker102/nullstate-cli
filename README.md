@@ -256,6 +256,7 @@ Each run writes:
 - `runs/<run-id>/vllm-metrics-after.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
 - `runs/<run-id>/attack.py`
+- `runs/<run-id>/attack-manifest.json`
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
 
@@ -271,6 +272,8 @@ Each run writes:
 - [CI/CD](docs/ci-cd.md)
 - [Runbook](docs/runbook.md)
 - [Model serving runbook](docs/model-serving.md)
+- [Enterprise roadmap](docs/enterprise-roadmap.md)
+- [Real sandbox red-team command plan](docs/plans/2026-06-01-real-sandbox-red-team-commands.md)
 - [AMD compute strategy](docs/compute-strategy.md)
 - [Failure modes](docs/failure-modes.md)
 - [Cost report](docs/cost-report.md)

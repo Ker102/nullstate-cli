@@ -65,9 +65,11 @@ class CliTests(unittest.TestCase):
             reports = list(runs_dir.glob("*/report.md"))
             findings = list(runs_dir.glob("*/findings.json"))
             metrics = list(runs_dir.glob("*/metrics.json"))
+            manifests = list(runs_dir.glob("*/attack-manifest.json"))
             self.assertEqual(len(reports), 1)
             self.assertEqual(len(findings), 1)
             self.assertEqual(len(metrics), 1)
+            self.assertEqual(len(manifests), 1)
             self.assertIn("Exploit blocked after remediation", reports[0].read_text(encoding="utf-8"))
             self.assertIn('container_access_type = "container"', (demo_dir / "main.tf").read_text(encoding="utf-8"))
             self.assertIn("Next", run_completed.stdout)
@@ -82,6 +84,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(red_tool_events[1]["data"]["stage"], "after")
             self.assertIn("command", red_tool_events[0]["data"])
             self.assertIn("target_url", red_tool_events[0]["data"])
+            self.assertIn("attack-manifest.json", " ".join(red_tool_events[0]["data"]["command"]))
 
     def test_report_without_run_id_opens_latest_nested_report(self):
         with TemporaryDirectory() as raw_tmp:

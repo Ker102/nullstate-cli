@@ -46,8 +46,9 @@ The V1 red command runner is constrained by design:
 
 - It only runs the generated `attack.py` file.
 - `attack.py` must live directly inside the run directory.
+- If an attack manifest is used, `attack-manifest.json` must also live directly inside the run directory.
 - The command is launched with the current Python interpreter, not an arbitrary shell.
-- The only dynamic inputs are `--target-url` and `--stage`.
+- The only dynamic inputs are `--target-url`, `--stage`, and the generated attack manifest path.
 - The event log records command, stdout, stderr, return code, target URL, start time, end time, and duration.
 
 This allows demos to show real command execution against local sandbox endpoints without giving the model unrestricted tool access.

@@ -273,7 +273,17 @@ Final portfolio version should include:
 - Add more Azure, AWS, Kubernetes, Docker Compose, and on-prem digital-twin scenarios.
 - Build a portfolio demo page with embedded screenshots, architecture diagram, and video.
 
-## 15. Repository and demo links
+## 15. Enterprise next iteration
+
+The hackathon build proves the architecture: deterministic IaC detection, LocalStack sandbox workflow, model-assisted red/blue reasoning, constrained red command execution, deterministic remediation, and evidence artifacts.
+
+The next enterprise-grade step is making the command evidence deeper. Today, the safe runner boundary exists and every red command is logged, but the AWS/Azure attack scripts are still narrow probes. The product should evolve each scenario from “configuration finding plus constrained probe” into “observed runtime exploit evidence plus deterministic validation.”
+
+For the AWS S3 scenario, that means creating an intentionally exposed evidence object in LocalStack, attempting anonymous object reads before remediation, blocking the path after remediation, and recording both command outputs in the report. For Azure Blob, the same pattern applies where LocalStack Azure supports the required blob APIs; otherwise the report should clearly label emulator limitations instead of overclaiming runtime exploitation.
+
+The business-grade principle is simple: if a report says “exploited,” the run should contain observed command evidence. If it is offline or emulator-limited, the report should label the result as deterministic simulation or inconclusive runtime evidence. That distinction is what makes the tool credible for security teams.
+
+## 16. Repository and demo links
 
 - GitHub: <https://github.com/Ker102/nullstate-cli>
 - Suggested portfolio slug: `/case-studies/nullstate-autonomous-purple-team-iac-sandbox`
@@ -281,11 +291,11 @@ Final portfolio version should include:
 - Final AWS report: `runs/final-aws-gemma26b/20260510-170931/report.md`
 - Final Azure report: `runs/final-azure-gemma26b/20260510-174858/report.md`
 
-## 16. Interview explanation
+## 17. Interview explanation
 
 I built `nullstate` because IaC security tools often identify misconfigurations without proving exploitability or remediation effectiveness. The architecture uses Terraform plan analysis, LocalStack sandboxes, deterministic detection, constrained attack script execution, and self-hosted model agents to create a repeatable purple-team loop. The most important security decision was to keep the pass/fail verdict deterministic and limit red command execution to generated `attack.py` scripts instead of arbitrary shell access. The hardest tradeoff was choosing reliability over full autonomy under hackathon time pressure. If I rebuilt it, I would expand the constrained runner into richer per-scenario allowlists with deeper network probes against the local sandbox.
 
-## 17. Resume bullets
+## 18. Resume bullets
 
 - Built `nullstate`, a Python DevSecOps CLI that validates Terraform IaC through a local red-team/blue-team loop with deterministic remediation and evidence artifacts.
 - Served a large model on AMD MI300X with vLLM/ROCm and captured token, latency, throughput, and endpoint metrics for final AWS and Azure sandbox runs.
