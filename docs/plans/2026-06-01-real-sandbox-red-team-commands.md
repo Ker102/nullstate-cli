@@ -21,6 +21,26 @@ The current red-team execution feature is safe but shallow:
 
 This is a strong security boundary, but not yet a full enterprise exploit validation engine.
 
+## Progress Status
+
+Updated 2026-06-01:
+
+- Completed locally: Task 1 attack evidence manifest.
+- Completed locally: Task 2 safe runner manifest argument.
+- Completed locally: initial platform foundation outside this plan:
+  - `nullstate bundle`
+  - `run-bundle.json`
+  - `nullstate dashboard`
+  - `dashboard.html`
+- Not pushed: the branch is ahead of origin with local-only commits.
+- Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
+
+Next task to execute:
+
+```text
+Task 3: Make AWS S3 Scenario Actually Read Sandbox Evidence
+```
+
 ## Target State
 
 For AWS S3 and Azure Blob:
@@ -44,6 +64,8 @@ A finding should not be labeled as “exploited” unless at least one of these 
 - the run is explicitly offline/mock and the report labels it as deterministic simulation.
 
 ## Task 1: Add Attack Evidence Manifest
+
+Status: completed locally in commit `55775a7 feat: add attack manifest foundation`.
 
 **Files:**
 - Create: `src/nullstate/attack_manifest.py`
@@ -104,6 +126,8 @@ Do not merge to main during the hackathon freeze.
 
 ## Task 2: Extend Attack Runner Arguments Safely
 
+Status: completed locally in commit `55775a7 feat: add attack manifest foundation`.
+
 **Files:**
 - Modify: `src/nullstate/attack_runner.py`
 - Modify: `tests/test_attack_runner.py`
@@ -137,6 +161,8 @@ python -m unittest tests.test_attack_runner -v
 ---
 
 ## Task 3: Make AWS S3 Scenario Actually Read Sandbox Evidence
+
+Status: next.
 
 **Files:**
 - Modify: `examples/aws-public-s3/main.tf`

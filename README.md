@@ -283,6 +283,7 @@ Each run writes:
 - [Model serving runbook](docs/model-serving.md)
 - [Enterprise roadmap](docs/enterprise-roadmap.md)
 - [Real sandbox red-team command plan](docs/plans/2026-06-01-real-sandbox-red-team-commands.md)
+- [Project handoff](docs/handoff.md)
 - [AMD compute strategy](docs/compute-strategy.md)
 - [Failure modes](docs/failure-modes.md)
 - [Cost report](docs/cost-report.md)
