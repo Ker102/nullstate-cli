@@ -284,7 +284,7 @@ Enterprise guardrails for this layer:
 
 - The command policy is scenario-template based. The model can reason about the attack path, but it cannot choose an arbitrary shell command.
 - Runtime targets should remain local sandbox endpoints unless a future `--allow-live-cloud` flag is implemented and recorded.
-- `red-tool` events should evolve to include a command schema version and a reproducibility hash for the generated `attack.py`.
+- `red-tool` events include a command schema version and reproducibility hashes for the generated `attack.py` and manifest.
 - Probe stdout and stderr should be capped before upload, ticket attachment, or long-term evidence retention.
 - Reports must distinguish observed runtime evidence from deterministic simulation and emulator-inconclusive probes.
 

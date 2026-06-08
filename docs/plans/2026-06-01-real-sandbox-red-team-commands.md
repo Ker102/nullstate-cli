@@ -46,6 +46,9 @@ Updated 2026-06-09:
   - command allowlist policy
   - artifact scrubber requirements
   - event schema and reproducibility hash requirements
+- Completed locally: first code-level enterprise guardrails:
+  - attack runner rejects non-local HTTP targets by default
+  - `red-tool` payloads include schema version, command policy ID, target classification, `attack.py` hash, and manifest hash
 - Verified locally with Ruff, mypy, full unittest discovery, and an offline Azure smoke run.
 - Not pushed: local feature-branch work should remain local unless the user explicitly asks to push.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
@@ -314,7 +317,7 @@ Report language must distinguish:
 
 ## Task 6: Enterprise Guardrails
 
-Status: completed locally for documentation and readiness checklist. Code-level enforcement remains future work.
+Status: partially implemented. Documentation/readiness checklist is complete, and the attack runner now enforces local targets and records first-pass audit metadata. Artifact scrubbing, stdout/stderr truncation metadata, and a future live-cloud approval gate remain future work.
 
 **Files:**
 - Modify: `docs/security-model.md`
@@ -336,7 +339,9 @@ Implementation notes from 2026-06-09:
 - Added [Enterprise Readiness](../enterprise-readiness.md).
 - Updated the security model with local-only target expectations and future live-cloud gate requirements.
 - Updated the technical walkthrough with runtime evidence guardrails and a pointer to the readiness checklist.
-- Kept this task documentation-only because live Azure validation is still waiting on `LOCALSTACK_AUTH_TOKEN`.
+- Added attack-runner local target validation for `offline://`, `local://`, loopback HTTP(S), and LocalStack-scoped HTTP(S) targets.
+- Added first-pass `red-tool` audit metadata: `schema_version`, `command_policy_id`, `target_classification`, `attack_script_sha256`, and `manifest_sha256`.
+- Live Azure validation is still waiting on `LOCALSTACK_AUTH_TOKEN`.
 
 ---
 

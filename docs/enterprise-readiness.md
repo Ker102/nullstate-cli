@@ -12,6 +12,8 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Constrained red runner | implemented | only run-directory `attack.py` executes |
 | Manifest-scoped probe inputs | implemented | `attack-manifest.json` carries resource hints |
 | Runtime evidence logging | implemented | `red-tool` events include command output and timing |
+| Local target enforcement | implemented | attack runner rejects non-local HTTP targets by default |
+| Attack artifact hashes | implemented | `red-tool` events include script and manifest SHA-256 values |
 | Report evidence classification | implemented | reports distinguish runtime, inconclusive, and offline simulation |
 | Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
 
@@ -19,7 +21,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 
 ### Local-Only Enforcement
 
-Default runtime targets should remain local:
+Default runtime targets remain local:
 
 - `offline://...`
 - `local://...`
@@ -27,7 +29,7 @@ Default runtime targets should remain local:
 - `localhost`
 - `localhost.localstack.cloud`
 
-Any future real cloud mode should require an explicit `--allow-live-cloud` flag, default off. The run should record the operator approval, target hostname, scenario, backend, and timestamp in `events.jsonl`.
+The attack runner rejects non-local HTTP targets by default. Any future real cloud mode should require an explicit `--allow-live-cloud` flag, default off. The run should record the operator approval, target hostname, scenario, backend, and timestamp in `events.jsonl`.
 
 ### Command Allowlist Policy
 
@@ -45,15 +47,18 @@ The model may explain an attack path, but it should not create arbitrary shell c
 
 ### Event Schema Hardening
 
-`red-tool` events should include:
+`red-tool` events include the first set of audit metadata:
 
 - `schema_version`
 - `command_policy_id`
 - `attack_script_sha256`
 - `manifest_sha256`
+
+They should also add:
+
 - `stdout_truncated`
 - `stderr_truncated`
-- `target_classification`
+- richer `target_classification` values for future real-cloud gates
 
 These fields make evidence reproducible and easier to audit in CI, support, and compliance workflows.
 
@@ -85,12 +90,10 @@ If a report says "exploited", it should include observed command evidence or exp
 
 ## Near-Term Readiness Tasks
 
-1. Add local-target validation around attack target URLs.
-2. Add `schema_version` and script hashes to `red-tool` events.
-3. Add stdout/stderr truncation metadata.
-4. Add artifact scrubber command and tests.
-5. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
-6. Run live LocalStack Azure validation and document emulator-specific limitations.
+1. Add stdout/stderr truncation metadata.
+2. Add artifact scrubber command and tests.
+3. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
+4. Run live LocalStack Azure validation and document emulator-specific limitations.
 
 ## Commercial Boundary
 

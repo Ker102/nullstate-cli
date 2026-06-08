@@ -48,7 +48,12 @@ class AttackRunnerTests(unittest.TestCase):
             )
             self.assertEqual(result.stderr, "")
             payload = result.to_dict()
+            self.assertEqual(payload["schema_version"], 1)
+            self.assertEqual(payload["command_policy_id"], "generated-attack-script-v1")
             self.assertEqual(payload["returncode"], 0)
+            self.assertEqual(payload["target_classification"], "local-http")
+            self.assertRegex(str(payload["attack_script_sha256"]), r"^[0-9a-f]{64}$")
+            self.assertRegex(str(payload["manifest_sha256"]), r"^[0-9a-f]{64}$")
             self.assertIn("started_at", payload)
             self.assertIn("ended_at", payload)
             json.dumps(payload)
@@ -101,6 +106,52 @@ class AttackRunnerTests(unittest.TestCase):
                     stage="before",
                     manifest_path=outside_manifest,
                 )
+
+    def test_rejects_non_local_http_targets_by_default(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+
+            with self.assertRaisesRegex(ValueError, "must be local"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="https://example.com",
+                    stage="before",
+                )
+
+    def test_allows_offline_local_loopback_and_localstack_targets(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text(
+                "import argparse\n"
+                "parser = argparse.ArgumentParser()\n"
+                "parser.add_argument('--target-url')\n"
+                "parser.add_argument('--stage')\n"
+                "parser.add_argument('--manifest')\n"
+                "parser.parse_args()\n",
+                encoding="utf-8",
+            )
+
+            targets = {
+                "offline://aws-public-s3": "offline",
+                "local://kind-kubernetes/k8s-privileged-pod": "local",
+                "http://127.0.0.1:4566": "local-http",
+                "http://localhost:4566": "local-http",
+                "http://s3.localhost.localstack.cloud:4566": "local-http",
+            }
+            for target_url, expected_classification in targets.items():
+                with self.subTest(target_url=target_url):
+                    result = run_attack_script(
+                        attack_script,
+                        run_dir=run_dir,
+                        target_url=target_url,
+                        stage="before",
+                    )
+                    self.assertEqual(result.returncode, 0)
+                    self.assertEqual(result.target_classification, expected_classification)
 
     def test_generated_aws_attack_script_reads_public_evidence_object(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), _EvidenceObjectHandler)

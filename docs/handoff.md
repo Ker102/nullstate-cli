@@ -84,7 +84,11 @@ Working features:
   - local-only target expectations
   - future `--allow-live-cloud` gate
   - command allowlist and artifact scrubber requirements
-  - future event schema and reproducibility hash requirements
+  - first-pass event schema and reproducibility hash metadata
+- Code-level enterprise guardrails:
+  - attack runner rejects non-local HTTP targets by default
+  - allowed targets are offline, local, loopback, localhost, and LocalStack-scoped HTTP(S)
+  - `red-tool` payloads include schema version, command policy ID, target classification, and SHA-256 hashes
 - AWS S3 runtime probe foundation:
   - AWS demo now creates an `aws_s3_object` evidence object
   - AWS demo includes a public read bucket policy for `evidence.txt`
@@ -203,7 +207,7 @@ Recommended next tests:
 - Live LocalStack Azure run where available.
 - Offline run still passes.
 - Report classifies runtime evidence as observed/inconclusive/simulated.
-- Enterprise readiness controls remain documented until code-level enforcement is implemented.
+- Remaining enterprise hardening: artifact scrubber, stdout/stderr truncation metadata, and future live-cloud approval gate.
 
 If Azure LocalStack support is unavailable or unreliable, do not overclaim Azure runtime exploitation. Prefer clear report language such as `runtime probe inconclusive; deterministic IaC validation still blocked the configured exposure`.
 
