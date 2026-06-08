@@ -37,10 +37,14 @@ def _resource_hints(scenario_name: str, workspace_dir: Path) -> dict[str, str]:
         }
         return {key: value for key, value in hints.items() if value}
     if scenario_name == "azure-public-blob":
+        storage_account_name = _tfstate_attribute(workspace_dir, "azurerm_storage_account", "demo", ("name",))
+        container_name = _tfstate_attribute(workspace_dir, "azurerm_storage_container", "secrets", ("name",))
+        blob_name = _tfstate_attribute(workspace_dir, "azurerm_storage_blob", "evidence", ("name",))
         hints = {
-            "storage_account_hint": _first_assignment(terraform_text, "name"),
-            "container_name": _first_assignment(terraform_text, "name", resource_type="azurerm_storage_container"),
-            "blob_name": _first_assignment(terraform_text, "name", resource_type="azurerm_storage_blob") or "evidence.txt",
+            "storage_account_name": storage_account_name,
+            "storage_account_hint": _first_assignment(terraform_text, "name", resource_type="azurerm_storage_account"),
+            "container_name": container_name or _first_assignment(terraform_text, "name", resource_type="azurerm_storage_container"),
+            "blob_name": blob_name or _first_assignment(terraform_text, "name", resource_type="azurerm_storage_blob") or "evidence.txt",
         }
         return {key: value for key, value in hints.items() if value}
     return {}

@@ -81,6 +81,60 @@ class AttackManifestTests(unittest.TestCase):
             self.assertEqual(manifest["resources"]["bucket_hint"], "nullstate-public-logs-")
             self.assertEqual(manifest["resources"]["object_key"], "evidence.txt")
 
+    def test_writes_azure_blob_manifest_with_state_resource_names(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            (workspace / "main.tf").write_text(
+                'resource "azurerm_storage_account" "demo" {\n'
+                '  name = "nullstate${random_string.suffix.result}"\n'
+                "}\n"
+                'resource "azurerm_storage_container" "secrets" {\n'
+                '  name = "secrets"\n'
+                "}\n"
+                'resource "azurerm_storage_blob" "evidence" {\n'
+                '  name = "evidence.txt"\n'
+                "}\n",
+                encoding="utf-8",
+            )
+            (workspace / "terraform.tfstate").write_text(
+                json.dumps(
+                    {
+                        "resources": [
+                            {
+                                "type": "azurerm_storage_account",
+                                "name": "demo",
+                                "instances": [{"attributes": {"name": "nullstateactual"}}],
+                            },
+                            {
+                                "type": "azurerm_storage_container",
+                                "name": "secrets",
+                                "instances": [{"attributes": {"name": "secrets"}}],
+                            },
+                            {
+                                "type": "azurerm_storage_blob",
+                                "name": "evidence",
+                                "instances": [{"attributes": {"name": "evidence.txt"}}],
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            manifest = write_attack_manifest(
+                root / "attack-manifest.json",
+                scenario_name="azure-public-blob",
+                backend_name="localstack-azure",
+                target_url="http://localhost.localstack.cloud:4566",
+                workspace_dir=workspace,
+            )
+
+            self.assertEqual(manifest["resources"]["storage_account_name"], "nullstateactual")
+            self.assertEqual(manifest["resources"]["container_name"], "secrets")
+            self.assertEqual(manifest["resources"]["blob_name"], "evidence.txt")
+
 
 if __name__ == "__main__":
     unittest.main()

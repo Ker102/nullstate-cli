@@ -1,6 +1,6 @@
 # Nullstate Project Handoff
 
-Last updated: 2026-06-01
+Last updated: 2026-06-09
 
 ## Read this first
 
@@ -12,11 +12,12 @@ The repository is currently under a hackathon freeze rule:
 - Do not push new work unless the user explicitly asks.
 - It is safe to keep working locally on feature branches and make local commits.
 - Current active branch: `feature/red-agent-runner`.
-- Current local state at handoff: branch has local-only commits; run `git status --short --branch` for the exact ahead count.
+- Current local state at handoff: active work continues on this feature branch; run `git status --short --branch` and `git log --oneline -8` for exact local ahead/uncommitted state.
 
 Recent local-only commits:
 
 ```text
+feat: add Azure blob runtime probe foundation
 ccc613e fix: block AWS evidence read after remediation
 0c26efe feat: add AWS runtime evidence probe
 baa782b docs: add project handoff
@@ -66,6 +67,12 @@ Working features:
   - backend
   - target URL
   - resource hints
+- Azure Blob runtime probe foundation:
+  - Azure demo now creates `azurerm_storage_blob.evidence`
+  - generated Azure `attack.py` parses `attack-manifest.json`
+  - generated Azure `attack.py` attempts anonymous HTTP GET against candidate blob URLs
+  - before-remediation probe failures are marked inconclusive rather than treated as proof
+  - offline Azure runs are labeled deterministic simulation in reports
 - Portable run bundle:
   - `nullstate bundle`
   - writes `runs/<id>/run-bundle.json`
@@ -85,9 +92,9 @@ Working features:
 
 Important limitation:
 
-- The constrained red runner is real. AWS now has a live-validated object-read probe path. Azure is still shallow.
+- The constrained red runner is real. AWS now has a live-validated object-read probe path. Azure now has a manifest-backed blob-read probe, but live LocalStack Azure validation is still pending.
 - The before/after success verdict is still mostly deterministic via `simulate_attack()`.
-- Enterprise-grade exploit validation still requires Azure blob probe work and clearer report classification language.
+- Enterprise-grade exploit validation still requires live Azure emulator confirmation and possible URL/API tuning if LocalStack Azure semantics differ.
 
 ## Important docs
 
@@ -164,20 +171,21 @@ Run artifacts are under `runs/` and may be ignored by Git. If this repository is
 Next highest-value feature:
 
 ```text
-Azure Blob runtime probe where LocalStack Azure supports it
+Live LocalStack Azure validation for the Azure Blob runtime probe
 ```
 
-The AWS implementation now has the Terraform evidence object, public-read policy, manifest-backed candidate URL generation, report runtime evidence section, and live LocalStack confirmation.
+The AWS implementation now has the Terraform evidence object, public-read policy, manifest-backed candidate URL generation, report runtime evidence section, and live LocalStack confirmation. The Azure implementation now has the Terraform evidence blob, manifest-backed candidate URL generation, and report classification language, but has not yet been validated against a live LocalStack Azure container.
 
 Next implementation should:
 
-1. Add Azure Blob object/blob evidence only if LocalStack Azure supports it reliably.
-2. Update Azure `attack.py` to attempt anonymous HTTP GET/list against blob URLs.
-3. Update report language to distinguish:
+1. Run live LocalStack Azure validation for `examples/azure-public-blob`.
+2. Inspect `events.jsonl` and `report.md` for before/after Azure runtime classifications.
+3. Tune candidate Azure blob URLs only if LocalStack Azure uses a different route.
+4. Keep report language honest:
    - observed runtime exploit evidence
    - deterministic simulation
    - inconclusive emulator result
-4. Keep safety boundaries:
+5. Keep safety boundaries:
    - local endpoints only
    - no arbitrary shell
    - no real cloud credentials
@@ -185,7 +193,7 @@ Next implementation should:
 
 Recommended next tests:
 
-- Unit test Azure attack script template parses manifest and builds blob candidate URLs.
+- Live LocalStack Azure run where available.
 - Offline run still passes.
 - Report classifies runtime evidence as observed/inconclusive/simulated.
 

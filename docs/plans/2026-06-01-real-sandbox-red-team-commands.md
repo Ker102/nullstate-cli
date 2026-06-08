@@ -23,7 +23,7 @@ This is a strong security boundary, but not yet a full enterprise exploit valida
 
 ## Progress Status
 
-Updated 2026-06-01:
+Updated 2026-06-09:
 
 - Completed locally: Task 1 attack evidence manifest.
 - Completed locally: Task 2 safe runner manifest argument.
@@ -34,14 +34,20 @@ Updated 2026-06-01:
   - `dashboard.html`
 - Completed locally: Task 3 AWS S3 evidence object and runtime HTTP object probe.
 - Completed live validation: LocalStack AWS before-remediation GET returned HTTP 200 with evidence body; after-remediation GET returned HTTP 404 and `runtime_exploit_observed=false`.
-- Completed locally: Task 5 initial report runtime command evidence section.
-- Not pushed: the branch is ahead of origin with local-only commits.
+- Completed locally: Task 4 Azure Blob evidence fixture and manifest-backed runtime blob probe.
+- Completed locally: Task 5 report runtime evidence classification:
+  - `runtime exploit observed`
+  - `runtime probe did not observe exploit`
+  - `runtime probe inconclusive`
+  - `offline deterministic simulation`
+- Verified locally with Ruff, mypy, full unittest discovery, and an offline Azure smoke run.
+- Not pushed: local feature-branch work should remain local unless the user explicitly asks to push.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
 
 Next task to execute:
 
 ```text
-Task 4: Make Azure Blob Scenario Use Real Blob Probe Where Supported
+Live LocalStack Azure validation for the new blob probe, if LocalStack Azure supports the blob APIs reliably.
 ```
 
 ## Target State
@@ -226,7 +232,7 @@ LocalStack public S3 semantics may differ from AWS. If public policy behavior is
 
 ## Task 4: Make Azure Blob Scenario Use Real Blob Probe Where Supported
 
-Status: next.
+Status: completed locally; live LocalStack Azure validation pending.
 
 **Files:**
 - Modify: `examples/azure-public-blob/main.tf`
@@ -245,11 +251,30 @@ If LocalStack Azure support is inconsistent, implement a two-level probe:
 
 Do not overclaim Azure runtime exploitation if the emulator cannot prove it reliably.
 
+Implementation notes from 2026-06-09:
+
+- `examples/azure-public-blob/main.tf` and `init-demo` now create `azurerm_storage_blob.evidence` with `source_content`.
+- `attack-manifest.json` now includes Azure storage account, container, and blob hints, preferring applied Terraform state values when available.
+- Generated Azure `attack.py` builds candidate blob URLs from the manifest and attempts anonymous HTTP GET with a strict timeout.
+- Before-remediation failures are labeled `runtime_probe_inconclusive=true` rather than overclaiming exploit failure.
+- After-remediation failures are labeled `runtime_exploit_observed=false`.
+- Offline runs explicitly say the runtime probe was not performed.
+- Unit tests cover Azure manifest extraction and generated Azure attack-script blob reads against a local HTTP fixture.
+
+Validation completed:
+
+```powershell
+C:\Users\ivo\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m ruff check src tests
+C:\Users\ivo\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m mypy src
+C:\Users\ivo\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m unittest discover -s tests -v
+C:\Users\ivo\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe -m nullstate run examples\azure-public-blob --offline --mock-agents --runs-dir runs\azure-probe-smoke
+```
+
 ---
 
 ## Task 5: Report Runtime Evidence Separately
 
-Status: partially completed locally. Reports now include a `Runtime Command Evidence` section with before/after command, return code, target, and stdout excerpt. Remaining improvement: classify evidence as observed, inconclusive, or deterministic simulation in report wording.
+Status: completed locally. Reports now include a `Runtime Command Evidence` section with before/after command, return code, target, stdout excerpt, and classification as observed, inconclusive, unavailable, or deterministic simulation.
 
 **Files:**
 - Modify: `src/nullstate/report.py`

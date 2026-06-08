@@ -8,23 +8,75 @@ from .findings import Finding
 ATTACK_SCRIPTS = {
     "azure-public-blob": """\
 import argparse
+import json
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
-def probe_target(target_url: str, stage: str) -> int:
+def load_manifest(path: str | None) -> dict:
+    if not path:
+        return {}
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def candidate_urls(target_url: str, manifest: dict) -> list[str]:
+    resources = manifest.get("resources") or {}
+    account = resources.get("storage_account_name") or resources.get("storage_account_hint")
+    container = resources.get("container_name")
+    blob = resources.get("blob_name") or "evidence.txt"
+    if not container or not blob:
+        return []
+    base = target_url.rstrip("/")
+    parsed = urllib.parse.urlparse(base)
+    encoded_container = urllib.parse.quote(str(container).strip("/"), safe="")
+    encoded_blob = "/".join(urllib.parse.quote(part, safe="") for part in str(blob).lstrip("/").split("/"))
+    urls = [f"{base}/{encoded_container}/{encoded_blob}"]
+    if account:
+        encoded_account = urllib.parse.quote(str(account).strip("/"), safe="")
+        urls.insert(0, f"{base}/{encoded_account}/{encoded_container}/{encoded_blob}")
+        if parsed.hostname and "localhost.localstack.cloud" in parsed.hostname:
+            port = f":{parsed.port}" if parsed.port else ""
+            scheme = parsed.scheme or "http"
+            urls.append(f"{scheme}://blob.localhost.localstack.cloud{port}/{encoded_account}/{encoded_container}/{encoded_blob}")
+            urls.append(f"{scheme}://{encoded_account}.blob.localhost.localstack.cloud{port}/{encoded_container}/{encoded_blob}")
+    return list(dict.fromkeys(urls))
+
+
+def probe_target(target_url: str, stage: str, manifest_path: str | None) -> int:
     print(f"stage={stage} target={target_url}")
     if not target_url.startswith(("http://", "https://")):
-        print("offline target selected; no network request performed")
+        print("offline target selected; runtime blob probe not performed")
         return 0
-    health_url = target_url.rstrip("/") + "/_localstack/health"
-    try:
-        with urllib.request.urlopen(health_url, timeout=5) as response:
-            print(f"health_url={health_url} status={response.status}")
-            return 0 if response.status < 500 else 2
-    except urllib.error.URLError as error:
-        print(f"health_url={health_url} error={error}")
+    manifest = load_manifest(manifest_path)
+    candidates = candidate_urls(target_url, manifest)
+    if not candidates:
+        print("manifest did not include Azure container/blob hints; cannot attempt blob read")
+        print("runtime_probe_inconclusive=true")
         return 2
+    for candidate_url in candidates:
+        print(f"candidate_url={candidate_url}")
+        try:
+            request = urllib.request.Request(candidate_url, headers={"User-Agent": "nullstate-red-probe/1"})
+            with urllib.request.urlopen(request, timeout=5) as response:
+                body = response.read(256).decode("utf-8", errors="replace")
+                print(f"status={response.status}")
+                print(f"body_excerpt={body}")
+                if 200 <= response.status < 300:
+                    print("runtime_exploit_observed=true")
+                    return 0
+        except urllib.error.HTTPError as error:
+            body = error.read(256).decode("utf-8", errors="replace")
+            print(f"status={error.code}")
+            print(f"error_body_excerpt={body}")
+        except urllib.error.URLError as error:
+            print(f"error={error}")
+    if stage == "after":
+        print("runtime_exploit_observed=false")
+    else:
+        print("runtime_probe_inconclusive=true")
+    return 2
 
 
 def main():
@@ -34,7 +86,7 @@ def main():
     parser.add_argument("--stage", required=True, choices=["before", "after"])
     parser.add_argument("--manifest")
     args = parser.parse_args()
-    return probe_target(args.target_url, args.stage)
+    return probe_target(args.target_url, args.stage, args.manifest)
 
 if __name__ == "__main__":
     raise SystemExit(main())
@@ -204,5 +256,4 @@ def simulate_attack(findings: list[Finding], stage: str) -> dict[str, str]:
     if stage == "before":
         return {"status": "blocked", "detail": "No exploitable scenario condition was found."}
     return {"status": "blocked", "detail": "Attack path denied after deterministic remediation."}
-
 

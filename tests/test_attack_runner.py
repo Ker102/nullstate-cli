@@ -141,10 +141,51 @@ class AttackRunnerTests(unittest.TestCase):
             server.shutdown()
             server.server_close()
 
+    def test_generated_azure_attack_script_reads_public_evidence_blob(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), _EvidenceObjectHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with TemporaryDirectory() as raw_tmp:
+                run_dir = Path(raw_tmp)
+                attack_script = run_dir / "attack.py"
+                write_attack_script(attack_script, "azure-public-blob")
+                manifest = run_dir / "attack-manifest.json"
+                manifest.write_text(
+                    json.dumps(
+                        {
+                            "resources": {
+                                "storage_account_name": "acct",
+                                "container_name": "secrets",
+                                "blob_name": "evidence.txt",
+                            }
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+                result = run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url=f"http://127.0.0.1:{server.server_port}",
+                    stage="before",
+                    manifest_path=manifest,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("candidate_url=", result.stdout)
+                self.assertIn("/acct/secrets/evidence.txt", result.stdout)
+                self.assertIn("status=200", result.stdout)
+                self.assertIn("body_excerpt=nullstate public evidence", result.stdout)
+                self.assertIn("runtime_exploit_observed=true", result.stdout)
+        finally:
+            server.shutdown()
+            server.server_close()
+
 
 class _EvidenceObjectHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == "/public-bucket/evidence.txt":
+        if self.path in {"/public-bucket/evidence.txt", "/acct/secrets/evidence.txt"}:
             body = b"nullstate public evidence"
             self.send_response(200)
             self.send_header("Content-Type", "text/plain")

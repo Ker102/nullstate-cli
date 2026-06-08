@@ -77,6 +77,7 @@ def _render_runtime_evidence(runtime_evidence: dict[str, dict[str, object]] | No
 - Command: `{_command(before)}`
 - Return code: `{before.get("returncode", "unknown")}`
 - Target: `{before.get("target_url", "unknown")}`
+- Classification: `{_runtime_classification(before)}`
 - Stdout excerpt:
 
 ```text
@@ -88,6 +89,7 @@ def _render_runtime_evidence(runtime_evidence: dict[str, dict[str, object]] | No
 - Command: `{_command(after)}`
 - Return code: `{after.get("returncode", "unknown")}`
 - Target: `{after.get("target_url", "unknown")}`
+- Classification: `{_runtime_classification(after)}`
 - Stdout excerpt:
 
 ```text
@@ -101,6 +103,20 @@ def _command(payload: dict[str, object]) -> str:
     if not isinstance(command, list):
         return "unknown"
     return " ".join(str(part) for part in command)
+
+
+def _runtime_classification(payload: dict[str, object]) -> str:
+    target_url = str(payload.get("target_url", ""))
+    stdout = str(payload.get("stdout", "")).lower()
+    if target_url.startswith("offline://") or "offline target selected" in stdout:
+        return "offline deterministic simulation"
+    if "runtime_exploit_observed=true" in stdout:
+        return "runtime exploit observed"
+    if "runtime_exploit_observed=false" in stdout:
+        return "runtime probe did not observe exploit"
+    if "runtime_probe_inconclusive=true" in stdout:
+        return "runtime probe inconclusive"
+    return "runtime evidence unavailable"
 
 
 def _excerpt(value: str, limit: int = 1200) -> str:
