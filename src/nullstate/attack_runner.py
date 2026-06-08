@@ -22,6 +22,8 @@ class AttackToolResult:
     returncode: int
     stdout: str
     stderr: str
+    stdout_truncated: bool
+    stderr_truncated: bool
     started_at: str
     ended_at: str
     duration_seconds: float
@@ -44,6 +46,7 @@ def run_attack_script(
     stage: str,
     manifest_path: Path | None = None,
     timeout_seconds: int = 30,
+    max_output_bytes: int = 12_000,
 ) -> AttackToolResult:
     resolved_script = script_path.resolve()
     resolved_run_dir = run_dir.resolve()
@@ -72,6 +75,8 @@ def run_attack_script(
         timeout=timeout_seconds,
     )
     ended_at = datetime.now(UTC).isoformat()
+    stdout, stdout_truncated = _truncate_text(completed.stdout, max_output_bytes)
+    stderr, stderr_truncated = _truncate_text(completed.stderr, max_output_bytes)
     return AttackToolResult(
         schema_version=1,
         command_policy_id="generated-attack-script-v1",
@@ -80,8 +85,10 @@ def run_attack_script(
         target_classification=target_classification,
         stage=stage,
         returncode=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
+        stdout=stdout,
+        stderr=stderr,
+        stdout_truncated=stdout_truncated,
+        stderr_truncated=stderr_truncated,
         started_at=started_at,
         ended_at=ended_at,
         duration_seconds=round(time.monotonic() - started, 3),
@@ -143,3 +150,12 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _truncate_text(value: str, max_bytes: int) -> tuple[str, bool]:
+    encoded = value.encode("utf-8")
+    if len(encoded) <= max_bytes:
+        return value, False
+    if max_bytes <= 0:
+        return "", True
+    return encoded[:max_bytes].decode("utf-8", errors="replace").rstrip() + "\n... truncated ...", True

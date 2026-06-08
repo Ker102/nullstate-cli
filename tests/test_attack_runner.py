@@ -54,6 +54,8 @@ class AttackRunnerTests(unittest.TestCase):
             self.assertEqual(payload["target_classification"], "local-http")
             self.assertRegex(str(payload["attack_script_sha256"]), r"^[0-9a-f]{64}$")
             self.assertRegex(str(payload["manifest_sha256"]), r"^[0-9a-f]{64}$")
+            self.assertFalse(payload["stdout_truncated"])
+            self.assertFalse(payload["stderr_truncated"])
             self.assertIn("started_at", payload)
             self.assertIn("ended_at", payload)
             json.dumps(payload)
@@ -152,6 +154,25 @@ class AttackRunnerTests(unittest.TestCase):
                     )
                     self.assertEqual(result.returncode, 0)
                     self.assertEqual(result.target_classification, expected_classification)
+
+    def test_truncates_large_stdout_and_marks_event_metadata(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('x' * 200)\n", encoding="utf-8")
+
+            result = run_attack_script(
+                attack_script,
+                run_dir=run_dir,
+                target_url="offline://aws-public-s3",
+                stage="before",
+                max_output_bytes=20,
+            )
+
+            self.assertTrue(result.stdout_truncated)
+            self.assertFalse(result.stderr_truncated)
+            self.assertIn("... truncated ...", result.stdout)
+            self.assertLess(len(result.stdout), 60)
 
     def test_generated_aws_attack_script_reads_public_evidence_object(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), _EvidenceObjectHandler)

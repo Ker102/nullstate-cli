@@ -61,7 +61,6 @@ This allows demos to show real command execution against local sandbox endpoints
 
 Enterprise hardening should add:
 
-- stdout/stderr truncation metadata in every `red-tool` event
 - explicit allowlist policy for each scenario and backend pair
 - publish-time artifact scrubber
 - future `--allow-live-cloud` gate, default off

@@ -14,6 +14,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Runtime evidence logging | implemented | `red-tool` events include command output and timing |
 | Local target enforcement | implemented | attack runner rejects non-local HTTP targets by default |
 | Attack artifact hashes | implemented | `red-tool` events include script and manifest SHA-256 values |
+| Output truncation metadata | implemented | `red-tool` events identify truncated stdout/stderr |
 | Report evidence classification | implemented | reports distinguish runtime, inconclusive, and offline simulation |
 | Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
 
@@ -54,10 +55,13 @@ The model may explain an attack path, but it should not create arbitrary shell c
 - `attack_script_sha256`
 - `manifest_sha256`
 
-They should also add:
+They should also add richer policy fields over time. Current events already include:
 
 - `stdout_truncated`
 - `stderr_truncated`
+
+Future event metadata should add:
+
 - richer `target_classification` values for future real-cloud gates
 
 These fields make evidence reproducible and easier to audit in CI, support, and compliance workflows.
@@ -90,10 +94,9 @@ If a report says "exploited", it should include observed command evidence or exp
 
 ## Near-Term Readiness Tasks
 
-1. Add stdout/stderr truncation metadata.
-2. Add artifact scrubber command and tests.
-3. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
-4. Run live LocalStack Azure validation and document emulator-specific limitations.
+1. Add artifact scrubber command and tests.
+2. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
+3. Run live LocalStack Azure validation and document emulator-specific limitations.
 
 ## Commercial Boundary
 
