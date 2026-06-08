@@ -79,6 +79,12 @@ Working features:
 - Free local HTML dashboard:
   - `nullstate dashboard`
   - writes `runs/<id>/dashboard.html`
+- Enterprise readiness documentation:
+  - `docs/enterprise-readiness.md`
+  - local-only target expectations
+  - future `--allow-live-cloud` gate
+  - command allowlist and artifact scrubber requirements
+  - future event schema and reproducibility hash requirements
 - AWS S3 runtime probe foundation:
   - AWS demo now creates an `aws_s3_object` evidence object
   - AWS demo includes a public read bucket policy for `evidence.txt`
@@ -104,6 +110,7 @@ Start here:
 - `docs/technical-walkthrough.md`
 - `docs/case-study.md`
 - `docs/enterprise-roadmap.md`
+- `docs/enterprise-readiness.md`
 - `docs/plans/2026-06-01-real-sandbox-red-team-commands.md`
 
 The implementation plan for the next core security feature is:
@@ -127,7 +134,7 @@ Result:
 ```text
 Ruff passed
 mypy passed
-66 tests OK
+69 tests OK
 ```
 
 Smoke run also passed:
@@ -196,6 +203,7 @@ Recommended next tests:
 - Live LocalStack Azure run where available.
 - Offline run still passes.
 - Report classifies runtime evidence as observed/inconclusive/simulated.
+- Enterprise readiness controls remain documented until code-level enforcement is implemented.
 
 If Azure LocalStack support is unavailable or unreliable, do not overclaim Azure runtime exploitation. Prefer clear report language such as `runtime probe inconclusive; deterministic IaC validation still blocked the configured exposure`.
 

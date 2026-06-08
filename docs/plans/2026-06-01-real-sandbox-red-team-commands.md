@@ -40,6 +40,12 @@ Updated 2026-06-09:
   - `runtime probe did not observe exploit`
   - `runtime probe inconclusive`
   - `offline deterministic simulation`
+- Completed locally: Task 6 enterprise guardrails documentation:
+  - local-only target expectations
+  - future `--allow-live-cloud` gate
+  - command allowlist policy
+  - artifact scrubber requirements
+  - event schema and reproducibility hash requirements
 - Verified locally with Ruff, mypy, full unittest discovery, and an offline Azure smoke run.
 - Not pushed: local feature-branch work should remain local unless the user explicitly asks to push.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
@@ -308,6 +314,8 @@ Report language must distinguish:
 
 ## Task 6: Enterprise Guardrails
 
+Status: completed locally for documentation and readiness checklist. Code-level enforcement remains future work.
+
 **Files:**
 - Modify: `docs/security-model.md`
 - Modify: `docs/technical-walkthrough.md`
@@ -322,6 +330,13 @@ Add enterprise controls:
 - timeout and max stdout/stderr capture length
 - red-team command schema version in events
 - reproducibility hash for generated `attack.py`
+
+Implementation notes from 2026-06-09:
+
+- Added [Enterprise Readiness](../enterprise-readiness.md).
+- Updated the security model with local-only target expectations and future live-cloud gate requirements.
+- Updated the technical walkthrough with runtime evidence guardrails and a pointer to the readiness checklist.
+- Kept this task documentation-only because live Azure validation is still waiting on `LOCALSTACK_AUTH_TOKEN`.
 
 ---
 

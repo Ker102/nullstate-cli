@@ -282,6 +282,7 @@ Each run writes:
 - [Runbook](docs/runbook.md)
 - [Model serving runbook](docs/model-serving.md)
 - [Enterprise roadmap](docs/enterprise-roadmap.md)
+- [Enterprise readiness](docs/enterprise-readiness.md)
 - [Real sandbox red-team command plan](docs/plans/2026-06-01-real-sandbox-red-team-commands.md)
 - [Project handoff](docs/handoff.md)
 - [AMD compute strategy](docs/compute-strategy.md)

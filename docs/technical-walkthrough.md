@@ -280,6 +280,14 @@ The runner records command evidence before and after remediation:
 
 This gives the report real command evidence while avoiding unrestricted red-agent tool access.
 
+Enterprise guardrails for this layer:
+
+- The command policy is scenario-template based. The model can reason about the attack path, but it cannot choose an arbitrary shell command.
+- Runtime targets should remain local sandbox endpoints unless a future `--allow-live-cloud` flag is implemented and recorded.
+- `red-tool` events should evolve to include a command schema version and a reproducibility hash for the generated `attack.py`.
+- Probe stdout and stderr should be capped before upload, ticket attachment, or long-term evidence retention.
+- Reports must distinguish observed runtime evidence from deterministic simulation and emulator-inconclusive probes.
+
 ### 9. Deterministic Remediation
 
 Relevant file:
@@ -368,6 +376,8 @@ The important boundaries are:
 - The attack runner only executes generated run-directory `attack.py`.
 - Secrets are loaded from environment variables or ignored local env files.
 - Run artifacts must be reviewed before publishing.
+- A future artifact scrubber should run before public case-study publishing, CI upload, or support bundle sharing.
+- A future `--allow-live-cloud` gate should be required before any non-local cloud endpoint is targeted.
 
 ## Extension Points
 
@@ -410,6 +420,8 @@ The next safe expansion is not free-form shell access. It should be a per-scenar
 - strict timeout
 - full event logging
 - no inherited real cloud credentials
+
+See [Enterprise Readiness](enterprise-readiness.md) for the control checklist that should be completed before positioning runtime probes as team or enterprise evidence.
 
 ## Test Coverage
 
