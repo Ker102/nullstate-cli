@@ -52,6 +52,84 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertIn("AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED", html)
             self.assertIn("Dashboard:", completed.stdout)
 
+    def test_scrub_command_writes_sanitized_run_copy(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            runs_dir = root / "runs"
+            output_dir = root / "scrubbed-runs"
+            run_dir = _minimal_run(runs_dir)
+            secret_text = (
+                "LOCALSTACK_AUTH_TOKEN=localstack-secret\n"
+                "NULLSTATE_LLM_API_KEY=model-secret\n"
+                "ARM_CLIENT_SECRET=azure-secret\n"
+                "tenant=11111111-2222-3333-4444-555555555555\n"
+                "private=10.20.30.40 loopback=127.0.0.1\n"
+            )
+            (run_dir / "events.jsonl").write_text(secret_text, encoding="utf-8")
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "scrub",
+                    run_dir.name,
+                    "--runs-dir",
+                    str(runs_dir),
+                    "--output-dir",
+                    str(output_dir),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            scrubbed_dir = output_dir / run_dir.name
+            self.assertTrue(scrubbed_dir.is_dir())
+            self.assertEqual(run_dir.joinpath("events.jsonl").read_text(encoding="utf-8"), secret_text)
+            scrubbed_events = scrubbed_dir.joinpath("events.jsonl").read_text(encoding="utf-8")
+            self.assertIn("<redacted-localstack-auth-token>", scrubbed_events)
+            self.assertIn("<redacted-model-api-key>", scrubbed_events)
+            self.assertIn("<redacted-azure-client-secret>", scrubbed_events)
+            self.assertIn("<redacted-uuid>", scrubbed_events)
+            self.assertIn("<redacted-private-ipv4>", scrubbed_events)
+            self.assertIn("127.0.0.1", scrubbed_events)
+            scrub_report = json.loads(scrubbed_dir.joinpath("scrub-report.json").read_text(encoding="utf-8"))
+            self.assertEqual(scrub_report["schema_version"], 1)
+            self.assertIn("events.jsonl", scrub_report["files_changed"])
+            self.assertEqual(scrub_report["redaction_counts"]["localstack_auth_token"], 1)
+            self.assertEqual(scrub_report["redaction_counts"]["private_ipv4"], 1)
+            self.assertIn("Scrubbed run:", completed.stdout)
+
+    def test_scrub_command_refuses_to_overwrite_existing_output(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            runs_dir = root / "runs"
+            output_dir = root / "scrubbed-runs"
+            run_dir = _minimal_run(runs_dir)
+            (output_dir / run_dir.name).mkdir(parents=True)
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "scrub",
+                    run_dir.name,
+                    "--runs-dir",
+                    str(runs_dir),
+                    "--output-dir",
+                    str(output_dir),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("already exists", completed.stderr)
+
 
 def _minimal_run(runs_dir: Path) -> Path:
     run_dir = runs_dir / "20260601-120000"

@@ -15,6 +15,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Local target enforcement | implemented | attack runner rejects non-local HTTP targets by default |
 | Attack artifact hashes | implemented | `red-tool` events include script and manifest SHA-256 values |
 | Output truncation metadata | implemented | `red-tool` events identify truncated stdout/stderr |
+| Non-destructive artifact scrubber | implemented | `nullstate scrub` copies and redacts run artifacts |
 | Report evidence classification | implemented | reports distinguish runtime, inconclusive, and offline simulation |
 | Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
 
@@ -68,7 +69,7 @@ These fields make evidence reproducible and easier to audit in CI, support, and 
 
 ### Artifact Scrubbing
 
-Before publishing, uploading, or attaching run bundles, an artifact scrubber should redact:
+Before publishing, uploading, or attaching run bundles, run `nullstate scrub`. The scrubber writes a sanitized copy and redacts:
 
 - LocalStack auth tokens
 - model endpoint keys
@@ -79,7 +80,7 @@ Before publishing, uploading, or attaching run bundles, an artifact scrubber sho
 - provider credentials
 - raw model prompts if they contain customer context
 
-The scrubber should write a scrub report that lists which files were processed and which redaction rules matched.
+The scrubber writes `scrub-report.json`, listing which files were processed and which redaction rules matched.
 
 ### Evidence Classification
 
@@ -94,9 +95,8 @@ If a report says "exploited", it should include observed command evidence or exp
 
 ## Near-Term Readiness Tasks
 
-1. Add artifact scrubber command and tests.
-2. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
-3. Run live LocalStack Azure validation and document emulator-specific limitations.
+1. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
+2. Run live LocalStack Azure validation and document emulator-specific limitations.
 
 ## Commercial Boundary
 

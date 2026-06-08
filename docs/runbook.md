@@ -102,6 +102,15 @@ Open a known run ID even when it is nested under a named evidence folder:
 python -m nullstate report 20260509-200601 --runs-dir runs
 ```
 
+Create a scrubbed copy before publishing, attaching to support tickets, or using run artifacts in a public case study:
+
+```powershell
+python -m nullstate scrub --runs-dir runs
+python -m nullstate scrub 20260509-200601 --runs-dir runs --output-dir scrubbed-runs
+```
+
+`scrub` writes a copied run directory under `scrubbed-runs/` and leaves the original run untouched. It refuses to overwrite an existing scrubbed copy. Review `scrub-report.json` before sharing.
+
 ## Model endpoint setup
 
 For one model endpoint serving both red and blue roles, set:

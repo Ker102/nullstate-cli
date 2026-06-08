@@ -49,6 +49,7 @@ Updated 2026-06-09:
 - Completed locally: first code-level enterprise guardrails:
   - attack runner rejects non-local HTTP targets by default
   - `red-tool` payloads include schema version, command policy ID, target classification, `attack.py` hash, manifest hash, and stdout/stderr truncation metadata
+  - `nullstate scrub` creates non-destructive redacted run copies with `scrub-report.json`
 - Verified locally with Ruff, mypy, full unittest discovery, and an offline Azure smoke run.
 - Not pushed: local feature-branch work should remain local unless the user explicitly asks to push.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
@@ -317,7 +318,7 @@ Report language must distinguish:
 
 ## Task 6: Enterprise Guardrails
 
-Status: partially implemented. Documentation/readiness checklist is complete, and the attack runner now enforces local targets and records first-pass audit metadata. Artifact scrubbing and a future live-cloud approval gate remain future work.
+Status: partially implemented. Documentation/readiness checklist is complete, the attack runner enforces local targets and records first-pass audit metadata, and `nullstate scrub` creates sanitized run copies. A future live-cloud approval gate remains future work.
 
 **Files:**
 - Modify: `docs/security-model.md`
@@ -342,6 +343,7 @@ Implementation notes from 2026-06-09:
 - Added attack-runner local target validation for `offline://`, `local://`, loopback HTTP(S), and LocalStack-scoped HTTP(S) targets.
 - Added first-pass `red-tool` audit metadata: `schema_version`, `command_policy_id`, `target_classification`, `attack_script_sha256`, and `manifest_sha256`.
 - Added bounded stdout/stderr capture metadata: `stdout_truncated` and `stderr_truncated`.
+- Added `nullstate scrub`, a non-destructive artifact scrubber that copies a run, redacts common secrets/identifiers/private IPs, and writes `scrub-report.json`.
 - Live Azure validation is still waiting on `LOCALSTACK_AUTH_TOKEN`.
 
 ---

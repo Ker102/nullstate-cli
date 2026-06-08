@@ -111,6 +111,7 @@ nullstate status
 nullstate init-demo azure-public-blob --output examples/azure-public-blob
 nullstate run examples/azure-public-blob --offline
 nullstate report
+nullstate scrub
 ```
 
 Run another offline scenario:
@@ -268,6 +269,14 @@ Each run writes:
 - `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
+- `scrubbed-runs/<run-id>/scrub-report.json` when `nullstate scrub` is used
+
+Create a scrubbed copy before sharing evidence:
+
+```powershell
+nullstate scrub
+nullstate scrub 20260608-224625 --runs-dir runs --output-dir scrubbed-runs
+```
 
 `events.jsonl` includes `red-tool` entries for the allowlisted attack command before and after remediation.
 

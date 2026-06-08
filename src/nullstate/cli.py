@@ -15,6 +15,7 @@ from rich.table import Table
 
 from .agents import LlmAgent
 from .artifacts import EventLog, new_run_id, write_json
+from .artifact_scrubber import scrub_run_artifacts
 from .attack import simulate_attack, write_attack_script
 from .attack_manifest import write_attack_manifest
 from .attack_runner import run_attack_script
@@ -632,6 +633,33 @@ def dashboard(
         [
             f"nullstate bundle {run_dir.name} --runs-dir {runs_dir}",
             f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
+
+
+@app.command()
+def scrub(
+    run_id: str | None = typer.Argument(None, help="Run ID to scrub. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    output_dir: Path = typer.Option(Path("scrubbed-runs"), "--output-dir", help="Directory for scrubbed run copies."),
+) -> None:
+    """Create a scrubbed copy of a run for publishing, support, or review."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    try:
+        report_payload = scrub_run_artifacts(run_dir, output_dir)
+    except FileExistsError as error:
+        raise typer.BadParameter(str(error)) from error
+    scrubbed_dir = Path(str(report_payload["scrubbed_run_dir"]))
+    console.print(f"Scrubbed run: {scrubbed_dir}")
+    console.print(f"Scrub report: {scrubbed_dir / 'scrub-report.json'}")
+    console.print(
+        f"Files scanned={report_payload['files_scanned']} "
+        f"changed={len(report_payload['files_changed'])}"
+    )
+    _print_next_steps(
+        [
+            f"nullstate report {scrubbed_dir.name} --runs-dir {scrubbed_dir.parent}",
+            f"nullstate bundle {scrubbed_dir.name} --runs-dir {scrubbed_dir.parent}",
         ]
     )
 

@@ -366,6 +366,8 @@ Each run writes:
 
 `nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login.
 
+`nullstate scrub` creates a sanitized copy of a run under `scrubbed-runs/` and writes `scrub-report.json`. It leaves the original run untouched and refuses to overwrite an existing scrubbed copy.
+
 ## Security Boundaries
 
 The important boundaries are:
@@ -376,7 +378,7 @@ The important boundaries are:
 - The attack runner only executes generated run-directory `attack.py`.
 - Secrets are loaded from environment variables or ignored local env files.
 - Run artifacts must be reviewed before publishing.
-- A future artifact scrubber should run before public case-study publishing, CI upload, or support bundle sharing.
+- `nullstate scrub` should run before public case-study publishing, CI upload, or support bundle sharing.
 - A future `--allow-live-cloud` gate should be required before any non-local cloud endpoint is targeted.
 
 ## Extension Points
