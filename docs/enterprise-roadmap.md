@@ -244,7 +244,7 @@ Before businesses can rely on it, the product needs:
 5. Stable scenario schema.
 6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
 7. SARIF or JSON export for security tooling. SARIF export and JSON policy-result output are now available.
-8. Reproducible run manifests. `nullstate evidence-manifest` now inventories shareable artifacts with SHA-256 hashes.
+8. Reproducible run manifests. `nullstate evidence-manifest` inventories shareable artifacts with SHA-256 hashes, and `nullstate evidence-verify` checks them later.
 9. Versioned remediation rules.
 10. Safe defaults that never target real cloud unless explicitly enabled.
 
@@ -271,6 +271,7 @@ Before businesses can rely on it, the product needs:
 - baseline policy scaffold through `nullstate policy init`
 - organization-level config
 - evidence integrity manifest through `nullstate evidence-manifest`
+- evidence hash verification through `nullstate evidence-verify`
 - signed run evidence as a future cryptographic hardening step
 - SBOM and package provenance
 

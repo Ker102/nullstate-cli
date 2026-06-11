@@ -296,6 +296,7 @@ Each run writes:
 - `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
 - `runs/<run-id>/nullstate.sarif` when `nullstate sarif` is run
 - `runs/<run-id>/evidence-manifest.json` when `nullstate evidence-manifest` is run
+- `runs/<run-id>/evidence-verification.json` when `nullstate evidence-verify` is run
 - `runs/<run-id>/upload-plan.json` when `nullstate upload --dry-run` is run
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
@@ -333,10 +334,12 @@ Create an evidence integrity manifest before attaching a run to a ticket, case s
 
 ```powershell
 nullstate evidence-manifest
+nullstate evidence-verify
 nullstate evidence-manifest 20260608-224625 --runs-dir runs --output artifacts/evidence-manifest.json
+nullstate evidence-verify 20260608-224625 --runs-dir runs --manifest artifacts/evidence-manifest.json
 ```
 
-The manifest inventories shareable run artifacts with SHA-256 hashes, excludes copied workspaces and Terraform internals, and records signing as `unsigned` until cryptographic signing is implemented.
+The manifest inventories shareable run artifacts with SHA-256 hashes, excludes copied workspaces and Terraform internals, and records signing as `unsigned` until cryptographic signing is implemented. `nullstate evidence-verify` recomputes those hashes and writes `evidence-verification.json`; it exits with code `2` when a recorded artifact is missing or changed.
 
 Create a baseline from a known run so CI can ignore known findings and fail on new ones:
 

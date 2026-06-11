@@ -85,6 +85,77 @@ class EvidenceManifestTests(unittest.TestCase):
             payload = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["run"]["id"], run_dir.name)
 
+    def test_evidence_verify_passes_for_unchanged_manifest_artifacts(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            _run_nullstate("evidence-manifest", run_dir.name, "--runs-dir", str(runs_dir))
+
+            completed = _run_nullstate("evidence-verify", run_dir.name, "--runs-dir", str(runs_dir))
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            result_path = run_dir / "evidence-verification.json"
+            self.assertTrue(result_path.is_file())
+            payload = json.loads(result_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["schema_version"], 1)
+            self.assertEqual(payload["run"]["id"], run_dir.name)
+            self.assertEqual(payload["manifest"]["path"], "evidence-manifest.json")
+            self.assertEqual(payload["status"], "passed")
+            self.assertEqual(payload["failure_count"], 0)
+            self.assertEqual(payload["failures"], [])
+            self.assertGreaterEqual(payload["checked_artifact_count"], 5)
+            self.assertIn("Evidence verification:", completed.stdout)
+            self.assertIn("status=passed", completed.stdout)
+
+    def test_evidence_verify_fails_when_artifact_hash_changes(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            _run_nullstate("evidence-manifest", run_dir.name, "--runs-dir", str(runs_dir))
+            (run_dir / "report.md").write_text("tampered report\n", encoding="utf-8")
+
+            completed = _run_nullstate("evidence-verify", run_dir.name, "--runs-dir", str(runs_dir))
+
+            self.assertEqual(completed.returncode, 2, completed.stderr)
+            result_path = run_dir / "evidence-verification.json"
+            self.assertTrue(result_path.is_file(), completed.stderr)
+            payload = json.loads(result_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["status"], "failed")
+            self.assertEqual(payload["failure_count"], 1)
+            self.assertEqual(payload["failures"][0]["path"], "report.md")
+            self.assertEqual(payload["failures"][0]["reason"], "sha256_mismatch")
+            self.assertRegex(payload["failures"][0]["expected_sha256"], r"^[0-9a-f]{64}$")
+            self.assertRegex(payload["failures"][0]["actual_sha256"], r"^[0-9a-f]{64}$")
+
+    def test_evidence_verify_accepts_custom_manifest_path(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            runs_dir = root / "runs"
+            run_dir = _minimal_run(runs_dir)
+            manifest_path = root / "exports" / "evidence.json"
+            _run_nullstate(
+                "evidence-manifest",
+                run_dir.name,
+                "--runs-dir",
+                str(runs_dir),
+                "--output",
+                str(manifest_path),
+            )
+
+            completed = _run_nullstate(
+                "evidence-verify",
+                run_dir.name,
+                "--runs-dir",
+                str(runs_dir),
+                "--manifest",
+                str(manifest_path),
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads((run_dir / "evidence-verification.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["status"], "passed")
+            self.assertEqual(payload["manifest"]["path"], str(manifest_path))
+
 
 def _minimal_run(runs_dir: Path) -> Path:
     run_dir = runs_dir / "20260601-120000"
@@ -124,6 +195,15 @@ def _minimal_run(runs_dir: Path) -> Path:
     )
     (run_dir / "remediation.patch").write_text("--- a/main.tf\n+++ b/main.tf\n", encoding="utf-8")
     return run_dir
+
+
+def _run_nullstate(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "nullstate", *args],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
 
 
 if __name__ == "__main__":

@@ -11,12 +11,49 @@ from . import __version__
 
 EVIDENCE_MANIFEST_SCHEMA_VERSION = 1
 EVIDENCE_MANIFEST_FILENAME = "evidence-manifest.json"
+EVIDENCE_VERIFICATION_FILENAME = "evidence-verification.json"
 
 
 def write_evidence_manifest(run_dir: Path, output_path: Path | None = None) -> dict[str, Any]:
     run_dir = run_dir.resolve()
     target = output_path or run_dir / EVIDENCE_MANIFEST_FILENAME
     payload = build_evidence_manifest(run_dir, output_path=target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return payload
+
+
+def verify_evidence_manifest(
+    run_dir: Path,
+    *,
+    manifest_path: Path | None = None,
+    output_path: Path | None = None,
+) -> dict[str, Any]:
+    run_dir = run_dir.resolve()
+    source = manifest_path or run_dir / EVIDENCE_MANIFEST_FILENAME
+    manifest = _read_json(source, default={})
+    failures = _verify_manifest_artifacts(run_dir, manifest)
+    artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), list) else []
+    payload = {
+        "schema_version": 1,
+        "generated_at": datetime.now(UTC).isoformat(),
+        "run": {
+            "id": str((manifest.get("run") or {}).get("id") or run_dir.name),
+            "path": str(run_dir),
+            "scenario": (manifest.get("run") or {}).get("scenario"),
+            "target": (manifest.get("run") or {}).get("target"),
+        },
+        "manifest": {
+            "path": _manifest_display_path(run_dir, source),
+            "schema_version": manifest.get("schema_version"),
+            "hash_algorithm": (manifest.get("integrity") or {}).get("hash_algorithm"),
+        },
+        "status": "failed" if failures else "passed",
+        "checked_artifact_count": len(artifacts),
+        "failure_count": len(failures),
+        "failures": failures,
+    }
+    target = output_path or run_dir / EVIDENCE_VERIFICATION_FILENAME
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
@@ -47,7 +84,13 @@ def build_evidence_manifest(run_dir: Path, *, output_path: Path | None = None) -
         "integrity": {
             "hash_algorithm": "sha256",
             "workspace_included": False,
-            "excluded_paths": ["workspace/", ".terraform/", "__pycache__/", EVIDENCE_MANIFEST_FILENAME],
+            "excluded_paths": [
+                "workspace/",
+                ".terraform/",
+                "__pycache__/",
+                EVIDENCE_MANIFEST_FILENAME,
+                EVIDENCE_VERIFICATION_FILENAME,
+            ],
         },
         "signing": {
             "status": "unsigned",
@@ -61,7 +104,7 @@ def build_evidence_manifest(run_dir: Path, *, output_path: Path | None = None) -
 def _artifact_inventory(run_dir: Path, *, output_path: Path | None) -> list[dict[str, Any]]:
     artifacts: list[dict[str, Any]] = []
     excluded_dirs = {"workspace", ".terraform", "__pycache__"}
-    excluded_files = {EVIDENCE_MANIFEST_FILENAME}
+    excluded_files = {EVIDENCE_MANIFEST_FILENAME, EVIDENCE_VERIFICATION_FILENAME}
     if output_path is not None:
         try:
             excluded_files.add(output_path.resolve().relative_to(run_dir).as_posix())
@@ -84,6 +127,74 @@ def _artifact_inventory(run_dir: Path, *, output_path: Path | None) -> list[dict
             }
         )
     return artifacts
+
+
+def _verify_manifest_artifacts(run_dir: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    failures: list[dict[str, Any]] = []
+    integrity = manifest.get("integrity") or {}
+    if integrity.get("hash_algorithm") != "sha256":
+        return [
+            {
+                "path": None,
+                "reason": "unsupported_hash_algorithm",
+                "expected_hash_algorithm": integrity.get("hash_algorithm"),
+                "actual_hash_algorithm": "sha256",
+            }
+        ]
+
+    artifacts = manifest.get("artifacts")
+    if not isinstance(artifacts, list):
+        return [{"path": None, "reason": "invalid_artifacts"}]
+
+    for item in artifacts:
+        if not isinstance(item, dict):
+            failures.append({"path": None, "reason": "invalid_artifact_entry"})
+            continue
+        relative = item.get("path")
+        if not isinstance(relative, str) or not relative:
+            failures.append({"path": None, "reason": "invalid_artifact_path"})
+            continue
+        artifact_path = (run_dir / relative).resolve()
+        try:
+            artifact_path.relative_to(run_dir)
+        except ValueError:
+            failures.append({"path": relative, "reason": "artifact_outside_run_dir"})
+            continue
+        if not artifact_path.is_file():
+            failures.append({"path": relative, "reason": "missing"})
+            continue
+        actual_sha256 = _sha256(artifact_path)
+        expected_sha256 = item.get("sha256")
+        if actual_sha256 != expected_sha256:
+            failures.append(
+                {
+                    "path": relative,
+                    "reason": "sha256_mismatch",
+                    "expected_sha256": expected_sha256,
+                    "actual_sha256": actual_sha256,
+                }
+            )
+            continue
+        actual_size = artifact_path.stat().st_size
+        expected_size = item.get("size_bytes")
+        if actual_size != expected_size:
+            failures.append(
+                {
+                    "path": relative,
+                    "reason": "size_mismatch",
+                    "expected_size_bytes": expected_size,
+                    "actual_size_bytes": actual_size,
+                }
+            )
+    return failures
+
+
+def _manifest_display_path(run_dir: Path, manifest_path: Path) -> str:
+    resolved = manifest_path.resolve()
+    try:
+        return resolved.relative_to(run_dir).as_posix()
+    except ValueError:
+        return str(resolved)
 
 
 def _read_events(path: Path) -> list[dict[str, Any]]:

@@ -382,6 +382,7 @@ Each run writes:
 | `policy-result.json` | Standalone JSON policy decision for an existing run |
 | `report.md` | Human-readable summary |
 | `evidence-manifest.json` | SHA-256 inventory for shareable run evidence when `nullstate evidence-manifest` is used |
+| `evidence-verification.json` | Verification result for a manifest when `nullstate evidence-verify` is used |
 | `upload-plan.json` | No-network upload plan when `nullstate upload --dry-run` is used |
 | `workspace/` | Copied and remediated IaC workspace |
 
@@ -399,7 +400,9 @@ Each run writes:
 
 `nullstate policy-result` writes the same style of threshold and baseline decision for an existing run without re-running the scenario.
 
-`nullstate evidence-manifest` writes `evidence-manifest.json`, a deterministic integrity inventory for shareable run artifacts. It excludes copied workspaces, Terraform internals, Python caches, and the manifest file itself. The first version records signing as `unsigned`; future signing work should attach a real cryptographic signature rather than changing this field cosmetically.
+`nullstate evidence-manifest` writes `evidence-manifest.json`, a deterministic integrity inventory for shareable run artifacts. It excludes copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. The first version records signing as `unsigned`; future signing work should attach a real cryptographic signature rather than changing this field cosmetically.
+
+`nullstate evidence-verify` writes `evidence-verification.json` after recomputing recorded artifact hashes and file sizes. It checks only artifacts listed in the manifest, ignores unrelated new files, and exits with code `2` when a recorded artifact is missing or changed.
 
 `nullstate upload --dry-run` writes `upload-plan.json`, refreshes `run-bundle.json`, records the intended endpoint and token environment variable, and confirms whether the token exists without storing the token value.
 

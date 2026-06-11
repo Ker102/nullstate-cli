@@ -25,7 +25,12 @@ from .bundle import BUNDLE_FILENAME, write_run_bundle
 from .ci import CI_SUMMARY_FILENAME, build_ci_summary, normalize_fail_on_severity
 from .dashboard import write_run_dashboard
 from .demo import create_demo
-from .evidence_manifest import EVIDENCE_MANIFEST_FILENAME, write_evidence_manifest
+from .evidence_manifest import (
+    EVIDENCE_MANIFEST_FILENAME,
+    EVIDENCE_VERIFICATION_FILENAME,
+    verify_evidence_manifest,
+    write_evidence_manifest,
+)
 from .findings import find_scenario_findings
 from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
@@ -756,6 +761,41 @@ def evidence_manifest(
             f"nullstate scrub {run_dir.name} --runs-dir {runs_dir}",
         ]
     )
+
+
+@app.command("evidence-verify")
+def evidence_verify(
+    run_id: str | None = typer.Argument(None, help="Run ID to verify. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    manifest: Path | None = typer.Option(
+        None,
+        "--manifest",
+        help=f"Manifest path. Defaults to {EVIDENCE_MANIFEST_FILENAME} in the run directory.",
+    ),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help=f"Output JSON path. Defaults to {EVIDENCE_VERIFICATION_FILENAME} in the run directory.",
+    ),
+) -> None:
+    """Verify run artifacts against an evidence integrity manifest."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    payload = verify_evidence_manifest(run_dir, manifest_path=manifest, output_path=output)
+    result_path = output or run_dir / EVIDENCE_VERIFICATION_FILENAME
+    console.print(f"Evidence verification: {result_path}")
+    console.print(
+        f"Run {payload['run']['id']} - status={payload['status']} - "
+        f"checked={payload['checked_artifact_count']} - failures={payload['failure_count']}"
+    )
+    _print_next_steps(
+        [
+            f"nullstate evidence-manifest {run_dir.name} --runs-dir {runs_dir}",
+            f"nullstate scrub {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
+    if payload["status"] != "passed":
+        raise typer.Exit(code=2)
 
 
 @app.command()

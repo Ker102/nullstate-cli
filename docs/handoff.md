@@ -274,6 +274,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - upload dry-run planning for future cloud ingestion
 - red-tool policy scaffold and standalone `policy-result.json`
 - unsigned evidence integrity manifests through `nullstate evidence-manifest`
+- evidence hash verification through `nullstate evidence-verify`
 
 Do not jump straight to full SaaS before stabilizing:
 

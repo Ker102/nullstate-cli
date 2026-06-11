@@ -49,6 +49,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Writes `evidence-manifest.json` with SHA-256 hashes and file sizes for shareable run artifacts.
   - Excludes copied workspaces, Terraform internals, Python caches, and the manifest file itself.
   - Records signing as `unsigned`; cryptographic signing remains future hardening.
+- `feat: add evidence manifest verification` (this checkpoint)
+  - Added `nullstate evidence-verify`.
+  - Writes `evidence-verification.json` with pass/fail status, checked artifact count, and mismatch details.
+  - Exits with code `2` when a manifest-listed artifact is missing or changed.
+  - Keeps cryptographic signature verification as future hardening.
 
 ## In Progress
 
@@ -64,4 +69,4 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 - Richer per-scenario policy fields beyond target classification and command policy ID.
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Cryptographic signing and verification for `evidence-manifest.json`.
+- Cryptographic signing and signature verification for `evidence-manifest.json`.

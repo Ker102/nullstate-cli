@@ -20,6 +20,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
 | Red-tool policy scaffold | implemented | `nullstate policy init` and `run --policy-file` |
 | Evidence integrity manifest | implemented | `nullstate evidence-manifest` writes SHA-256 artifact inventory with explicit unsigned status |
+| Evidence manifest verification | implemented | `nullstate evidence-verify` detects missing or changed manifest artifacts |
 
 ## Required Before Enterprise Claims
 
@@ -71,7 +72,7 @@ Future event metadata should add:
 
 These fields make evidence reproducible and easier to audit in CI, support, and compliance workflows.
 
-`nullstate evidence-manifest` adds a run-level artifact inventory for support, case-study, and future ingestion workflows. It records SHA-256 hashes and file sizes for shareable artifacts while excluding copied workspaces, Terraform internals, Python caches, and the manifest file itself. The current manifest is deliberately marked `unsigned`; enterprise signing should add a real signature, signing key identity, and verification workflow.
+`nullstate evidence-manifest` adds a run-level artifact inventory for support, case-study, and future ingestion workflows. It records SHA-256 hashes and file sizes for shareable artifacts while excluding copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. `nullstate evidence-verify` recomputes recorded hashes and writes `evidence-verification.json`, exiting with code `2` when a listed artifact is missing or changed. The current manifest is deliberately marked `unsigned`; enterprise signing should add a real signature, signing key identity, and verification workflow.
 
 ### Artifact Scrubbing
 
@@ -103,7 +104,7 @@ If a report says "exploited", it should include observed command evidence or exp
 
 1. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
 2. Run live LocalStack Azure validation and document emulator-specific limitations.
-3. Add cryptographic signing and verification for `evidence-manifest.json`.
+3. Add cryptographic signing and signature verification for `evidence-manifest.json`.
 
 ## Commercial Boundary
 
