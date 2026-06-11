@@ -28,6 +28,7 @@ from .demo import create_demo
 from .findings import find_scenario_findings
 from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
+from .policy import DEFAULT_POLICY_FILENAME, load_attack_policy, write_default_policy
 from .remediation import remediate_scenario_files
 from .report import render_report
 from .sarif import SARIF_FILENAME, write_sarif
@@ -45,8 +46,10 @@ app = typer.Typer(
 )
 sandbox_app = typer.Typer(no_args_is_help=True, help="Manage local sandbox backends.")
 scenarios_app = typer.Typer(no_args_is_help=True, help="Inspect supported attack scenarios.")
+policy_app = typer.Typer(no_args_is_help=True, help="Manage red-tool execution policies.")
 app.add_typer(sandbox_app, name="sandbox")
 app.add_typer(scenarios_app, name="scenarios")
+app.add_typer(policy_app, name="policy")
 console = Console()
 
 BANNER = r"""
@@ -203,6 +206,7 @@ def run(
         help="CI failure threshold: none, low, medium, high, or critical.",
     ),
     baseline_file: Path | None = typer.Option(None, "--baseline-file", help="Optional baseline JSON file for known findings."),
+    policy_file: Path | None = typer.Option(None, "--policy-file", help="Optional red-tool execution policy JSON file."),
 ) -> None:
     """Run detection, attack, remediation, and validation."""
     try:
@@ -220,6 +224,10 @@ def run(
         offline = True
     for key, value in _localstack_azure_auth_env(backend.name, offline=offline).items():
         os.environ.setdefault(key, value)
+    try:
+        attack_policy = load_attack_policy(policy_file)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
     try:
         red_config = _resolve_agent_config("red", explicit_provider=red_provider, shared_provider=llm_provider, explicit_base_url=red_base_url)
         blue_config = _resolve_agent_config("blue", explicit_provider=blue_provider, shared_provider=llm_provider, explicit_base_url=blue_base_url)
@@ -324,6 +332,7 @@ def run(
         target_url=attack_target_url,
         stage="before",
         manifest_path=attack_manifest_path,
+        policy=attack_policy,
     )
     events.write("red-tool", "Allowlisted attack command completed", **before_tool.to_dict())
     before_attack = simulate_attack(findings, "before")
@@ -408,6 +417,7 @@ def run(
         target_url=attack_target_url,
         stage="after",
         manifest_path=attack_manifest_path,
+        policy=attack_policy,
     )
     events.write("red-tool", "Allowlisted attack command completed", **after_tool.to_dict())
     after_attack = simulate_attack(remaining_findings, "after")
@@ -517,6 +527,22 @@ def scenarios_status(name: str = typer.Argument(..., help="Scenario name.")) -> 
     table.add_row("Risk", scenario.risk)
     table.add_row("Description", scenario.description)
     console.print(table)
+
+
+@policy_app.command("init")
+def policy_init(
+    output: Path = typer.Option(Path(DEFAULT_POLICY_FILENAME), "--output", "-o", help="Policy JSON output path."),
+) -> None:
+    """Create a starter red-tool execution policy."""
+    payload = write_default_policy(output)
+    console.print(f"Policy: {output}")
+    console.print(
+        "Allowed targets="
+        + ", ".join(payload["allowed_target_classifications"])
+        + " · command policies="
+        + ", ".join(payload["allowed_command_policy_ids"])
+    )
+    _print_next_steps([f"nullstate run examples/aws-public-s3 --offline --policy-file {output}"])
 
 
 @sandbox_app.command("status")

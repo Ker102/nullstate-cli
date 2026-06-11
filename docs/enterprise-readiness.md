@@ -18,6 +18,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Non-destructive artifact scrubber | implemented | `nullstate scrub` copies and redacts run artifacts |
 | Report evidence classification | implemented | reports distinguish runtime, inconclusive, and offline simulation |
 | Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
+| Red-tool policy scaffold | implemented | `nullstate policy init` and `run --policy-file` |
 
 ## Required Before Enterprise Claims
 
@@ -46,6 +47,8 @@ The red runner should stay template-based. A scenario policy should define:
 - allowed target URL schemes and host patterns
 
 The model may explain an attack path, but it should not create arbitrary shell commands.
+
+`nullstate policy init` creates the first JSON policy scaffold. `nullstate run --policy-file` enforces allowed target classifications and command policy IDs before `attack.py` can execute. This is intentionally narrower than a full policy engine, but it creates the product contract for future per-scenario and per-backend controls.
 
 ### Event Schema Hardening
 

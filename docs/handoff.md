@@ -114,6 +114,8 @@ Working features:
 - Code-level enterprise guardrails:
   - attack runner rejects non-local HTTP targets by default
   - allowed targets are offline, local, loopback, localhost, and LocalStack-scoped HTTP(S)
+  - `nullstate policy init` creates a red-tool allowlist policy scaffold
+  - `nullstate run --policy-file` enforces allowed target classifications and command policy IDs
   - `red-tool` payloads include schema version, command policy ID, target classification, SHA-256 hashes, and stdout/stderr truncation flags
   - `nullstate scrub` creates non-destructive scrubbed run copies and `scrub-report.json`
 - Sandbox startup hardening:

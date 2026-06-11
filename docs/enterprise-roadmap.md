@@ -239,7 +239,7 @@ Before businesses can rely on it, the product needs:
 
 1. Real exploit probes for core scenarios.
 2. Clear distinction between simulated, inferred, and observed evidence.
-3. Policy-defined command allowlists.
+3. Policy-defined command allowlists. Baseline target and command policy enforcement is now available.
 4. Artifact scrubbing.
 5. Stable scenario schema.
 6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
@@ -268,6 +268,7 @@ Before businesses can rely on it, the product needs:
 ### P2: Enterprise controls
 
 - policy file for allowed targets and commands
+- baseline policy scaffold through `nullstate policy init`
 - organization-level config
 - signed run evidence
 - SBOM and package provenance

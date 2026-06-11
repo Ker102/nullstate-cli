@@ -131,6 +131,7 @@ nullstate sandbox list
 nullstate sandbox status localstack-azure
 nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
+nullstate policy init --output nullstate-policy.json
 ```
 
 `status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
@@ -315,6 +316,15 @@ nullstate sarif 20260608-224625 --runs-dir runs --output artifacts/nullstate.sar
 ```
 
 Use `--fail-on-severity high` or `--fail-on-severity critical` when the CI job should fail on matching findings.
+
+Create and use a red-tool policy file:
+
+```powershell
+nullstate policy init --output nullstate-policy.json
+nullstate run examples/aws-public-s3 --offline --mock-agents --policy-file nullstate-policy.json
+```
+
+The policy file allowlists target classifications such as `offline`, `local`, and `local-http`, plus command policy IDs such as `generated-attack-script-v1`.
 
 Create a baseline from a known run so CI can ignore known findings and fail on new ones:
 

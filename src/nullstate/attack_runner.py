@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from .policy import AttackPolicy, enforce_attack_policy
+
 
 @dataclass(frozen=True)
 class AttackToolResult:
@@ -47,12 +49,19 @@ def run_attack_script(
     manifest_path: Path | None = None,
     timeout_seconds: int = 30,
     max_output_bytes: int = 12_000,
+    policy: AttackPolicy | None = None,
 ) -> AttackToolResult:
     resolved_script = script_path.resolve()
     resolved_run_dir = run_dir.resolve()
     _validate_attack_script(resolved_script, resolved_run_dir)
     resolved_manifest = _validate_attack_manifest(manifest_path, resolved_run_dir)
     target_classification = _validate_local_target_url(target_url)
+    command_policy_id = "generated-attack-script-v1"
+    enforce_attack_policy(
+        policy,
+        target_classification=target_classification,
+        command_policy_id=command_policy_id,
+    )
 
     command = [
         sys.executable,
@@ -79,7 +88,7 @@ def run_attack_script(
     stderr, stderr_truncated = _truncate_text(completed.stderr, max_output_bytes)
     return AttackToolResult(
         schema_version=1,
-        command_policy_id="generated-attack-script-v1",
+        command_policy_id=command_policy_id,
         command=command,
         target_url=target_url,
         target_classification=target_classification,

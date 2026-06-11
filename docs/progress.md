@@ -33,6 +33,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `nullstate baseline`.
   - Added `nullstate run --ci --baseline-file`.
   - CI severity thresholds are evaluated against new findings only when a baseline is supplied.
+- `feat: add red-tool policy scaffold` (this checkpoint)
+  - Added `nullstate policy init`.
+  - Added optional `nullstate run --policy-file`.
+  - Enforces allowed target classifications and command policy IDs before `attack.py` execution.
 
 ## In Progress
 
@@ -47,5 +51,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - JSON policy output beyond `ci-summary.json`.
-- Policy file for allowed targets and command templates.
+- Richer per-scenario policy fields beyond target classification and command policy ID.
 - Upload dry-run to live upload transition once an ingestion API exists.
