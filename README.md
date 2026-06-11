@@ -152,6 +152,7 @@ Create a portable run bundle or a free local HTML dashboard:
 nullstate bundle
 nullstate dashboard --open
 nullstate sarif
+nullstate upload --dry-run
 ```
 
 ## Live LocalStack demo path
@@ -289,6 +290,7 @@ Each run writes:
 - `runs/<run-id>/run-bundle.json` when `nullstate bundle` or `nullstate dashboard` is run
 - `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
 - `runs/<run-id>/nullstate.sarif` when `nullstate sarif` is run
+- `runs/<run-id>/upload-plan.json` when `nullstate upload --dry-run` is run
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
 - `scrubbed-runs/<run-id>/scrub-report.json` when `nullstate scrub` is used
@@ -312,6 +314,15 @@ nullstate sarif 20260608-224625 --runs-dir runs --output artifacts/nullstate.sar
 
 Use `--fail-on-severity high` or `--fail-on-severity critical` when the CI job should fail on matching findings.
 
+Prepare a future cloud-ingestion upload plan without sending data:
+
+```powershell
+nullstate upload --dry-run
+nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstate.dev/v1/runs --dry-run
+```
+
+`upload-plan.json` records the target endpoint, bundle checksum, artifact count, and whether `NULLSTATE_CLOUD_TOKEN` is present. It never stores token values.
+
 ## Documentation
 
 - [Case study](docs/case-study.md)
@@ -324,6 +335,7 @@ Use `--fail-on-severity high` or `--fail-on-severity critical` when the CI job s
 - [Model serving runbook](docs/model-serving.md)
 - [Enterprise roadmap](docs/enterprise-roadmap.md)
 - [Enterprise readiness](docs/enterprise-readiness.md)
+- [Productization progress](docs/progress.md)
 - [Real sandbox red-team command plan](docs/plans/2026-06-01-real-sandbox-red-team-commands.md)
 - [Project handoff](docs/handoff.md)
 - [AMD compute strategy](docs/compute-strategy.md)

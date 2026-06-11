@@ -24,6 +24,7 @@ Use offline mode for deterministic pull request evidence when no sandbox is avai
 python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none --runs-dir runs/ci
 python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
 python -m nullstate bundle --runs-dir runs/ci
+python -m nullstate upload --runs-dir runs/ci --dry-run
 ```
 
 `--ci` writes `ci-summary.json` into the run directory and exits with code `2` when the original findings meet or exceed `--fail-on-severity`. Supported thresholds are `none`, `low`, `medium`, `high`, and `critical`.
@@ -35,6 +36,8 @@ Use `--fail-on-severity none` for demonstration or pure upload workflows. Use `-
 The repository includes `.github/workflows/nullstate-sarif.yml` as the first GitHub Actions example. It runs an offline AWS S3 scenario with `--ci --fail-on-severity none` so the intentionally vulnerable demo can still upload SARIF, uploads it with `github/codeql-action/upload-sarif`, and stores the run artifacts for review. Change the threshold to `high` or `critical` when using the workflow as an enforcing PR gate against real project IaC.
 
 Run `nullstate scrub` before attaching bundles or reports to public issues, support tickets, or case-study artifacts.
+
+`nullstate upload --dry-run` writes `upload-plan.json` beside the run bundle. It prepares the future Nullstate Cloud ingestion request shape without sending network traffic or storing token values.
 
 ## Security checks
 

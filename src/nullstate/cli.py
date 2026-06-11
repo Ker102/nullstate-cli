@@ -34,6 +34,7 @@ from .sandbox import get_backend, list_backends, probe_backend, render_commands,
 from .scenario_detection import infer_scenario
 from .scenarios import get_scenario, list_scenarios
 from .terraform import apply_saved_plan, load_plan_json
+from .upload import DEFAULT_UPLOAD_ENDPOINT, DEFAULT_UPLOAD_TOKEN_ENV, UPLOAD_PLAN_FILENAME, write_upload_plan
 
 
 app = typer.Typer(
@@ -731,6 +732,33 @@ def scrub(
         [
             f"nullstate report {scrubbed_dir.name} --runs-dir {scrubbed_dir.parent}",
             f"nullstate bundle {scrubbed_dir.name} --runs-dir {scrubbed_dir.parent}",
+        ]
+    )
+
+
+@app.command()
+def upload(
+    run_id: str | None = typer.Argument(None, help="Run ID to prepare for upload. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    endpoint: str = typer.Option(DEFAULT_UPLOAD_ENDPOINT, "--endpoint", help="Future Nullstate Cloud ingestion endpoint."),
+    token_env: str = typer.Option(DEFAULT_UPLOAD_TOKEN_ENV, "--token-env", help="Environment variable that will hold the cloud token."),
+    dry_run: bool = typer.Option(True, "--dry-run/--no-dry-run", help="Only write an upload plan; live upload is not implemented yet."),
+) -> None:
+    """Prepare a dry-run upload plan for future Nullstate Cloud ingestion."""
+    if not dry_run:
+        raise typer.BadParameter("Live upload is not implemented yet. Use --dry-run.")
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    plan = write_upload_plan(run_dir, endpoint=endpoint, token_env=token_env)
+    plan_path = run_dir / UPLOAD_PLAN_FILENAME
+    console.print(f"Upload plan: {plan_path}")
+    console.print(
+        f"Run {plan['run']['id']} · dry_run={plan['dry_run']} · "
+        f"token_present={plan['auth']['token_present']}"
+    )
+    _print_next_steps(
+        [
+            f"nullstate bundle {run_dir.name} --runs-dir {runs_dir}",
+            f"nullstate scrub {run_dir.name} --runs-dir {runs_dir}",
         ]
     )
 

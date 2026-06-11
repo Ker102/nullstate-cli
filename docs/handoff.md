@@ -9,8 +9,8 @@ This file is written for a fresh agent with no conversation history and no MCP t
 The repository is currently under a hackathon freeze rule:
 
 - Do not merge anything into `main`.
-- Do not push new work unless the user explicitly asks.
-- It is safe to keep working locally on feature branches and make local commits.
+- Do not push or merge updates to `main`.
+- It is safe to keep working on feature branches, make checkpoint commits, and push those feature branches.
 - Current active branch: `feature/red-agent-runner`.
 - Current local state at handoff: active work continues on this feature branch; run `git status --short --branch` and `git log --oneline -8` for exact local ahead/uncommitted state.
 
@@ -83,6 +83,11 @@ Working features:
 - Portable run bundle:
   - `nullstate bundle`
   - writes `runs/<id>/run-bundle.json`
+- Upload dry-run scaffold:
+  - `nullstate upload --dry-run`
+  - refreshes `run-bundle.json`
+  - writes `runs/<id>/upload-plan.json`
+  - records token env presence without storing token values
 - SARIF export:
   - `nullstate sarif`
   - writes `runs/<id>/nullstate.sarif`
@@ -256,7 +261,7 @@ Do not jump straight to full SaaS before stabilizing:
 1. run bundle schema
 2. local dashboard
 3. JSON policy output, baseline comparison, and richer GitHub Actions examples
-4. upload dry-run/cloud token scaffold
+4. live upload implementation after a real ingestion API exists
 5. real cloud ingestion service
 
 ## Branch and release guidance
@@ -264,8 +269,7 @@ Do not jump straight to full SaaS before stabilizing:
 Until the user says the freeze is over:
 
 - Do not merge PR #24.
-- Do not push local commits unless asked.
+- Do not push or merge to `main`.
+- Feature branch checkpoint pushes are allowed.
 - Do not tag releases.
 - Do not update `main`.
-
-If the next agent needs to preserve work before switching devices, ask the user whether to push the current branch. Do not assume.
