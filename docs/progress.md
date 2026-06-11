@@ -29,6 +29,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `nullstate upload --dry-run`.
   - Refreshes `run-bundle.json` and writes `upload-plan.json`.
   - Records endpoint intent, bundle checksum, artifact count, and token presence without network calls or token values.
+- `feat: add CI baseline comparison` (this checkpoint)
+  - Added `nullstate baseline`.
+  - Added `nullstate run --ci --baseline-file`.
+  - CI severity thresholds are evaluated against new findings only when a baseline is supplied.
 
 ## In Progress
 
@@ -43,6 +47,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - JSON policy output beyond `ci-summary.json`.
-- Baseline comparison for CI.
 - Policy file for allowed targets and command templates.
 - Upload dry-run to live upload transition once an ingestion API exists.

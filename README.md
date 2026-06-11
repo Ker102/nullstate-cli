@@ -120,6 +120,8 @@ Run another offline scenario:
 nullstate run examples/aws-public-s3 --offline
 nullstate run examples/k8s-privileged-pod --offline
 nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity high
+nullstate baseline --output nullstate-baseline.json
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --baseline-file nullstate-baseline.json
 ```
 
 Sandbox discovery:
@@ -313,6 +315,13 @@ nullstate sarif 20260608-224625 --runs-dir runs --output artifacts/nullstate.sar
 ```
 
 Use `--fail-on-severity high` or `--fail-on-severity critical` when the CI job should fail on matching findings.
+
+Create a baseline from a known run so CI can ignore known findings and fail on new ones:
+
+```powershell
+nullstate baseline --output nullstate-baseline.json
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --baseline-file nullstate-baseline.json
+```
 
 Prepare a future cloud-ingestion upload plan without sending data:
 

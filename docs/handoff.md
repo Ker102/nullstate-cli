@@ -98,6 +98,10 @@ Working features:
   - writes `runs/<id>/ci-summary.json`
   - exits with code `2` when original findings meet or exceed `--fail-on-severity`
   - supports `none`, `low`, `medium`, `high`, and `critical` thresholds
+- Baseline comparison:
+  - `nullstate baseline`
+  - writes a JSON baseline of `rule_id|resource_address` identities
+  - `nullstate run --ci --baseline-file` evaluates the severity threshold against new findings only
 - Free local HTML dashboard:
   - `nullstate dashboard`
   - writes `runs/<id>/dashboard.html`
@@ -260,7 +264,7 @@ Do not jump straight to full SaaS before stabilizing:
 
 1. run bundle schema
 2. local dashboard
-3. JSON policy output, baseline comparison, and richer GitHub Actions examples
+3. JSON policy output and richer GitHub Actions examples
 4. live upload implementation after a real ingestion API exists
 5. real cloud ingestion service
 

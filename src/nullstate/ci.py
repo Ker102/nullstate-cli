@@ -24,9 +24,13 @@ def build_ci_summary(
     fail_on_severity: str,
     before_attack: dict[str, str],
     after_attack: dict[str, str],
+    baseline_path: str | None = None,
+    known_findings: list[Finding] | None = None,
+    new_findings: list[Finding] | None = None,
 ) -> dict[str, Any]:
     threshold = normalize_fail_on_severity(fail_on_severity)
-    max_severity = max_finding_severity(findings)
+    evaluated_findings = new_findings if new_findings is not None else findings
+    max_severity = max_finding_severity(evaluated_findings)
     failed = threshold != "none" and SEVERITY_RANKS[max_severity] >= SEVERITY_RANKS[threshold]
     return {
         "schema_version": 1,
@@ -41,6 +45,12 @@ def build_ci_summary(
         "before_attack_status": before_attack.get("status", "unknown"),
         "after_attack_status": after_attack.get("status", "unknown"),
         "findings": [finding.to_dict() for finding in findings],
+        "baseline": {
+            "path": baseline_path,
+            "known_finding_count": len(known_findings or []),
+            "new_finding_count": len(evaluated_findings),
+            "new_findings": [finding.to_dict() for finding in evaluated_findings],
+        },
     }
 
 

@@ -20,6 +20,7 @@ from .artifact_scrubber import scrub_run_artifacts
 from .attack import simulate_attack, write_attack_script
 from .attack_manifest import write_attack_manifest
 from .attack_runner import run_attack_script
+from .baseline import DEFAULT_BASELINE_FILENAME, load_baseline_identities, split_known_and_new_findings, write_baseline
 from .bundle import BUNDLE_FILENAME, write_run_bundle
 from .ci import CI_SUMMARY_FILENAME, build_ci_summary, normalize_fail_on_severity
 from .dashboard import write_run_dashboard
@@ -201,6 +202,7 @@ def run(
         "--fail-on-severity",
         help="CI failure threshold: none, low, medium, high, or critical.",
     ),
+    baseline_file: Path | None = typer.Option(None, "--baseline-file", help="Optional baseline JSON file for known findings."),
 ) -> None:
     """Run detection, attack, remediation, and validation."""
     try:
@@ -429,6 +431,11 @@ def run(
 
     ci_summary = None
     if ci:
+        known_findings = None
+        new_findings = None
+        if baseline_file is not None:
+            baseline_identities = load_baseline_identities(baseline_file)
+            known_findings, new_findings = split_known_and_new_findings(findings, baseline_identities)
         ci_summary = build_ci_summary(
             run_id=run_id,
             findings=findings,
@@ -436,6 +443,9 @@ def run(
             fail_on_severity=normalized_fail_on_severity,
             before_attack=before_attack,
             after_attack=after_attack,
+            baseline_path=str(baseline_file) if baseline_file is not None else None,
+            known_findings=known_findings,
+            new_findings=new_findings,
         )
         write_json(run_dir / CI_SUMMARY_FILENAME, ci_summary)
 
@@ -759,6 +769,25 @@ def upload(
         [
             f"nullstate bundle {run_dir.name} --runs-dir {runs_dir}",
             f"nullstate scrub {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
+
+
+@app.command()
+def baseline(
+    run_id: str | None = typer.Argument(None, help="Run ID to baseline. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    output: Path = typer.Option(Path(DEFAULT_BASELINE_FILENAME), "--output", "-o", help="Baseline JSON output path."),
+) -> None:
+    """Export current run findings as a CI baseline."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    payload = write_baseline(run_dir, output)
+    console.print(f"Baseline: {output}")
+    console.print(f"Run {payload['run_id']} · findings={payload['finding_count']}")
+    _print_next_steps(
+        [
+            f"nullstate run examples/aws-public-s3 --offline --ci --baseline-file {output}",
+            f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
         ]
     )
 

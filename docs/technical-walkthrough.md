@@ -392,6 +392,8 @@ Each run writes:
 
 `nullstate run --ci` writes `ci-summary.json` and exits with code `2` when the run's original findings meet or exceed `--fail-on-severity`. This gives CI a stable policy gate without changing the human report.
 
+`nullstate baseline` writes a JSON baseline of finding identities. When `nullstate run --ci --baseline-file` is used, known baseline findings remain visible but the CI failure threshold is evaluated against new findings only.
+
 `nullstate upload --dry-run` writes `upload-plan.json`, refreshes `run-bundle.json`, records the intended endpoint and token environment variable, and confirms whether the token exists without storing the token value.
 
 `nullstate scrub` creates a sanitized copy of a run under `scrubbed-runs/` and writes `scrub-report.json`. It leaves the original run untouched and refuses to overwrite an existing scrubbed copy.

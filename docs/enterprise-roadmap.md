@@ -262,7 +262,7 @@ Before businesses can rely on it, the product needs:
 - `nullstate run --ci`
 - SARIF export through `nullstate sarif`
 - GitHub Actions template
-- baseline/fail-on-severity settings
+- baseline/fail-on-severity settings through `nullstate baseline` and `--baseline-file`
 - upload dry-run scaffold through `nullstate upload --dry-run`
 
 ### P2: Enterprise controls
@@ -324,7 +324,7 @@ Business:
 ### Days 15-30
 
 - Azure Blob real probe or explicit emulator limitation handling
-- richer CI policy modes beyond the baseline `--ci` severity threshold
+- richer CI policy modes beyond baseline comparison and severity thresholds
 - SARIF/JSON export
 - GitHub Actions example
 
