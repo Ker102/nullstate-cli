@@ -42,6 +42,14 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Writes `policy-result.json` for an existing run.
   - Reuses severity threshold and optional baseline comparison without re-running a scenario.
 
+### 2026-06-12
+
+- `feat: add evidence integrity manifest` (this checkpoint)
+  - Added `nullstate evidence-manifest`.
+  - Writes `evidence-manifest.json` with SHA-256 hashes and file sizes for shareable run artifacts.
+  - Excludes copied workspaces, Terraform internals, Python caches, and the manifest file itself.
+  - Records signing as `unsigned`; cryptographic signing remains future hardening.
+
 ## In Progress
 
 - No active implementation slice at this checkpoint.
@@ -56,3 +64,4 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 - Richer per-scenario policy fields beyond target classification and command policy ID.
 - Upload dry-run to live upload transition once an ingestion API exists.
+- Cryptographic signing and verification for `evidence-manifest.json`.

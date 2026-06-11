@@ -24,6 +24,7 @@ Use offline mode for deterministic pull request evidence when no sandbox is avai
 python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none --runs-dir runs/ci
 python -m nullstate policy-result --runs-dir runs/ci --fail-on-severity high
 python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
+python -m nullstate evidence-manifest --runs-dir runs/ci --output artifacts/evidence-manifest.json
 python -m nullstate bundle --runs-dir runs/ci
 python -m nullstate upload --runs-dir runs/ci --dry-run
 ```
@@ -45,6 +46,8 @@ python -m nullstate policy-result --runs-dir runs/ci-next --baseline-file nullst
 When `--baseline-file` is set, `ci-summary.json` records known and new finding counts. The severity threshold is evaluated against new findings only.
 
 `nullstate sarif` reads the latest run by default, or a specific run ID when provided. It writes SARIF 2.1.0 with one result per finding and preserves severity, evidence, remediation guidance, and the IaC resource address as a logical location. Upload `artifacts/nullstate.sarif` to GitHub code scanning or another SARIF-aware security tool.
+
+`nullstate evidence-manifest` writes an unsigned SHA-256 inventory for shareable run evidence. Use it when a pipeline needs artifact integrity metadata before attaching a run to a ticket, support workflow, or case-study archive.
 
 The repository includes `.github/workflows/nullstate-sarif.yml` as the first GitHub Actions example. It runs an offline AWS S3 scenario with `--ci --fail-on-severity none` so the intentionally vulnerable demo can still upload SARIF, uploads it with `github/codeql-action/upload-sarif`, and stores the run artifacts for review. Change the threshold to `high` or `critical` when using the workflow as an enforcing PR gate against real project IaC.
 

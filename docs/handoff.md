@@ -266,6 +266,15 @@ Run bundle is the key contract between:
 - support tickets
 - future enterprise dashboards
 
+Current productization checkpoints on `feature/red-agent-runner` also include:
+
+- provider presets for Google, Claude, custom, and generic OpenAI-compatible endpoints
+- SARIF export and GitHub Actions code-scanning workflow
+- CI summaries, fail-on-severity gates, and baseline comparison
+- upload dry-run planning for future cloud ingestion
+- red-tool policy scaffold and standalone `policy-result.json`
+- unsigned evidence integrity manifests through `nullstate evidence-manifest`
+
 Do not jump straight to full SaaS before stabilizing:
 
 1. run bundle schema

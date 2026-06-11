@@ -295,6 +295,7 @@ Each run writes:
 - `runs/<run-id>/run-bundle.json` when `nullstate bundle` or `nullstate dashboard` is run
 - `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
 - `runs/<run-id>/nullstate.sarif` when `nullstate sarif` is run
+- `runs/<run-id>/evidence-manifest.json` when `nullstate evidence-manifest` is run
 - `runs/<run-id>/upload-plan.json` when `nullstate upload --dry-run` is run
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
@@ -327,6 +328,15 @@ nullstate run examples/aws-public-s3 --offline --mock-agents --policy-file nulls
 ```
 
 The policy file allowlists target classifications such as `offline`, `local`, and `local-http`, plus command policy IDs such as `generated-attack-script-v1`.
+
+Create an evidence integrity manifest before attaching a run to a ticket, case study, or support workflow:
+
+```powershell
+nullstate evidence-manifest
+nullstate evidence-manifest 20260608-224625 --runs-dir runs --output artifacts/evidence-manifest.json
+```
+
+The manifest inventories shareable run artifacts with SHA-256 hashes, excludes copied workspaces and Terraform internals, and records signing as `unsigned` until cryptographic signing is implemented.
 
 Create a baseline from a known run so CI can ignore known findings and fail on new ones:
 

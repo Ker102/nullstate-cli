@@ -25,6 +25,7 @@ from .bundle import BUNDLE_FILENAME, write_run_bundle
 from .ci import CI_SUMMARY_FILENAME, build_ci_summary, normalize_fail_on_severity
 from .dashboard import write_run_dashboard
 from .demo import create_demo
+from .evidence_manifest import EVIDENCE_MANIFEST_FILENAME, write_evidence_manifest
 from .findings import find_scenario_findings
 from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
@@ -722,6 +723,37 @@ def sarif(
         [
             f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
             f"nullstate bundle {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
+
+
+@app.command("evidence-manifest")
+def evidence_manifest(
+    run_id: str | None = typer.Argument(None, help="Run ID to inventory. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    output: Path | None = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help=f"Output JSON path. Defaults to {EVIDENCE_MANIFEST_FILENAME} in the run directory.",
+    ),
+) -> None:
+    """Write an integrity manifest for shareable run evidence artifacts."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    try:
+        payload = write_evidence_manifest(run_dir, output_path=output)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    manifest_path = output or run_dir / EVIDENCE_MANIFEST_FILENAME
+    console.print(f"Evidence manifest: {manifest_path}")
+    console.print(
+        f"Run {payload['run']['id']} - artifacts={payload['artifact_count']} - "
+        f"signing={payload['signing']['status']}"
+    )
+    _print_next_steps(
+        [
+            f"nullstate bundle {run_dir.name} --runs-dir {runs_dir}",
+            f"nullstate scrub {run_dir.name} --runs-dir {runs_dir}",
         ]
     )
 
