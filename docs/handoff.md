@@ -87,6 +87,7 @@ Working features:
   - `nullstate sarif`
   - writes `runs/<id>/nullstate.sarif`
   - emits SARIF 2.1.0 findings for CI and code-scanning upload
+  - `.github/workflows/nullstate-sarif.yml` runs an offline scenario and uploads SARIF to GitHub code scanning
 - Free local HTML dashboard:
   - `nullstate dashboard`
   - writes `runs/<id>/dashboard.html`
