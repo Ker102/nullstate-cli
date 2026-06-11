@@ -16,6 +16,20 @@ The PR workflow runs:
 - mypy type check
 - pip-audit dependency audit
 
+## Nullstate CI export
+
+Use offline mode for deterministic pull request evidence when no sandbox is available:
+
+```powershell
+python -m nullstate run examples/aws-public-s3 --offline --mock-agents --runs-dir runs/ci
+python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
+python -m nullstate bundle --runs-dir runs/ci
+```
+
+`nullstate sarif` reads the latest run by default, or a specific run ID when provided. It writes SARIF 2.1.0 with one result per finding and preserves severity, evidence, remediation guidance, and the IaC resource address as a logical location. Upload `artifacts/nullstate.sarif` to GitHub code scanning or another SARIF-aware security tool.
+
+Run `nullstate scrub` before attaching bundles or reports to public issues, support tickets, or case-study artifacts.
+
 ## Security checks
 
 - CodeQL scans Python code on PRs, main pushes, and weekly schedule.

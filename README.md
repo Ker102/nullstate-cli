@@ -150,6 +150,7 @@ Create a portable run bundle or a free local HTML dashboard:
 ```powershell
 nullstate bundle
 nullstate dashboard --open
+nullstate sarif
 ```
 
 ## Live LocalStack demo path
@@ -285,6 +286,7 @@ Each run writes:
 - `runs/<run-id>/attack-manifest.json`
 - `runs/<run-id>/run-bundle.json` when `nullstate bundle` or `nullstate dashboard` is run
 - `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
+- `runs/<run-id>/nullstate.sarif` when `nullstate sarif` is run
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
 - `scrubbed-runs/<run-id>/scrub-report.json` when `nullstate scrub` is used
@@ -297,6 +299,13 @@ nullstate scrub 20260608-224625 --runs-dir runs --output-dir scrubbed-runs
 ```
 
 `events.jsonl` includes `red-tool` entries for the allowlisted attack command before and after remediation.
+
+Export findings for CI or code-scanning upload:
+
+```powershell
+nullstate sarif
+nullstate sarif 20260608-224625 --runs-dir runs --output artifacts/nullstate.sarif
+```
 
 ## Documentation
 

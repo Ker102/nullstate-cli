@@ -241,7 +241,7 @@ Before businesses can rely on it, the product needs:
 4. Artifact scrubbing.
 5. Stable scenario schema.
 6. CI mode with machine-readable exit codes.
-7. SARIF or JSON export for security tooling.
+7. SARIF or JSON export for security tooling. SARIF export is now available; JSON policy output remains future work.
 8. Reproducible run manifests.
 9. Versioned remediation rules.
 10. Safe defaults that never target real cloud unless explicitly enabled.
@@ -258,7 +258,7 @@ Before businesses can rely on it, the product needs:
 ### P1: CI/CD adoption
 
 - `nullstate run --ci`
-- SARIF export
+- SARIF export through `nullstate sarif`
 - GitHub Actions template
 - baseline/fail-on-severity settings
 

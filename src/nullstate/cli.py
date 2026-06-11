@@ -28,6 +28,7 @@ from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_u
 from .metrics import collect_run_metrics
 from .remediation import remediate_scenario_files
 from .report import render_report
+from .sarif import SARIF_FILENAME, write_sarif
 from .sandbox import get_backend, list_backends, probe_backend, render_commands, run_commands
 from .scenario_detection import infer_scenario
 from .scenarios import get_scenario, list_scenarios
@@ -632,6 +633,27 @@ def bundle(
         [
             f"nullstate dashboard {payload['run']['id']} --runs-dir {runs_dir}",
             f"nullstate report {payload['run']['id']} --runs-dir {runs_dir}",
+        ]
+    )
+
+
+@app.command()
+def sarif(
+    run_id: str | None = typer.Argument(None, help="Run ID to export. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    output: Path | None = typer.Option(None, "--output", "-o", help=f"Output SARIF path. Defaults to {SARIF_FILENAME} in the run directory."),
+) -> None:
+    """Export run findings as SARIF for CI and code-scanning tools."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    sarif_path = output or run_dir / SARIF_FILENAME
+    payload = write_sarif(run_dir, sarif_path)
+    result_count = len(payload["runs"][0]["results"])
+    console.print(f"SARIF: {sarif_path}")
+    console.print(f"Run {run_dir.name} · results={result_count}")
+    _print_next_steps(
+        [
+            f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
+            f"nullstate bundle {run_dir.name} --runs-dir {runs_dir}",
         ]
     )
 

@@ -386,6 +386,8 @@ Each run writes:
 
 `nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login.
 
+`nullstate sarif` writes `nullstate.sarif`, a SARIF 2.1.0 export with one result per finding for CI and code-scanning upload.
+
 `nullstate scrub` creates a sanitized copy of a run under `scrubbed-runs/` and writes `scrub-report.json`. It leaves the original run untouched and refuses to overwrite an existing scrubbed copy.
 
 ## Security Boundaries

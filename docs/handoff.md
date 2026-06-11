@@ -83,6 +83,10 @@ Working features:
 - Portable run bundle:
   - `nullstate bundle`
   - writes `runs/<id>/run-bundle.json`
+- SARIF export:
+  - `nullstate sarif`
+  - writes `runs/<id>/nullstate.sarif`
+  - emits SARIF 2.1.0 findings for CI and code-scanning upload
 - Free local HTML dashboard:
   - `nullstate dashboard`
   - writes `runs/<id>/dashboard.html`
@@ -245,7 +249,7 @@ Do not jump straight to full SaaS before stabilizing:
 
 1. run bundle schema
 2. local dashboard
-3. CI mode and SARIF/JSON export
+3. CI mode, JSON policy output, and GitHub Actions examples
 4. upload dry-run/cloud token scaffold
 5. real cloud ingestion service
 
