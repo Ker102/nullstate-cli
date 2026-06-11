@@ -21,6 +21,7 @@ from .attack import simulate_attack, write_attack_script
 from .attack_manifest import write_attack_manifest
 from .attack_runner import run_attack_script
 from .bundle import BUNDLE_FILENAME, write_run_bundle
+from .ci import CI_SUMMARY_FILENAME, build_ci_summary, normalize_fail_on_severity
 from .dashboard import write_run_dashboard
 from .demo import create_demo
 from .findings import find_scenario_findings
@@ -193,8 +194,18 @@ def run(
     ),
     red_provider: str | None = typer.Option(None, "--red-provider", help="Provider preset for the red-team agent."),
     blue_provider: str | None = typer.Option(None, "--blue-provider", help="Provider preset for the blue-team agent."),
+    ci: bool = typer.Option(False, "--ci", help="Write CI summary and use severity-based exit codes."),
+    fail_on_severity: str = typer.Option(
+        "high",
+        "--fail-on-severity",
+        help="CI failure threshold: none, low, medium, high, or critical.",
+    ),
 ) -> None:
     """Run detection, attack, remediation, and validation."""
+    try:
+        normalized_fail_on_severity = normalize_fail_on_severity(fail_on_severity)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
     scenario_spec = _resolve_scenario(terraform_dir, scenario)
     backend = _resolve_backend(target, scenario_spec.backend)
     if not offline and not _scenario_supports_live_terraform(scenario_spec.name):
@@ -415,7 +426,24 @@ def run(
     )
     (run_dir / "report.md").write_text(report, encoding="utf-8")
 
+    ci_summary = None
+    if ci:
+        ci_summary = build_ci_summary(
+            run_id=run_id,
+            findings=findings,
+            remaining_findings=remaining_findings,
+            fail_on_severity=normalized_fail_on_severity,
+            before_attack=before_attack,
+            after_attack=after_attack,
+        )
+        write_json(run_dir / CI_SUMMARY_FILENAME, ci_summary)
+
     _print_run_summary(run_dir, findings, before_attack, after_attack)
+    if ci_summary is not None:
+        console.print(
+            f"CI summary: {run_dir / CI_SUMMARY_FILENAME} · "
+            f"failed={ci_summary['failed']} · exit_code={ci_summary['exit_code']}"
+        )
     _print_next_steps(
         [
             f"nullstate report {run_id} --runs-dir {runs_dir}",
@@ -425,6 +453,8 @@ def run(
             f"nullstate status --runs-dir {runs_dir} --sandbox {backend.name}",
         ]
     )
+    if ci_summary is not None and ci_summary["failed"]:
+        raise typer.Exit(code=int(ci_summary["exit_code"]))
 
 
 @sandbox_app.command("list")

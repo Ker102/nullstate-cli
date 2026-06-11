@@ -88,6 +88,11 @@ Working features:
   - writes `runs/<id>/nullstate.sarif`
   - emits SARIF 2.1.0 findings for CI and code-scanning upload
   - `.github/workflows/nullstate-sarif.yml` runs an offline scenario and uploads SARIF to GitHub code scanning
+- CI mode:
+  - `nullstate run --ci`
+  - writes `runs/<id>/ci-summary.json`
+  - exits with code `2` when original findings meet or exceed `--fail-on-severity`
+  - supports `none`, `low`, `medium`, `high`, and `critical` thresholds
 - Free local HTML dashboard:
   - `nullstate dashboard`
   - writes `runs/<id>/dashboard.html`
@@ -250,7 +255,7 @@ Do not jump straight to full SaaS before stabilizing:
 
 1. run bundle schema
 2. local dashboard
-3. CI mode, JSON policy output, and GitHub Actions examples
+3. JSON policy output, baseline comparison, and richer GitHub Actions examples
 4. upload dry-run/cloud token scaffold
 5. real cloud ingestion service
 

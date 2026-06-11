@@ -240,7 +240,7 @@ Before businesses can rely on it, the product needs:
 3. Policy-defined command allowlists.
 4. Artifact scrubbing.
 5. Stable scenario schema.
-6. CI mode with machine-readable exit codes.
+6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
 7. SARIF or JSON export for security tooling. SARIF export is now available; JSON policy output remains future work.
 8. Reproducible run manifests.
 9. Versioned remediation rules.
@@ -253,7 +253,7 @@ Before businesses can rely on it, the product needs:
 - real AWS S3 sandbox read probe
 - runtime evidence section in reports
 - artifact scrubber
-- machine-readable run verdict and exit codes
+- machine-readable run verdict and exit codes through `ci-summary.json`
 
 ### P1: CI/CD adoption
 
@@ -321,7 +321,7 @@ Business:
 ### Days 15-30
 
 - Azure Blob real probe or explicit emulator limitation handling
-- `--ci` mode and exit codes
+- richer CI policy modes beyond the baseline `--ci` severity threshold
 - SARIF/JSON export
 - GitHub Actions example
 

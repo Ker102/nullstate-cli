@@ -119,6 +119,7 @@ Run another offline scenario:
 ```powershell
 nullstate run examples/aws-public-s3 --offline
 nullstate run examples/k8s-privileged-pod --offline
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity high
 ```
 
 Sandbox discovery:
@@ -279,6 +280,7 @@ Each run writes:
 - `runs/<run-id>/events.jsonl`
 - `runs/<run-id>/findings.json`
 - `runs/<run-id>/metrics.json`
+- `runs/<run-id>/ci-summary.json` when `nullstate run --ci` is used
 - `runs/<run-id>/vllm-metrics-before.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-after.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
@@ -303,9 +305,12 @@ nullstate scrub 20260608-224625 --runs-dir runs --output-dir scrubbed-runs
 Export findings for CI or code-scanning upload:
 
 ```powershell
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none
 nullstate sarif
 nullstate sarif 20260608-224625 --runs-dir runs --output artifacts/nullstate.sarif
 ```
+
+Use `--fail-on-severity high` or `--fail-on-severity critical` when the CI job should fail on matching findings.
 
 ## Documentation
 

@@ -21,14 +21,18 @@ The PR workflow runs:
 Use offline mode for deterministic pull request evidence when no sandbox is available:
 
 ```powershell
-python -m nullstate run examples/aws-public-s3 --offline --mock-agents --runs-dir runs/ci
+python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none --runs-dir runs/ci
 python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
 python -m nullstate bundle --runs-dir runs/ci
 ```
 
+`--ci` writes `ci-summary.json` into the run directory and exits with code `2` when the original findings meet or exceed `--fail-on-severity`. Supported thresholds are `none`, `low`, `medium`, `high`, and `critical`.
+
+Use `--fail-on-severity none` for demonstration or pure upload workflows. Use `--fail-on-severity high` or `--fail-on-severity critical` for enforcing PR gates; if the job must both fail and upload SARIF, run the upload step with explicit `continue-on-error` handling or split export and enforcement into separate steps.
+
 `nullstate sarif` reads the latest run by default, or a specific run ID when provided. It writes SARIF 2.1.0 with one result per finding and preserves severity, evidence, remediation guidance, and the IaC resource address as a logical location. Upload `artifacts/nullstate.sarif` to GitHub code scanning or another SARIF-aware security tool.
 
-The repository includes `.github/workflows/nullstate-sarif.yml` as the first GitHub Actions example. It runs an offline AWS S3 scenario, exports SARIF, uploads it with `github/codeql-action/upload-sarif`, and stores the run artifacts for review.
+The repository includes `.github/workflows/nullstate-sarif.yml` as the first GitHub Actions example. It runs an offline AWS S3 scenario with `--ci --fail-on-severity none` so the intentionally vulnerable demo can still upload SARIF, uploads it with `github/codeql-action/upload-sarif`, and stores the run artifacts for review. Change the threshold to `high` or `critical` when using the workflow as an enforcing PR gate against real project IaC.
 
 Run `nullstate scrub` before attaching bundles or reports to public issues, support tickets, or case-study artifacts.
 

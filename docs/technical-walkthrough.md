@@ -377,6 +377,7 @@ Each run writes:
 | `attack-manifest.json` | Scenario, backend, target URL, and resource hints for constrained probes |
 | `remediation.patch` | Terraform remediation diff |
 | `metrics.json` | Model calls, token counts, latency, endpoint metrics |
+| `ci-summary.json` | Machine-readable CI verdict when `--ci` is used |
 | `report.md` | Human-readable summary |
 | `workspace/` | Copied and remediated IaC workspace |
 
@@ -387,6 +388,8 @@ Each run writes:
 `nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login.
 
 `nullstate sarif` writes `nullstate.sarif`, a SARIF 2.1.0 export with one result per finding for CI and code-scanning upload.
+
+`nullstate run --ci` writes `ci-summary.json` and exits with code `2` when the run's original findings meet or exceed `--fail-on-severity`. This gives CI a stable policy gate without changing the human report.
 
 `nullstate scrub` creates a sanitized copy of a run under `scrubbed-runs/` and writes `scrub-report.json`. It leaves the original run untouched and refuses to overwrite an existing scrubbed copy.
 
