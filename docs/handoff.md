@@ -90,6 +90,9 @@ Working features:
   - allowed targets are offline, local, loopback, localhost, and LocalStack-scoped HTTP(S)
   - `red-tool` payloads include schema version, command policy ID, target classification, SHA-256 hashes, and stdout/stderr truncation flags
   - `nullstate scrub` creates non-destructive scrubbed run copies and `scrub-report.json`
+- Sandbox startup hardening:
+  - `sandbox up` now verifies that a named Docker container remains running after `docker run -d`
+  - exited containers are reported as failed starts instead of false success
 - AWS S3 runtime probe foundation:
   - AWS demo now creates an `aws_s3_object` evidence object
   - AWS demo includes a public read bucket policy for `evidence.txt`
@@ -178,6 +181,8 @@ After remediation:
 
 Run artifacts are under `runs/` and may be ignored by Git. If this repository is opened on another device, reproduce the validation with the commands above instead of assuming the run directory exists.
 
+Live LocalStack Azure validation attempt on 2026-06-11 did not reach Terraform execution. The container started and exited with LocalStack reporting that the Azure Emulator is not enabled for the account/license. Do not keep retrying until the LocalStack account has Azure Emulator entitlement; each retry pulls a large image and can exhaust disk.
+
 ## Where to continue
 
 Next highest-value feature:
@@ -208,7 +213,7 @@ Recommended next tests:
 - Live LocalStack Azure run where available.
 - Offline run still passes.
 - Report classifies runtime evidence as observed/inconclusive/simulated.
-- Remaining enterprise hardening: future live-cloud approval gate and live Azure emulator validation.
+- Remaining enterprise hardening: future live-cloud approval gate and live Azure emulator validation after LocalStack Azure entitlement is available.
 
 If Azure LocalStack support is unavailable or unreliable, do not overclaim Azure runtime exploitation. Prefer clear report language such as `runtime probe inconclusive; deterministic IaC validation still blocked the configured exposure`.
 

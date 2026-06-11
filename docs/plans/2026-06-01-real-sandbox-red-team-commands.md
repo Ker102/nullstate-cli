@@ -50,6 +50,9 @@ Updated 2026-06-09:
   - attack runner rejects non-local HTTP targets by default
   - `red-tool` payloads include schema version, command policy ID, target classification, `attack.py` hash, manifest hash, and stdout/stderr truncation metadata
   - `nullstate scrub` creates non-destructive redacted run copies with `scrub-report.json`
+- Completed locally: sandbox startup hardening:
+  - `sandbox up` verifies named Docker containers remain running after startup
+  - immediate container exits now fail the command instead of reporting success
 - Verified locally with Ruff, mypy, full unittest discovery, and an offline Azure smoke run.
 - Not pushed: local feature-branch work should remain local unless the user explicitly asks to push.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
@@ -57,7 +60,7 @@ Updated 2026-06-09:
 Next task to execute:
 
 ```text
-Live LocalStack Azure validation for the new blob probe, if LocalStack Azure supports the blob APIs reliably.
+Live LocalStack Azure validation after the LocalStack account has Azure Emulator entitlement.
 ```
 
 ## Target State
@@ -261,6 +264,13 @@ If LocalStack Azure support is inconsistent, implement a two-level probe:
 
 Do not overclaim Azure runtime exploitation if the emulator cannot prove it reliably.
 
+Live validation note from 2026-06-11:
+
+- `LOCALSTACK_AUTH_TOKEN` loaded successfully from `.env`.
+- LocalStack Azure container started and then exited before Terraform execution.
+- Container logs reported that the Azure Emulator is not enabled for the account/license.
+- Do not retry repeatedly until entitlement is available; the Azure image is large and can exhaust disk.
+
 Implementation notes from 2026-06-09:
 
 - `examples/azure-public-blob/main.tf` and `init-demo` now create `azurerm_storage_blob.evidence` with `source_content`.
@@ -344,7 +354,8 @@ Implementation notes from 2026-06-09:
 - Added first-pass `red-tool` audit metadata: `schema_version`, `command_policy_id`, `target_classification`, `attack_script_sha256`, and `manifest_sha256`.
 - Added bounded stdout/stderr capture metadata: `stdout_truncated` and `stderr_truncated`.
 - Added `nullstate scrub`, a non-destructive artifact scrubber that copies a run, redacts common secrets/identifiers/private IPs, and writes `scrub-report.json`.
-- Live Azure validation is still waiting on `LOCALSTACK_AUTH_TOKEN`.
+- Added sandbox startup verification so exited LocalStack containers are surfaced immediately.
+- Live Azure validation is waiting on LocalStack Azure Emulator account entitlement.
 
 ---
 

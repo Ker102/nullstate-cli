@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 import webbrowser
 from datetime import UTC, datetime
 from pathlib import Path
@@ -528,6 +529,11 @@ def sandbox_up(
         console.print("Sandbox start failed. Re-run with --dry-run to inspect commands.", style="bold red")
         _print_sandbox_start_failure_hints(backend)
         raise typer.Exit(code=1)
+    verified, detail = _verify_sandbox_container_started(container_name)
+    if not verified:
+        console.print(f"Sandbox container did not stay running: {detail}", style="bold red")
+        _print_sandbox_start_failure_hints(backend)
+        raise typer.Exit(code=1)
     console.print("Sandbox start commands completed.", style="bold green")
     if renamed_container and container_name:
         console.print(
@@ -827,6 +833,40 @@ def _docker_container_exists(container_name: str) -> bool:
         check=False,
     )
     return result.returncode == 0 and container_name in {line.strip() for line in result.stdout.splitlines()}
+
+
+def _verify_sandbox_container_started(
+    container_name: str | None,
+    *,
+    runner=None,
+    sleep_seconds: float = 2.0,
+) -> tuple[bool, str]:
+    if not container_name:
+        return True, "No container runtime to verify."
+    if sleep_seconds > 0:
+        time.sleep(sleep_seconds)
+    run = runner or subprocess.run
+    result = run(
+        [
+            "docker",
+            "inspect",
+            "--format",
+            "{{.State.Running}} {{.State.Status}} {{.State.ExitCode}}",
+            container_name,
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return False, (result.stderr or result.stdout or f"Could not inspect container {container_name}.").strip()
+    raw = result.stdout.strip()
+    parts = raw.split()
+    if parts and parts[0].lower() == "true":
+        return True, f"{container_name} is running."
+    status = parts[1] if len(parts) > 1 else "unknown"
+    exit_code = parts[2] if len(parts) > 2 else "unknown"
+    return False, f"{container_name} status={status} exit_code={exit_code}"
 
 
 def _resolve_sandbox_down_commands(backend, *, container_lister=None) -> tuple[list[list[str]], str]:

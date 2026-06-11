@@ -48,6 +48,14 @@ python -m nullstate sandbox up localstack-azure
 python -m nullstate sandbox status localstack-azure
 ```
 
+If `sandbox up localstack-azure` reports that the container did not stay running, inspect:
+
+```powershell
+docker logs localstack-azure
+```
+
+If the logs say the Azure Emulator is not enabled for the account, stop and resolve the LocalStack account entitlement before retrying. Repeated retries can consume significant disk because the Azure image is large.
+
 If the token is stored in a local env file, keep the file untracked. The CLI auto-discovers `.env.local` first and `.env` second:
 
 ```powershell
