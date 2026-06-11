@@ -22,12 +22,15 @@ Use offline mode for deterministic pull request evidence when no sandbox is avai
 
 ```powershell
 python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none --runs-dir runs/ci
+python -m nullstate policy-result --runs-dir runs/ci --fail-on-severity high
 python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
 python -m nullstate bundle --runs-dir runs/ci
 python -m nullstate upload --runs-dir runs/ci --dry-run
 ```
 
 `--ci` writes `ci-summary.json` into the run directory and exits with code `2` when the original findings meet or exceed `--fail-on-severity`. Supported thresholds are `none`, `low`, `medium`, `high`, and `critical`.
+
+`nullstate policy-result` writes `policy-result.json` from an existing run. Use it when a pipeline needs a standalone JSON decision artifact without re-running the scenario.
 
 Use `--fail-on-severity none` for demonstration or pure upload workflows. Use `--fail-on-severity high` or `--fail-on-severity critical` for enforcing PR gates; if the job must both fail and upload SARIF, run the upload step with explicit `continue-on-error` handling or split export and enforcement into separate steps.
 
@@ -36,6 +39,7 @@ For repositories with existing accepted findings, create a baseline from a revie
 ```powershell
 python -m nullstate baseline --runs-dir runs/ci --output nullstate-baseline.json
 python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --baseline-file nullstate-baseline.json --runs-dir runs/ci-next
+python -m nullstate policy-result --runs-dir runs/ci-next --baseline-file nullstate-baseline.json
 ```
 
 When `--baseline-file` is set, `ci-summary.json` records known and new finding counts. The severity threshold is evaluated against new findings only.

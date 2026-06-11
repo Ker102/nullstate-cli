@@ -102,6 +102,10 @@ Working features:
   - `nullstate baseline`
   - writes a JSON baseline of `rule_id|resource_address` identities
   - `nullstate run --ci --baseline-file` evaluates the severity threshold against new findings only
+- JSON policy result:
+  - `nullstate policy-result`
+  - writes `runs/<id>/policy-result.json`
+  - evaluates an existing run against severity threshold and optional baseline without re-running the scan
 - Free local HTML dashboard:
   - `nullstate dashboard`
   - writes `runs/<id>/dashboard.html`
@@ -266,7 +270,7 @@ Do not jump straight to full SaaS before stabilizing:
 
 1. run bundle schema
 2. local dashboard
-3. JSON policy output and richer GitHub Actions examples
+3. richer GitHub Actions examples and integration templates
 4. live upload implementation after a real ingestion API exists
 5. real cloud ingestion service
 

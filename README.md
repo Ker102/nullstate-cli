@@ -122,6 +122,7 @@ nullstate run examples/k8s-privileged-pod --offline
 nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity high
 nullstate baseline --output nullstate-baseline.json
 nullstate run examples/aws-public-s3 --offline --mock-agents --ci --baseline-file nullstate-baseline.json
+nullstate policy-result --baseline-file nullstate-baseline.json
 ```
 
 Sandbox discovery:
@@ -285,6 +286,7 @@ Each run writes:
 - `runs/<run-id>/findings.json`
 - `runs/<run-id>/metrics.json`
 - `runs/<run-id>/ci-summary.json` when `nullstate run --ci` is used
+- `runs/<run-id>/policy-result.json` when `nullstate policy-result` is used
 - `runs/<run-id>/vllm-metrics-before.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-after.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
@@ -331,7 +333,10 @@ Create a baseline from a known run so CI can ignore known findings and fail on n
 ```powershell
 nullstate baseline --output nullstate-baseline.json
 nullstate run examples/aws-public-s3 --offline --mock-agents --ci --baseline-file nullstate-baseline.json
+nullstate policy-result --baseline-file nullstate-baseline.json
 ```
+
+`policy-result.json` evaluates an existing run without re-running the scan. It is useful for downstream automation that wants the same threshold and baseline decision as CI in a standalone JSON artifact.
 
 Prepare a future cloud-ingestion upload plan without sending data:
 

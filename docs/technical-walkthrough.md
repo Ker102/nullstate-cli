@@ -379,6 +379,7 @@ Each run writes:
 | `remediation.patch` | Terraform remediation diff |
 | `metrics.json` | Model calls, token counts, latency, endpoint metrics |
 | `ci-summary.json` | Machine-readable CI verdict when `--ci` is used |
+| `policy-result.json` | Standalone JSON policy decision for an existing run |
 | `report.md` | Human-readable summary |
 | `upload-plan.json` | No-network upload plan when `nullstate upload --dry-run` is used |
 | `workspace/` | Copied and remediated IaC workspace |
@@ -394,6 +395,8 @@ Each run writes:
 `nullstate run --ci` writes `ci-summary.json` and exits with code `2` when the run's original findings meet or exceed `--fail-on-severity`. This gives CI a stable policy gate without changing the human report.
 
 `nullstate baseline` writes a JSON baseline of finding identities. When `nullstate run --ci --baseline-file` is used, known baseline findings remain visible but the CI failure threshold is evaluated against new findings only.
+
+`nullstate policy-result` writes the same style of threshold and baseline decision for an existing run without re-running the scenario.
 
 `nullstate upload --dry-run` writes `upload-plan.json`, refreshes `run-bundle.json`, records the intended endpoint and token environment variable, and confirms whether the token exists without storing the token value.
 

@@ -37,6 +37,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `nullstate policy init`.
   - Added optional `nullstate run --policy-file`.
   - Enforces allowed target classifications and command policy IDs before `attack.py` execution.
+- `feat: add JSON policy result export` (this checkpoint)
+  - Added `nullstate policy-result`.
+  - Writes `policy-result.json` for an existing run.
+  - Reuses severity threshold and optional baseline comparison without re-running a scenario.
 
 ## In Progress
 
@@ -50,6 +54,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Next Candidates
 
-- JSON policy output beyond `ci-summary.json`.
 - Richer per-scenario policy fields beyond target classification and command policy ID.
 - Upload dry-run to live upload transition once an ingestion API exists.

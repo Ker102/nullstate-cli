@@ -29,6 +29,7 @@ from .findings import find_scenario_findings
 from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
 from .policy import DEFAULT_POLICY_FILENAME, load_attack_policy, write_default_policy
+from .policy_result import POLICY_RESULT_FILENAME, write_policy_result
 from .remediation import remediate_scenario_files
 from .report import render_report
 from .sarif import SARIF_FILENAME, write_sarif
@@ -813,6 +814,39 @@ def baseline(
     _print_next_steps(
         [
             f"nullstate run examples/aws-public-s3 --offline --ci --baseline-file {output}",
+            f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
+
+
+@app.command("policy-result")
+def policy_result(
+    run_id: str | None = typer.Argument(None, help="Run ID to evaluate. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    output: Path | None = typer.Option(None, "--output", "-o", help=f"Output JSON path. Defaults to {POLICY_RESULT_FILENAME} in the run directory."),
+    fail_on_severity: str = typer.Option("high", "--fail-on-severity", help="Failure threshold: none, low, medium, high, or critical."),
+    baseline_file: Path | None = typer.Option(None, "--baseline-file", help="Optional baseline JSON file for known findings."),
+) -> None:
+    """Export a JSON policy decision from an existing run."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    try:
+        payload = write_policy_result(
+            run_dir,
+            fail_on_severity=fail_on_severity,
+            baseline_file=baseline_file,
+            output_path=output,
+        )
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    result_path = output or run_dir / POLICY_RESULT_FILENAME
+    console.print(f"Policy result: {result_path}")
+    console.print(
+        f"Run {payload['run_id']} · failed={payload['failed']} · "
+        f"evaluated_findings={payload['evaluated_finding_count']}"
+    )
+    _print_next_steps(
+        [
+            f"nullstate sarif {run_dir.name} --runs-dir {runs_dir}",
             f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
         ]
     )
