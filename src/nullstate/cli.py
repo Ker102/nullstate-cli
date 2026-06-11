@@ -24,6 +24,7 @@ from .bundle import BUNDLE_FILENAME, write_run_bundle
 from .dashboard import write_run_dashboard
 from .demo import create_demo
 from .findings import find_scenario_findings
+from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
 from .remediation import remediate_scenario_files
 from .report import render_report
@@ -184,6 +185,13 @@ def run(
     red_model: str = typer.Option("qwen3-coder-next", "--red-model", help="Red-team model name."),
     red_base_url: str | None = typer.Option(None, "--red-base-url", help="OpenAI-compatible endpoint for red-team agent."),
     blue_base_url: str | None = typer.Option(None, "--blue-base-url", help="OpenAI-compatible endpoint for blue-team agent."),
+    llm_provider: str | None = typer.Option(
+        None,
+        "--llm-provider",
+        help="Shared LLM provider preset: openai-compatible, google, claude, or custom.",
+    ),
+    red_provider: str | None = typer.Option(None, "--red-provider", help="Provider preset for the red-team agent."),
+    blue_provider: str | None = typer.Option(None, "--blue-provider", help="Provider preset for the blue-team agent."),
 ) -> None:
     """Run detection, attack, remediation, and validation."""
     scenario_spec = _resolve_scenario(terraform_dir, scenario)
@@ -197,14 +205,15 @@ def run(
         offline = True
     for key, value in _localstack_azure_auth_env(backend.name, offline=offline).items():
         os.environ.setdefault(key, value)
-    red_endpoint = _resolve_agent_base_url("red", red_base_url)
-    blue_endpoint = _resolve_agent_base_url("blue", blue_base_url)
-    red_api_key = _resolve_agent_api_key("red")
-    blue_api_key = _resolve_agent_api_key("blue")
-    use_red_mock = mock_agents or not bool(red_endpoint)
-    use_blue_mock = mock_agents or not bool(blue_endpoint)
+    try:
+        red_config = _resolve_agent_config("red", explicit_provider=red_provider, shared_provider=llm_provider, explicit_base_url=red_base_url)
+        blue_config = _resolve_agent_config("blue", explicit_provider=blue_provider, shared_provider=llm_provider, explicit_base_url=blue_base_url)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    use_red_mock = mock_agents or not bool(red_config.base_url)
+    use_blue_mock = mock_agents or not bool(blue_config.base_url)
     use_mock_agents = use_red_mock and use_blue_mock
-    shared_endpoint = red_endpoint == blue_endpoint
+    shared_endpoint = red_config == blue_config
 
     run_id = new_run_id()
     run_dir = runs_dir / run_id
@@ -249,8 +258,8 @@ def run(
     if shared_endpoint:
         before_metrics = collect_run_metrics(
             run_dir=run_dir,
-            base_url=red_endpoint,
-            offline=not bool(red_endpoint),
+            base_url=red_config.base_url,
+            offline=not bool(red_config.base_url),
             stage="before",
         )
         endpoint_metrics: dict[str, dict[str, Any]] = {
@@ -260,8 +269,8 @@ def run(
     else:
         red_before_metrics = collect_run_metrics(
             run_dir=run_dir,
-            base_url=red_endpoint,
-            offline=not bool(red_endpoint),
+            base_url=red_config.base_url,
+            offline=not bool(red_config.base_url),
             stage="red-before",
         )
         endpoint_metrics = {"red": {"before": red_before_metrics}}
@@ -281,7 +290,7 @@ def run(
         target_url=attack_target_url,
         workspace_dir=workspace_dir,
     )
-    red_agent = LlmAgent("red", red_model, base_url=red_endpoint, api_key=red_api_key)
+    red_agent = LlmAgent("red", red_model, base_url=red_config.base_url, api_key=red_config.api_key, provider=red_config.provider)
     red_result = red_agent.complete(
         "You are a red-team IaC security agent constrained to the generated local sandbox and run evidence.",
         f"Find an exploit for these findings: {[finding.to_dict() for finding in findings]}",
@@ -290,8 +299,8 @@ def run(
     if not shared_endpoint:
         endpoint_metrics["red"]["after"] = collect_run_metrics(
             run_dir=run_dir,
-            base_url=red_endpoint,
-            offline=not bool(red_endpoint),
+            base_url=red_config.base_url,
+            offline=not bool(red_config.base_url),
             stage="red-after",
         )
     before_tool = run_attack_script(
@@ -310,13 +319,13 @@ def run(
         endpoint_metrics["blue"] = {
             "before": collect_run_metrics(
                 run_dir=run_dir,
-                base_url=blue_endpoint,
-                offline=not bool(blue_endpoint),
+                base_url=blue_config.base_url,
+                offline=not bool(blue_config.base_url),
                 stage="blue-before",
             )
         }
 
-    blue_agent = LlmAgent("blue", blue_model, base_url=blue_endpoint, api_key=blue_api_key)
+    blue_agent = LlmAgent("blue", blue_model, base_url=blue_config.base_url, api_key=blue_config.api_key, provider=blue_config.provider)
     blue_result = blue_agent.complete(
         "You are a blue-team IaC remediation agent.",
         f"Diagnose and patch these findings: {[finding.to_dict() for finding in findings]}",
@@ -325,8 +334,8 @@ def run(
     if not shared_endpoint:
         endpoint_metrics["blue"]["after"] = collect_run_metrics(
             run_dir=run_dir,
-            base_url=blue_endpoint,
-            offline=not bool(blue_endpoint),
+            base_url=blue_config.base_url,
+            offline=not bool(blue_config.base_url),
             stage="blue-after",
         )
 
@@ -335,8 +344,8 @@ def run(
     if shared_endpoint:
         after_metrics = collect_run_metrics(
             run_dir=run_dir,
-            base_url=red_endpoint,
-            offline=not bool(red_endpoint),
+            base_url=red_config.base_url,
+            offline=not bool(red_config.base_url),
             stage="after",
         )
         endpoint_metrics["red"]["after"] = after_metrics
@@ -360,6 +369,10 @@ def run(
                 "Offline mock mode records zero token counts. User-authored prompts are not required; "
                 "nullstate sends internal agent instructions plus scenario evidence."
             ),
+            "providers": {
+                "red": red_config.provider,
+                "blue": blue_config.provider,
+            },
         },
     )
     events.write("blue-team", "IaC remediation generated", changed=patch_result.changed, agent=blue_result)
@@ -687,6 +700,9 @@ def _llm_configured() -> bool:
         os.getenv("NULLSTATE_LLM_BASE_URL")
         or os.getenv("NULLSTATE_RED_LLM_BASE_URL")
         or os.getenv("NULLSTATE_BLUE_LLM_BASE_URL")
+        or os.getenv("NULLSTATE_LLM_PROVIDER")
+        or os.getenv("NULLSTATE_RED_LLM_PROVIDER")
+        or os.getenv("NULLSTATE_BLUE_LLM_PROVIDER")
     )
 
 
@@ -698,7 +714,10 @@ def _endpoint_status_detail() -> str:
         return f"red={_redact_url(red)}, blue={_redact_url(blue)}"
     if shared:
         return f"shared={_redact_url(shared)}"
-    return "Set NULLSTATE_LLM_BASE_URL or role-specific red/blue endpoints."
+    provider = os.getenv("NULLSTATE_LLM_PROVIDER")
+    if provider:
+        return f"provider={provider}"
+    return "Set NULLSTATE_LLM_BASE_URL, role-specific endpoints, or NULLSTATE_LLM_PROVIDER=google or claude."
 
 
 def _redact_url(value: str | None) -> str:
@@ -950,16 +969,32 @@ def _localstack_azure_auth_env(backend_name: str, *, offline: bool) -> dict[str,
     }
 
 
-def _resolve_agent_base_url(role: str, explicit: str | None) -> str | None:
-    if explicit:
-        return explicit
-    role_env = f"NULLSTATE_{role.upper()}_LLM_BASE_URL"
-    return os.getenv(role_env) or os.getenv("NULLSTATE_LLM_BASE_URL")
-
-
 def _resolve_agent_api_key(role: str) -> str:
     role_env = f"NULLSTATE_{role.upper()}_LLM_API_KEY"
     return os.getenv(role_env) or os.getenv("NULLSTATE_LLM_API_KEY") or ""
+
+
+def _resolve_agent_config(
+    role: str,
+    *,
+    explicit_provider: str | None,
+    shared_provider: str | None,
+    explicit_base_url: str | None,
+) -> LlmEndpointConfig:
+    provider = normalize_provider(
+        explicit_provider
+        or os.getenv(f"NULLSTATE_{role.upper()}_LLM_PROVIDER")
+        or shared_provider
+        or os.getenv("NULLSTATE_LLM_PROVIDER")
+    )
+    role_env = f"NULLSTATE_{role.upper()}_LLM_BASE_URL"
+    base_url = resolve_base_url(
+        provider=provider,
+        explicit_base_url=explicit_base_url,
+        role_base_url=os.getenv(role_env),
+        shared_base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
+    )
+    return LlmEndpointConfig(provider=provider, base_url=base_url, api_key=_resolve_agent_api_key(role))
 
 
 def _copy_terraform_workspace(source: Path, destination: Path) -> None:

@@ -1,6 +1,6 @@
 # Nullstate Project Handoff
 
-Last updated: 2026-06-09
+Last updated: 2026-06-11
 
 ## Read this first
 
@@ -17,12 +17,14 @@ The repository is currently under a hackathon freeze rule:
 Recent local-only commits:
 
 ```text
-feat: add Azure blob runtime probe foundation
+cad9f3c fix: fail sandbox up when container exits
+504533e feat: add artifact scrubber command
+10a4699 feat: record attack output truncation metadata
+2a90716 feat: enforce local attack targets
+ee6d883 docs: add enterprise readiness guardrails
+2ab50f8 feat: add Azure blob runtime probe foundation
+d1e419f docs: harden handoff for fresh agents
 ccc613e fix: block AWS evidence read after remediation
-0c26efe feat: add AWS runtime evidence probe
-baa782b docs: add project handoff
-7117340 feat: add run bundles and local dashboard
-55775a7 feat: add attack manifest foundation
 ```
 
 These commits have not been pushed at the time of this handoff. Confirm with:
@@ -58,6 +60,11 @@ Working features:
 - Live LocalStack AWS/Azure scenario path.
 - Deterministic finding detection and remediation.
 - Red/blue model wrappers for OpenAI-compatible endpoints.
+- LLM provider presets:
+  - `custom` / `openai-compatible` for self-hosted vLLM, SGLang, private gateways, and explicit base URLs
+  - `google` for Google AI Studio / Gemini through the Gemini OpenAI-compatible endpoint
+  - `claude` for Anthropic's OpenAI SDK compatibility endpoint, documented as experimental until a native Claude adapter exists
+  - role-specific providers and base URLs for red/blue split testing
 - Constrained red command runner:
   - only generated `attack.py`
   - no arbitrary shell

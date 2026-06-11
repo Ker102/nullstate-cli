@@ -48,18 +48,29 @@ nullstate run examples/azure-public-blob --target localstack-azure
 nullstate report
 ```
 
-When a self-hosted model endpoint is available, set one shared endpoint:
+When a self-hosted model endpoint is available, use the custom provider and set one shared endpoint:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_LLM_BASE_URL = "http://127.0.0.1:8000"
 ```
 
 Or set role-specific endpoints:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
 $env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
 ```
+
+Managed provider presets can remove endpoint setup for users who bring their own keys:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "google"
+$env:NULLSTATE_LLM_API_KEY = "<google-ai-studio-key>"
+```
+
+The `claude` preset is also available through Anthropic's OpenAI SDK compatibility layer, but it should be treated as experimental until a native Claude adapter exists.
 
 ## Runtime Modes
 
@@ -81,7 +92,16 @@ runs/<run-id>/workspace/
 
 ### Model Endpoint Mode
 
-The model endpoint must expose an OpenAI-compatible API. This allows the same CLI integration to work with local vLLM, SGLang, or a managed fallback.
+The model endpoint must expose an OpenAI-compatible API. This allows the same CLI integration to work with local vLLM, SGLang, managed provider presets, or a custom proxy.
+
+Provider resolution follows this order:
+
+1. role-specific CLI flags or environment values
+2. shared CLI flags or environment values
+3. provider preset default URL
+4. deterministic mock agent fallback when no endpoint is configured
+
+The `google` preset resolves to Gemini's OpenAI-compatible endpoint. The `claude` preset resolves to Anthropic's OpenAI SDK compatibility endpoint. The `custom` and `openai-compatible` modes require a base URL unless a role-specific URL is provided.
 
 The CLI records model token counts and latency from response `usage` fields when available. It also tries to scrape Prometheus-style `/metrics` from the endpoint and writes the raw metrics snapshots into the run directory.
 

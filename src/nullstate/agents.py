@@ -8,6 +8,7 @@ from typing import Any
 
 import requests
 
+from .llm_providers import chat_completions_url, normalize_provider, resolve_base_url
 from .metrics import ModelCallMetrics, metrics_from_openai_response, offline_agent_metrics
 
 
@@ -20,10 +21,22 @@ class AgentResult:
 
 
 class LlmAgent:
-    def __init__(self, role: str, model: str, base_url: str | None = None, api_key: str | None = None) -> None:
+    def __init__(
+        self,
+        role: str,
+        model: str,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        provider: str | None = None,
+    ) -> None:
         self.role = role
         self.model = model
-        self.base_url = base_url or os.getenv("NULLSTATE_LLM_BASE_URL")
+        self.provider = normalize_provider(provider or os.getenv("NULLSTATE_LLM_PROVIDER"))
+        self.base_url = resolve_base_url(
+            provider=self.provider,
+            explicit_base_url=base_url,
+            shared_base_url=os.getenv("NULLSTATE_LLM_BASE_URL"),
+        )
         self.api_key = api_key or os.getenv("NULLSTATE_LLM_API_KEY", "")
 
     def complete(self, system_prompt: str, user_prompt: str, offline: bool) -> AgentResult:
@@ -35,7 +48,7 @@ class LlmAgent:
                 metrics=offline_agent_metrics(self.role),
             )
 
-        endpoint = self.base_url.rstrip("/") + "/v1/chat/completions"
+        endpoint = chat_completions_url(self.base_url, provider=self.provider)
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"

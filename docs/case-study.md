@@ -251,7 +251,7 @@ Final portfolio version should include:
 | Deterministic security core | Pure LLM scanner | Reliable pass/fail and reproducible patching | Narrower scenario coverage in V1 |
 | LocalStack sandbox | Real AWS/Azure | Safer and no production credentials | Emulator differences and setup friction |
 | One large model for red and blue | Separate red/blue models | Avoided dual-container VRAM/runtime failures | Less role specialization |
-| OpenAI-compatible endpoint | Provider-specific SDK | Works with vLLM, SGLang, or managed fallback | Requires endpoint setup knowledge |
+| OpenAI-compatible endpoint with provider presets | Provider-specific SDK per model vendor | Works with vLLM, SGLang, managed Gemini, Claude compatibility, or custom proxies | Native provider features need dedicated adapters later |
 | Constrained red runner | Free-form shell agent | Real command evidence without arbitrary tool access | Scripts are narrow and scenario-specific |
 
 ## 13. Failure modes and lessons learned

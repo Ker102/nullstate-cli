@@ -53,6 +53,11 @@ Updated 2026-06-09:
 - Completed locally: sandbox startup hardening:
   - `sandbox up` verifies named Docker containers remain running after startup
   - immediate container exits now fail the command instead of reporting success
+- Completed locally: adjacent model onboarding improvement:
+  - added LLM provider presets for `google`, `claude`, `custom`, and `openai-compatible`
+  - Google AI Studio / Gemini users can provide only `NULLSTATE_LLM_PROVIDER=google` and `NULLSTATE_LLM_API_KEY`
+  - Claude is routed through Anthropic's OpenAI SDK compatibility endpoint and documented as experimental
+  - self-hosted AMD/vLLM/SGLang users can still provide explicit shared or role-specific base URLs
 - Verified locally with Ruff, mypy, full unittest discovery, and an offline Azure smoke run.
 - Not pushed: local feature-branch work should remain local unless the user explicitly asks to push.
 - Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.

@@ -121,18 +121,38 @@ python -m nullstate scrub 20260509-200601 --runs-dir runs --output-dir scrubbed-
 
 ## Model endpoint setup
 
-For one model endpoint serving both red and blue roles, set:
+For self-hosted vLLM, SGLang, or a private OpenAI-compatible proxy serving both red and blue roles, set:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_LLM_BASE_URL = "http://localhost:8000"
 $env:NULLSTATE_LLM_API_KEY = "<optional>"
 ```
 
 Then run normally.
 
+For Google AI Studio / Gemini, set the provider preset and API key. The CLI fills in the Gemini OpenAI-compatible base URL:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "google"
+$env:NULLSTATE_LLM_API_KEY = "<google-ai-studio-key>"
+python -m nullstate run examples/azure-public-blob --red-model gemini-3.5-flash --blue-model gemini-3.5-flash
+```
+
+For Claude, the `claude` preset uses Anthropic's OpenAI SDK compatibility layer:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "claude"
+$env:NULLSTATE_LLM_API_KEY = "<anthropic-api-key>"
+python -m nullstate run examples/azure-public-blob --red-model claude-sonnet-4-6 --blue-model claude-sonnet-4-6
+```
+
+Treat Claude compatibility as experimental for this CLI. If a future product path needs Claude-specific features, add a native Anthropic adapter instead of stretching the OpenAI-compatible wrapper.
+
 For two containers or two SSH tunnels, set role-specific endpoints:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
 $env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
 $env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
@@ -140,7 +160,7 @@ $env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
 python -m nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
 ```
 
-You can also pass `--red-base-url` and `--blue-base-url` for a single run. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+You can also pass `--llm-provider`, `--red-provider`, `--blue-provider`, `--red-base-url`, and `--blue-base-url` for a single run. Role-specific settings fall back to `NULLSTATE_LLM_PROVIDER`, `NULLSTATE_LLM_BASE_URL`, and `NULLSTATE_LLM_API_KEY` when they are not set. Explicit base URLs override provider presets for custom gateways and test fixtures.
 
 If no model endpoint is configured for a role, nullstate falls back to a deterministic mock agent response for that role. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
 

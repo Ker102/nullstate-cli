@@ -209,17 +209,35 @@ LOCALSTACK_AUTH_TOKEN=your-token-here
 
 ## Model endpoint
 
-`nullstate` talks to OpenAI-compatible model servers. The simplest setup is one endpoint serving both roles:
+`nullstate` talks to OpenAI-compatible model servers. For self-hosted vLLM, SGLang, or a private proxy, use the custom provider and one endpoint serving both roles:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_LLM_BASE_URL = "http://<mi300x-host>:8000"
 $env:NULLSTATE_LLM_API_KEY = "<optional-token>"
 nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
 ```
 
+For Google AI Studio / Gemini, users only need the provider preset and API key; `nullstate` supplies the OpenAI-compatible Gemini base URL:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "google"
+$env:NULLSTATE_LLM_API_KEY = "<google-ai-studio-key>"
+nullstate run examples/azure-public-blob --blue-model gemini-3.5-flash --red-model gemini-3.5-flash
+```
+
+For Claude through Anthropic's OpenAI SDK compatibility layer, use the Claude preset. Treat this as an experimental compatibility path; a native Claude adapter is still the better future production path if Claude-specific features are needed:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "claude"
+$env:NULLSTATE_LLM_API_KEY = "<anthropic-api-key>"
+nullstate run examples/azure-public-blob --blue-model claude-sonnet-4-6 --red-model claude-sonnet-4-6
+```
+
 For two vLLM/SGLang containers or two SSH tunnels, set role-specific endpoints:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
 $env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
 $env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
@@ -227,7 +245,7 @@ $env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
 nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
 ```
 
-The CLI also accepts `--red-base-url` and `--blue-base-url` for one-off runs. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+The CLI also accepts `--llm-provider`, `--red-provider`, `--blue-provider`, `--red-base-url`, and `--blue-base-url` for one-off runs. Presets currently include `google`, `claude`, `custom`, and `openai-compatible`. Role-specific settings fall back to `NULLSTATE_LLM_PROVIDER`, `NULLSTATE_LLM_BASE_URL`, and `NULLSTATE_LLM_API_KEY` when they are not set. Explicit base URLs always win, so custom gateways, self-hosted models, and provider proxies stay supported.
 
 Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If an endpoint is missing for a role, that role falls back to a deterministic mock response, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If a shared or role-specific model endpoint is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
 
