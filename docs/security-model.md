@@ -70,7 +70,7 @@ Enterprise hardening should add:
 - PR checks run tests, lint, type checks, and dependency audit.
 - CodeQL runs on PRs, pushes, and weekly schedule.
 - Dependency review runs on PRs.
-- Release workflow triggers only from semver tags.
+- Release workflow triggers only from semver tags and creates GitHub artifact attestations for built distributions.
 - Workflows use least-privilege permissions.
 
 ## Data protection
@@ -87,7 +87,7 @@ Artifacts must be reviewed before publishing. Do not publish tokens, real tenant
 ## Future improvements
 
 - SBOM generation.
-- Package provenance signing.
+- SBOM attestation for release artifacts.
 - Artifact scrubbing command.
 - Policy-as-code guardrails for agent tools.
 - Live-cloud approval gate with auditable operator intent.

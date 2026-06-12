@@ -399,8 +399,14 @@ The `Media` prerelease is only used to host README assets. Product releases shou
 
 The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.1`.
 
+Tagged releases build wheel/sdist artifacts, upload `release-manifest.json` with SHA-256 digests, and create GitHub artifact attestations for `dist/*`. Verify a downloaded wheel with:
+
+```powershell
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
+```
+
 ## Status
 
 Working now: live LocalStack AWS/Azure storage scenarios, offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
 
-Experimental: richer scenario-specific attack scripts, live Kubernetes/Compose/on-prem adapters, SBOM/signing, and automatic artifact scrubbing.
+Experimental: richer scenario-specific attack scripts, live Kubernetes/Compose/on-prem adapters, SBOM attestation, and automatic artifact scrubbing.

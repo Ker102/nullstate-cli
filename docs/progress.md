@@ -93,6 +93,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Start events record operator approval, and red-tool events record `live_cloud_allowed` plus `external-http` classification when applicable.
   - Attack command timeouts now return structured red-tool evidence with return code `124` instead of a traceback.
   - Built-in scenarios still resolve to local/offline targets; real cloud adapters remain future work.
+- `ci: add release provenance attestations` (this checkpoint)
+  - Hardened the tag release workflow with GitHub artifact attestation permissions.
+  - Added `release-manifest.json` with SHA-256 digests and sizes for built wheel/sdist artifacts.
+  - Added `actions/attest@v4` provenance attestation for `dist/*` release assets.
+  - SBOM attestation remains future supply-chain hardening.
 
 ## In Progress
 
@@ -107,5 +112,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Public-key package signing and release provenance for distributed artifacts.
+- SBOM attestation for release artifacts.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

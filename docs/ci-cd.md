@@ -72,8 +72,18 @@ merge to main
 -> update CHANGELOG.md
 -> tag v0.1.0
 -> release workflow builds package
+-> release-manifest.json records SHA-256 digests and sizes
+-> GitHub artifact attestations bind provenance to dist/*
 -> GitHub release created with generated notes
 ```
+
+After a tagged release is published, verify package provenance with GitHub CLI:
+
+```powershell
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
+```
+
+`release-manifest.json` is uploaded beside the wheel and sdist. It is a checksum index for release assets; GitHub artifact attestations provide the build provenance for those assets.
 
 ## Required repository settings
 

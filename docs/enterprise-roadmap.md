@@ -273,7 +273,8 @@ Before businesses can rely on it, the product needs:
 - evidence integrity manifest through `nullstate evidence-manifest`
 - evidence hash verification through `nullstate evidence-verify`
 - signed run evidence through optional HMAC evidence-manifest signatures
-- SBOM and package provenance
+- release package provenance through GitHub artifact attestations
+- SBOM attestation as future supply-chain hardening
 
 ### P3: Growth and brand
 

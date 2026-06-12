@@ -59,6 +59,6 @@ nullstate is a local-first CLI that analyzes IaC, runs or simulates sandbox atta
 ## Next improvements
 
 - Add `nullstate scrub runs/<id>`.
-- Add signed release provenance.
+- Add SBOM attestation for release artifacts.
 - Add SBOM workflow.
 - Add explicit policy file for red-team tool permissions.
