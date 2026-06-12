@@ -295,6 +295,7 @@ Each run writes:
 - `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
 - `runs/<run-id>/attack.py`
 - `runs/<run-id>/attack-manifest.json`
+- `runs/<run-id>/remediation.json`
 - `runs/<run-id>/run-bundle.json` when `nullstate bundle` or `nullstate dashboard` is run
 - `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
 - `runs/<run-id>/nullstate.sarif` when `nullstate sarif` is run
@@ -312,7 +313,7 @@ nullstate scrub
 nullstate scrub 20260608-224625 --runs-dir runs --output-dir scrubbed-runs
 ```
 
-`events.jsonl` includes `red-tool` entries for the allowlisted attack command before and after remediation.
+`events.jsonl` includes `red-tool` entries for the allowlisted attack command before and after remediation. `remediation.json` records the deterministic remediation ruleset version, scenario, changed files, and rule IDs applied during the run.
 
 Export findings for CI or code-scanning upload:
 

@@ -31,6 +31,7 @@ def build_run_bundle(run_dir: Path) -> dict[str, Any]:
     metrics = _read_json(run_dir / "metrics.json", default={})
     report = _read_text(run_dir / "report.md")
     manifest = _read_json(run_dir / "attack-manifest.json", default={})
+    remediation = _read_json(run_dir / "remediation.json", default={})
 
     bundle = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
@@ -51,6 +52,7 @@ def build_run_bundle(run_dir: Path) -> dict[str, Any]:
             "events": events,
             "metrics": metrics,
             "attack_manifest": manifest,
+            "remediation": remediation,
             "report_excerpt": report[:4000],
         },
         "artifacts": _artifact_inventory(run_dir),

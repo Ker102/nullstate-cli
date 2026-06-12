@@ -41,7 +41,7 @@ IaC scanners are useful, but they often stop at "this configuration looks risky.
 - Generate blue-team remediation explanation with a self-hosted model endpoint.
 - Apply deterministic Terraform remediation.
 - Re-run validation after remediation.
-- Produce `report.md`, `findings.json`, `events.jsonl`, `metrics.json`, `attack.py`, and `remediation.patch`.
+- Produce `report.md`, `findings.json`, `events.jsonl`, `metrics.json`, `attack.py`, `remediation.patch`, and `remediation.json`.
 - Support offline/mock mode so the demo can still run without GPU or sandbox access.
 
 ### Non-functional requirements
@@ -93,7 +93,7 @@ This is intentionally narrower than a free-form agent shell. It gives the demo r
 | Risk | Control | Evidence |
 |---|---|---|
 | Accidental real cloud attack | LocalStack and plan-only targets by default | sandbox adapters and run commands |
-| Model makes unsafe recommendation | deterministic detector and remediation remain source of truth | `findings.json`, `remediation.patch` |
+| Model makes unsafe recommendation | deterministic detector and versioned remediation remain source of truth | `findings.json`, `remediation.patch`, `remediation.json` |
 | Arbitrary exploit execution | generated `attack.py` only, no arbitrary shell | `red-tool` events, `src/nullstate/attack_runner.py` |
 | Secret leakage | `.env` and Terraform state ignored; screenshots must be redacted | repo hygiene and submission checklist |
 | Public model endpoint exposure | vLLM bound through SSH tunnel, not public ingress | droplet setup and tunnel workflow |
@@ -216,6 +216,7 @@ Each run creates:
 - `findings.json`: structured finding data.
 - `attack.py`: generated scenario attack artifact.
 - `remediation.patch`: deterministic Terraform diff.
+- `remediation.json`: deterministic remediation ruleset version, changed files, and applied rule IDs.
 - `metrics.json`: model call token counts, latency, throughput, and endpoint metrics.
 - `report.md`: human-readable case-study report.
 - `run-bundle.json`: portable evidence contract for local dashboards, support bundles, CI upload, and future cloud ingestion.

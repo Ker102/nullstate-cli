@@ -27,6 +27,8 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertEqual(payload["run"]["id"], run_dir.name)
             self.assertEqual(payload["run"]["verdict"], "blocked")
             self.assertEqual(payload["run"]["finding_count"], 1)
+            self.assertEqual(payload["evidence"]["remediation"]["ruleset_version"], "2026.06.1")
+            self.assertIn("AWS_S3_BLOCK_PUBLIC_ACCESS", payload["evidence"]["remediation"]["rules_applied"])
             self.assertFalse(payload["scrub"]["workspace_included"])
             self.assertIn("report.md", {artifact["path"] for artifact in payload["artifacts"]})
             self.assertIn("Bundle:", completed.stdout)
@@ -175,6 +177,19 @@ def _minimal_run(runs_dir: Path) -> Path:
         encoding="utf-8",
     )
     (run_dir / "remediation.patch").write_text("--- a/main.tf\n+++ b/main.tf\n", encoding="utf-8")
+    (run_dir / "remediation.json").write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "scenario": "aws-public-s3",
+                "changed": True,
+                "changed_files": ["workspace/main.tf"],
+                "ruleset_version": "2026.06.1",
+                "rules_applied": ["AWS_S3_BLOCK_PUBLIC_ACCESS", "AWS_S3_REMOVE_PUBLIC_READ_POLICY"],
+            }
+        ),
+        encoding="utf-8",
+    )
     return run_dir
 
 

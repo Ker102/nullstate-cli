@@ -43,7 +43,7 @@ from .policy import (
     write_policy_validation,
 )
 from .policy_result import POLICY_RESULT_FILENAME, write_policy_result
-from .remediation import remediate_scenario_files
+from .remediation import REMEDIATION_METADATA_FILENAME, build_remediation_metadata, remediate_scenario_files
 from .report import render_report
 from .sarif import SARIF_FILENAME, write_sarif
 from .sandbox import get_backend, list_backends, probe_backend, render_commands, run_commands
@@ -388,6 +388,8 @@ def run(
 
     patch_result = remediate_scenario_files(scenario_spec.name, workspace_dir)
     (run_dir / "remediation.patch").write_text(patch_result.diff, encoding="utf-8")
+    remediation_metadata = build_remediation_metadata(scenario_spec.name, patch_result)
+    write_json(run_dir / REMEDIATION_METADATA_FILENAME, remediation_metadata)
     if shared_endpoint:
         after_metrics = collect_run_metrics(
             run_dir=run_dir,
@@ -422,7 +424,13 @@ def run(
             },
         },
     )
-    events.write("blue-team", "IaC remediation generated", changed=patch_result.changed, agent=blue_result)
+    events.write(
+        "blue-team",
+        "IaC remediation generated",
+        changed=patch_result.changed,
+        remediation=remediation_metadata,
+        agent=blue_result,
+    )
 
     if offline:
         remediated_plan, remediation_commands = load_plan_json(workspace_dir, offline=True)
@@ -458,6 +466,7 @@ def run(
         after_attack=after_attack,
         patch_diff=patch_result.diff,
         model_notes=f"Red: {red_result.model}. Blue: {blue_result.model}. {blue_result.content}",
+        remediation_metadata=remediation_metadata,
         runtime_evidence={
             "before": before_tool.to_dict(),
             "after": after_tool.to_dict(),

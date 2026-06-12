@@ -27,6 +27,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Release SBOM | implemented | tagged release workflow installs the built wheel into a clean environment, validates `sbom.spdx.json` locally and with SPDX tools, and attests it with GitHub artifact attestations |
 | Keyless release signing | implemented | tagged release workflow signs primary release assets with Sigstore through GitHub OIDC |
 | Release dry-run rehearsal | implemented | manual `workflow_dispatch` runs release validation without creating a GitHub release |
+| Versioned remediation rules | implemented | `remediation.json` records the ruleset version, scenario, changed files, and applied rule IDs |
 
 ## Required Before Enterprise Claims
 
@@ -85,6 +86,8 @@ Tagged package releases write `release-manifest.json` with SHA-256 digests and `
 
 The same release workflow can be run manually with `dry_run=true` before tagging. Manual dry runs exercise the release build, validation, attestation, signing, and signature-bundle checks while skipping GitHub release creation.
 
+Each run also writes `remediation.json` beside `remediation.patch`. The JSON artifact records the deterministic remediation ruleset version, scenario, changed flag, changed files, and rule IDs applied by the remediation engine. Reports and run bundles include the same metadata so support, CI, and future ingestion workflows can tie a remediation patch back to the exact rule contract.
+
 ### Artifact Scrubbing
 
 Before publishing, uploading, or attaching run bundles, run `nullstate scrub`. The scrubber writes a sanitized copy and redacts:
@@ -116,8 +119,7 @@ If a report says "exploited", it should include observed command evidence or exp
 ## Near-Term Readiness Tasks
 
 1. Run live LocalStack Azure validation and document emulator-specific limitations.
-2. Add post-release verification checklist for the first tagged release.
-3. Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.
+2. Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.
 
 ## Commercial Boundary
 

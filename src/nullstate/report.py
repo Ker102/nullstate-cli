@@ -12,6 +12,7 @@ def render_report(
     after_attack: dict[str, str],
     patch_diff: str,
     model_notes: str,
+    remediation_metadata: dict[str, object] | None = None,
     runtime_evidence: dict[str, dict[str, object]] | None = None,
 ) -> str:
     verdict = "Exploit blocked after remediation" if after_attack.get("status") == "blocked" else "Exploit still succeeds"
@@ -51,6 +52,8 @@ IaC input: `{terraform_dir}`
 - Evidence: {after_attack.get("detail", "No detail recorded.")}
 
 {_render_runtime_evidence(runtime_evidence)}
+
+{_render_remediation_metadata(remediation_metadata)}
 
 ## Case Study Notes
 
@@ -95,6 +98,35 @@ def _render_runtime_evidence(runtime_evidence: dict[str, dict[str, object]] | No
 ```text
 {_excerpt(str(after.get("stdout", "")))}
 ```
+"""
+
+
+def _render_remediation_metadata(remediation_metadata: dict[str, object] | None) -> str:
+    if not remediation_metadata:
+        return ""
+    rules = remediation_metadata.get("rules_applied")
+    if isinstance(rules, list):
+        rendered_rules = "\n".join(f"- `{rule}`" for rule in rules) or "- None"
+    else:
+        rendered_rules = "- None"
+    changed_files = remediation_metadata.get("changed_files")
+    if isinstance(changed_files, list):
+        rendered_files = "\n".join(f"- `{path}`" for path in changed_files) or "- None"
+    else:
+        rendered_files = "- None"
+    return f"""## Remediation Metadata
+
+- Ruleset version: `{remediation_metadata.get("ruleset_version", "unknown")}`
+- Scenario: `{remediation_metadata.get("scenario", "unknown")}`
+- Changed: `{remediation_metadata.get("changed", "unknown")}`
+
+Rules applied:
+
+{rendered_rules}
+
+Changed files:
+
+{rendered_files}
 """
 
 

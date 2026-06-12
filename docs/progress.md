@@ -137,6 +137,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added a runbook checklist for the first tagged release.
   - Captures PR check review, manual release dry-run rehearsal, release inspection, GitHub attestation verification, and Sigstore bundle verification.
   - Keeps the freeze rule explicit: no tagging, release publishing, or `main` updates until approved.
+- `feat: add versioned remediation metadata` (this checkpoint)
+  - Added `remediation.json` with remediation ruleset version, scenario, changed files, and applied deterministic rule IDs.
+  - Included remediation metadata in reports, run bundles, and blue-team remediation events.
+  - Updated roadmap and readiness docs so versioned remediation is no longer listed as future-only work.
 
 ## In Progress
 

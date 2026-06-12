@@ -23,6 +23,11 @@ class ReportTests(unittest.TestCase):
             after_attack={"status": "blocked", "detail": "Anonymous read denied"},
             patch_diff="--- a/main.tf\n+++ b/main.tf\n",
             model_notes="offline mock blue team",
+            remediation_metadata={
+                "ruleset_version": "2026.06.1",
+                "rules_applied": ["AZURE_STORAGE_PUBLIC_BLOB_PRIVATE_ACCESS"],
+                "changed_files": ["workspace/main.tf"],
+            },
             runtime_evidence={
                 "before": {
                     "command": ["python", "attack.py", "--stage", "before"],
@@ -44,6 +49,9 @@ class ReportTests(unittest.TestCase):
         self.assertIn("Anonymous read returned secret.txt", report)
         self.assertIn("Anonymous read denied", report)
         self.assertIn("offline mock blue team", report)
+        self.assertIn("## Remediation Metadata", report)
+        self.assertIn("Ruleset version: `2026.06.1`", report)
+        self.assertIn("AZURE_STORAGE_PUBLIC_BLOB_PRIVATE_ACCESS", report)
         self.assertIn("## Runtime Command Evidence", report)
         self.assertIn("Classification: `runtime evidence unavailable`", report)
         self.assertIn("Classification: `runtime probe did not observe exploit`", report)

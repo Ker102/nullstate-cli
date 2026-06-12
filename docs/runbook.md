@@ -271,6 +271,7 @@ Check:
 - `runs/<id>/report.md`
 - `runs/<id>/findings.json`
 - `runs/<id>/events.jsonl`
+- `runs/<id>/remediation.json`
 - `runs/<id>/metrics.json`
 - `runs/<id>/vllm-metrics-before.prom`
 - `runs/<id>/vllm-metrics-after.prom`

@@ -58,6 +58,5 @@ nullstate is a local-first CLI that analyzes IaC, runs or simulates sandbox atta
 
 ## Next improvements
 
-- Add `nullstate scrub runs/<id>`.
-- Expand release SBOMs from declared dependencies to resolved dependency lock data.
-- Add explicit policy file for red-team tool permissions.
+- Run live LocalStack Azure validation when the account has Azure Emulator entitlement.
+- Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.

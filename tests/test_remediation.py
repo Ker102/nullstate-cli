@@ -42,6 +42,8 @@ class RemediationTests(unittest.TestCase):
             self.assertIn("allow_nested_items_to_be_public  = false", updated)
             self.assertIn('-  container_access_type = "container"', result.diff)
             self.assertIn('+  container_access_type = "private"', result.diff)
+            self.assertRegex(result.ruleset_version, r"^\d{4}\.\d{2}\.\d+$")
+            self.assertIn("AZURE_STORAGE_PUBLIC_BLOB_PRIVATE_ACCESS", result.rules_applied)
 
     def test_adds_missing_storage_account_public_block_setting(self):
         with TemporaryDirectory() as raw_tmp:
@@ -115,6 +117,7 @@ class RemediationTests(unittest.TestCase):
             self.assertNotIn('resource "aws_s3_object" "evidence"', updated)
             self.assertIn('-resource "aws_s3_bucket_policy" "public_read"', result.diff)
             self.assertIn('-resource "aws_s3_object" "evidence"', result.diff)
+            self.assertIn("AWS_S3_BLOCK_PUBLIC_ACCESS", result.rules_applied)
 
 
 if __name__ == "__main__":

@@ -290,6 +290,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - keyless Sigstore release signing for primary release assets
 - manual release dry-run rehearsal before tagging
 - first tagged release verification checklist in the runbook
+- versioned remediation metadata through `remediation.json`, report sections, and run-bundle evidence
 
 Do not jump straight to full SaaS before stabilizing:
 

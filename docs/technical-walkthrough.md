@@ -378,6 +378,7 @@ Each run writes:
 | `attack.py` | Generated constrained attack artifact |
 | `attack-manifest.json` | Scenario, backend, target URL, and resource hints for constrained probes |
 | `remediation.patch` | Terraform remediation diff |
+| `remediation.json` | Versioned deterministic remediation ruleset metadata |
 | `metrics.json` | Model calls, token counts, latency, endpoint metrics |
 | `ci-summary.json` | Machine-readable CI verdict when `--ci` is used |
 | `policy-result.json` | Standalone JSON policy decision for an existing run |
@@ -389,7 +390,7 @@ Each run writes:
 
 `nullstate report` opens the latest report by default, including reports nested under named run directories.
 
-`nullstate bundle` writes `run-bundle.json`, the portable evidence contract for local dashboards, CI upload, support bundles, and future Nullstate Cloud ingestion.
+`nullstate bundle` writes `run-bundle.json`, the portable evidence contract for local dashboards, CI upload, support bundles, and future Nullstate Cloud ingestion. The bundle includes `remediation.json` metadata when available so downstream tools can display the remediation ruleset version and rule IDs.
 
 `nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login.
 
