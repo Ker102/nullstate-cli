@@ -58,14 +58,14 @@ class BundleDashboardTests(unittest.TestCase):
             runs_dir = root / "runs"
             output_dir = root / "scrubbed-runs"
             run_dir = _minimal_run(runs_dir)
-            secret_text = (
-                "LOCALSTACK_AUTH_TOKEN=localstack-secret\n"
-                "NULLSTATE_LLM_API_KEY=model-secret\n"
-                "ARM_CLIENT_SECRET=azure-secret\n"
+            scrub_fixture_text = (
+                "LOCALSTACK_AUTH_TOKEN=fixture-value\n"
+                "NULLSTATE_LLM_API_KEY=fixture-value\n"
+                "ARM_CLIENT_SECRET=fixture-value\n"
                 "tenant=11111111-2222-3333-4444-555555555555\n"
                 "private=10.20.30.40 loopback=127.0.0.1\n"
             )
-            (run_dir / "events.jsonl").write_text(secret_text, encoding="utf-8")
+            (run_dir / "events.jsonl").write_text(scrub_fixture_text, encoding="utf-8")
 
             completed = subprocess.run(
                 [
@@ -87,7 +87,7 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             scrubbed_dir = output_dir / run_dir.name
             self.assertTrue(scrubbed_dir.is_dir())
-            self.assertEqual(run_dir.joinpath("events.jsonl").read_text(encoding="utf-8"), secret_text)
+            self.assertEqual(run_dir.joinpath("events.jsonl").read_text(encoding="utf-8"), scrub_fixture_text)
             scrubbed_events = scrubbed_dir.joinpath("events.jsonl").read_text(encoding="utf-8")
             self.assertIn("<redacted-localstack-auth-token>", scrubbed_events)
             self.assertIn("<redacted-model-api-key>", scrubbed_events)

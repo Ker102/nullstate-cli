@@ -72,6 +72,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - `nullstate evidence-verify` now fails copied/wrong manifests whose declared run identity does not match the target run.
   - Malformed evidence manifests now surface as CLI parameter errors instead of Python tracebacks.
   - This checkpoint is intentionally local until the next substantive batch push, to avoid triggering a CodeRabbit review loop over review-response fixes.
+- `fix: make SARIF upload and CodeQL fixtures CI-clean` (local checkpoint)
+  - Investigated PR #24 failing checks with `gh`.
+  - Fixed GitHub SARIF upload validation by moving finding logical locations under SARIF result locations.
+  - Reworked scrubber test fixture values/naming so CodeQL does not treat the test artifact as clear-text secret storage.
+  - GitHub has not re-run these checks yet because the fixes remain local on this branch.
 
 ## In Progress
 

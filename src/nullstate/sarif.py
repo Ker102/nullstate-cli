@@ -90,11 +90,15 @@ def _result_from_finding(finding: dict[str, Any]) -> dict[str, Any]:
         "ruleId": rule_id,
         "level": _level_for_severity(str(finding.get("severity") or "")),
         "message": {"text": text},
-        "logicalLocations": [
+        "locations": [
             {
-                "name": resource_address,
-                "fullyQualifiedName": resource_address,
-                "kind": "resource",
+                "logicalLocations": [
+                    {
+                        "name": resource_address,
+                        "fullyQualifiedName": resource_address,
+                        "kind": "resource",
+                    }
+                ],
             }
         ],
         "properties": {

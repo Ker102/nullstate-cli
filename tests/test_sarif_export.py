@@ -31,7 +31,12 @@ class SarifExportTests(unittest.TestCase):
             self.assertEqual(result["ruleId"], "AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED")
             self.assertEqual(result["level"], "error")
             self.assertIn("S3 public access block controls are disabled.", result["message"]["text"])
-            self.assertEqual(result["logicalLocations"][0]["fullyQualifiedName"], "aws_s3_bucket_public_access_block.public_logs")
+            self.assertNotIn("logicalLocations", result)
+            location = result["locations"][0]
+            self.assertEqual(
+                location["logicalLocations"][0]["fullyQualifiedName"],
+                "aws_s3_bucket_public_access_block.public_logs",
+            )
             self.assertEqual(result["properties"]["severity"], "high")
             self.assertEqual(result["properties"]["remediation"], "enable controls")
             self.assertIn("SARIF:", completed.stdout)
