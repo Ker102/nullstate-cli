@@ -278,6 +278,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - policy validation output through `nullstate policy validate`
 - unsigned evidence integrity manifests through `nullstate evidence-manifest`
 - evidence hash verification through `nullstate evidence-verify`
+- review-hardening fixes for fail-closed `policy-result` inputs, copied evidence manifests, and malformed manifest CLI errors
 
 Do not jump straight to full SaaS before stabilizing:
 
@@ -294,5 +295,6 @@ Until the user says the freeze is over:
 - Do not merge PR #24.
 - Do not push or merge to `main`.
 - Feature branch checkpoint pushes are allowed.
+- After applying CodeRabbit review feedback, do not push solely to trigger another CodeRabbit review loop; fold those fixes into the next substantive batch unless the user explicitly approves a review-response push.
 - Do not tag releases.
 - Do not update `main`.

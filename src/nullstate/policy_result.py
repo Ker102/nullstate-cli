@@ -53,14 +53,17 @@ def write_policy_result(
 
 def _read_findings(path: Path) -> list[Finding]:
     if not path.is_file():
-        return []
-    raw = json.loads(path.read_text(encoding="utf-8"))
+        raise ValueError(f"Run directory does not contain findings.json: {path.parent}")
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError(f"Invalid findings.json: {path}") from error
     if not isinstance(raw, list):
-        return []
+        raise ValueError(f"findings.json must contain a list: {path}")
     findings = []
     for item in raw:
         if not isinstance(item, dict):
-            continue
+            raise ValueError(f"findings.json contains an invalid finding entry: {path}")
         findings.append(
             Finding(
                 rule_id=str(item.get("rule_id") or ""),

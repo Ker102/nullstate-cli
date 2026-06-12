@@ -77,6 +77,40 @@ class PolicyResultTests(unittest.TestCase):
             self.assertEqual(payload["baseline"]["new_finding_count"], 0)
             self.assertEqual(payload["evaluated_finding_count"], 0)
 
+    def test_policy_result_fails_closed_when_findings_are_missing(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            (run_dir / "findings.json").unlink()
+
+            completed = subprocess.run(
+                [sys.executable, "-m", "nullstate", "policy-result", run_dir.name, "--runs-dir", str(runs_dir)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("findings.json", completed.stderr)
+            self.assertFalse((run_dir / "policy-result.json").exists())
+
+    def test_policy_result_fails_closed_when_findings_are_not_a_list(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            (run_dir / "findings.json").write_text(json.dumps({"findings": []}), encoding="utf-8")
+
+            completed = subprocess.run(
+                [sys.executable, "-m", "nullstate", "policy-result", run_dir.name, "--runs-dir", str(runs_dir)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("findings.json", completed.stderr)
+            self.assertFalse((run_dir / "policy-result.json").exists())
+
 
 def _write_baseline(path: Path, rule_id: str, resource_address: str) -> None:
     path.write_text(

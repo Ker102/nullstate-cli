@@ -32,7 +32,8 @@ def verify_evidence_manifest(
     run_dir = run_dir.resolve()
     source = manifest_path or run_dir / EVIDENCE_MANIFEST_FILENAME
     manifest = _read_json(source, default={})
-    failures = _verify_manifest_artifacts(run_dir, manifest)
+    failures = _verify_manifest_identity(run_dir, manifest)
+    failures.extend(_verify_manifest_artifacts(run_dir, manifest))
     artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), list) else []
     payload = {
         "schema_version": 1,
@@ -189,6 +190,43 @@ def _verify_manifest_artifacts(run_dir: Path, manifest: dict[str, Any]) -> list[
     return failures
 
 
+def _verify_manifest_identity(run_dir: Path, manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    run = manifest.get("run")
+    if not isinstance(run, dict):
+        return [{"path": None, "reason": "invalid_manifest_run"}]
+
+    failures: list[dict[str, Any]] = []
+    actual_run_id = run.get("id")
+    if actual_run_id != run_dir.name:
+        failures.append(
+            {
+                "path": None,
+                "reason": "manifest_run_id_mismatch",
+                "expected_run_id": run_dir.name,
+                "actual_run_id": actual_run_id,
+            }
+        )
+
+    declared_path = run.get("path")
+    if isinstance(declared_path, str) and declared_path:
+        declared_run_name = _path_basename(declared_path)
+        if declared_run_name and declared_run_name != run_dir.name:
+            failures.append(
+                {
+                    "path": None,
+                    "reason": "manifest_run_path_mismatch",
+                    "expected_run_id": run_dir.name,
+                    "actual_run_path": declared_path,
+                }
+            )
+    return failures
+
+
+def _path_basename(path: str) -> str:
+    normalized = path.replace("\\", "/").rstrip("/")
+    return normalized.rsplit("/", 1)[-1] if normalized else ""
+
+
 def _manifest_display_path(run_dir: Path, manifest_path: Path) -> str:
     resolved = manifest_path.resolve()
     try:
@@ -211,7 +249,10 @@ def _read_events(path: Path) -> list[dict[str, Any]]:
 def _read_json(path: Path, *, default: Any) -> Any:
     if not path.is_file():
         return default
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError(f"Invalid JSON file: {path}") from error
     return payload if isinstance(payload, dict) else default
 
 

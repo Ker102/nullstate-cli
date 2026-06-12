@@ -66,6 +66,12 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `nullstate policy validate`.
   - Writes optional `policy-validation.json` for CI evidence.
   - Exits with code `2` when the policy file is malformed or invalid.
+- `fix: harden policy and evidence verification` (local checkpoint)
+  - Reviewed the latest CodeRabbit findings and accepted the verified fail-closed issues.
+  - `nullstate policy-result` now fails closed when `findings.json` is missing, malformed, or not a list.
+  - `nullstate evidence-verify` now fails copied/wrong manifests whose declared run identity does not match the target run.
+  - Malformed evidence manifests now surface as CLI parameter errors instead of Python tracebacks.
+  - This checkpoint is intentionally local until the next substantive batch push, to avoid triggering a CodeRabbit review loop over review-response fixes.
 
 ## In Progress
 

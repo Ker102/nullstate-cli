@@ -156,9 +156,40 @@ class EvidenceManifestTests(unittest.TestCase):
             self.assertEqual(payload["status"], "passed")
             self.assertEqual(payload["manifest"]["path"], str(manifest_path))
 
+    def test_evidence_verify_fails_when_manifest_run_id_does_not_match(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            source_run = _minimal_run(runs_dir, run_id="20260601-120000")
+            target_run = _minimal_run(runs_dir, run_id="20260601-130000")
+            _run_nullstate("evidence-manifest", source_run.name, "--runs-dir", str(runs_dir))
+            copied_manifest = target_run / "evidence-manifest.json"
+            copied_manifest.write_text((source_run / "evidence-manifest.json").read_text(encoding="utf-8"), encoding="utf-8")
 
-def _minimal_run(runs_dir: Path) -> Path:
-    run_dir = runs_dir / "20260601-120000"
+            completed = _run_nullstate("evidence-verify", target_run.name, "--runs-dir", str(runs_dir))
+
+            self.assertEqual(completed.returncode, 2, completed.stdout)
+            payload = json.loads((target_run / "evidence-verification.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["status"], "failed")
+            self.assertIn(
+                {"path": None, "reason": "manifest_run_id_mismatch", "expected_run_id": target_run.name, "actual_run_id": source_run.name},
+                payload["failures"],
+            )
+
+    def test_evidence_verify_reports_malformed_manifest_as_cli_error(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            (run_dir / "evidence-manifest.json").write_text("{", encoding="utf-8")
+
+            completed = _run_nullstate("evidence-verify", run_dir.name, "--runs-dir", str(runs_dir))
+
+            self.assertEqual(completed.returncode, 2)
+            self.assertIn("Invalid JSON file", completed.stderr)
+            self.assertFalse((run_dir / "evidence-verification.json").exists())
+
+
+def _minimal_run(runs_dir: Path, *, run_id: str = "20260601-120000") -> Path:
+    run_dir = runs_dir / run_id
     run_dir.mkdir(parents=True)
     (run_dir / "report.md").write_text("# nullstate Run Report\n\nExploit blocked after remediation\n", encoding="utf-8")
     (run_dir / "findings.json").write_text(

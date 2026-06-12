@@ -811,7 +811,10 @@ def evidence_verify(
 ) -> None:
     """Verify run artifacts against an evidence integrity manifest."""
     run_dir = _resolve_run_dir(run_id, runs_dir)
-    payload = verify_evidence_manifest(run_dir, manifest_path=manifest, output_path=output)
+    try:
+        payload = verify_evidence_manifest(run_dir, manifest_path=manifest, output_path=output)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
     result_path = output or run_dir / EVIDENCE_VERIFICATION_FILENAME
     console.print(f"Evidence verification: {result_path}")
     console.print(

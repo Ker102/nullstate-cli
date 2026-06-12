@@ -21,7 +21,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Red-tool policy scaffold | implemented | `nullstate policy init` and `run --policy-file` enforce scenario, backend, stage, argument, target, command, timeout, and output fields |
 | Policy validation artifact | implemented | `nullstate policy validate` writes optional `policy-validation.json` |
 | Evidence integrity manifest | implemented | `nullstate evidence-manifest` writes SHA-256 artifact inventory with explicit unsigned status |
-| Evidence manifest verification | implemented | `nullstate evidence-verify` detects missing or changed manifest artifacts |
+| Evidence manifest verification | implemented | `nullstate evidence-verify` detects missing or changed manifest artifacts and copied manifests for another run |
 
 ## Required Before Enterprise Claims
 
@@ -73,7 +73,7 @@ Future event metadata should add:
 
 These fields make evidence reproducible and easier to audit in CI, support, and compliance workflows.
 
-`nullstate evidence-manifest` adds a run-level artifact inventory for support, case-study, and future ingestion workflows. It records SHA-256 hashes and file sizes for shareable artifacts while excluding copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. `nullstate evidence-verify` recomputes recorded hashes and writes `evidence-verification.json`, exiting with code `2` when a listed artifact is missing or changed. The current manifest is deliberately marked `unsigned`; enterprise signing should add a real signature, signing key identity, and verification workflow.
+`nullstate evidence-manifest` adds a run-level artifact inventory for support, case-study, and future ingestion workflows. It records SHA-256 hashes and file sizes for shareable artifacts while excluding copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. `nullstate evidence-verify` recomputes recorded hashes and writes `evidence-verification.json`, exiting with code `2` when a listed artifact is missing, changed, or tied to a different declared run identity. The current manifest is deliberately marked `unsigned`; enterprise signing should add a real signature, signing key identity, and verification workflow.
 
 ### Artifact Scrubbing
 
