@@ -221,6 +221,11 @@ def run(
     ),
     baseline_file: Path | None = typer.Option(None, "--baseline-file", help="Optional baseline JSON file for known findings."),
     policy_file: Path | None = typer.Option(None, "--policy-file", help="Optional red-tool execution policy JSON file."),
+    allow_live_cloud: bool = typer.Option(
+        False,
+        "--allow-live-cloud",
+        help="Allow future non-local HTTP(S) attack probe targets and record explicit operator approval.",
+    ),
 ) -> None:
     """Run detection, attack, remediation, and validation."""
     try:
@@ -280,6 +285,7 @@ def run(
         red_mock_agent=use_red_mock,
         blue_mock_agent=use_blue_mock,
         role_specific_endpoints=not shared_endpoint,
+        allow_live_cloud=allow_live_cloud,
     )
 
     plan, commands = load_plan_json(workspace_dir, offline=offline)
@@ -349,6 +355,7 @@ def run(
         scenario_name=scenario_spec.name,
         backend_name=backend.name,
         policy=attack_policy,
+        allow_live_cloud=allow_live_cloud,
     )
     events.write("red-tool", "Allowlisted attack command completed", **before_tool.to_dict())
     before_attack = simulate_attack(findings, "before")
@@ -436,6 +443,7 @@ def run(
         scenario_name=scenario_spec.name,
         backend_name=backend.name,
         policy=attack_policy,
+        allow_live_cloud=allow_live_cloud,
     )
     events.write("red-tool", "Allowlisted attack command completed", **after_tool.to_dict())
     after_attack = simulate_attack(remaining_findings, "after")

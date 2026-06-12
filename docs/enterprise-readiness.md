@@ -35,7 +35,7 @@ Default runtime targets remain local:
 - `localhost`
 - `localhost.localstack.cloud`
 
-The attack runner rejects non-local HTTP targets by default. Any future real cloud mode should require an explicit `--allow-live-cloud` flag, default off. The run should record the operator approval, target hostname, scenario, backend, and timestamp in `events.jsonl`.
+The attack runner rejects non-local HTTP targets by default. Any real cloud mode requires the explicit `--allow-live-cloud` flag, default off. The run records operator approval in `events.jsonl`, and red-tool events record whether the live-cloud gate was enabled for the executed command.
 
 ### Command Allowlist Policy
 
@@ -67,9 +67,10 @@ They should also add richer policy fields over time. Current events already incl
 - `stdout_truncated`
 - `stderr_truncated`
 
-Future event metadata should add:
+Current events also include:
 
-- richer `target_classification` values for future real-cloud gates
+- `live_cloud_allowed`
+- richer `target_classification` values, including `external-http` when the live-cloud gate is explicitly enabled
 
 These fields make evidence reproducible and easier to audit in CI, support, and compliance workflows.
 
@@ -103,9 +104,9 @@ If a report says "exploited", it should include observed command evidence or exp
 
 ## Near-Term Readiness Tasks
 
-1. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
-2. Run live LocalStack Azure validation and document emulator-specific limitations.
-3. Add public-key package signing and release provenance for distributed artifacts.
+1. Run live LocalStack Azure validation and document emulator-specific limitations.
+2. Add public-key package signing and release provenance for distributed artifacts.
+3. Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.
 
 ## Commercial Boundary
 

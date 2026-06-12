@@ -23,6 +23,7 @@ class AttackToolResult:
     scenario_name: str | None
     backend_name: str | None
     stage: str
+    live_cloud_allowed: bool
     returncode: int
     stdout: str
     stderr: str
@@ -54,12 +55,13 @@ def run_attack_script(
     timeout_seconds: int = 30,
     max_output_bytes: int = 12_000,
     policy: AttackPolicy | None = None,
+    allow_live_cloud: bool = False,
 ) -> AttackToolResult:
     resolved_script = script_path.resolve()
     resolved_run_dir = run_dir.resolve()
     _validate_attack_script(resolved_script, resolved_run_dir)
     resolved_manifest = _validate_attack_manifest(manifest_path, resolved_run_dir)
-    target_classification = _validate_local_target_url(target_url)
+    target_classification = _validate_target_url(target_url, allow_live_cloud=allow_live_cloud)
     command_policy_id = "generated-attack-script-v1"
     attack_script_args = {"--target-url", "--stage"}
     if resolved_manifest is not None:
@@ -88,17 +90,27 @@ def run_attack_script(
         command.extend(["--manifest", str(resolved_manifest)])
     started_at = datetime.now(UTC).isoformat()
     started = time.monotonic()
-    completed = subprocess.run(
-        command,
-        cwd=resolved_run_dir,
-        text=True,
-        capture_output=True,
-        check=False,
-        timeout=timeout_seconds,
-    )
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=resolved_run_dir,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=timeout_seconds,
+        )
+        returncode = completed.returncode
+        completed_stdout = completed.stdout
+        completed_stderr = completed.stderr
+    except subprocess.TimeoutExpired as error:
+        returncode = 124
+        completed_stdout = _coerce_timeout_output(error.stdout)
+        completed_stderr = _coerce_timeout_output(error.stderr)
+        timeout_message = f"Attack command timed out after {timeout_seconds} seconds."
+        completed_stderr = f"{completed_stderr}\n{timeout_message}".strip()
     ended_at = datetime.now(UTC).isoformat()
-    stdout, stdout_truncated = _truncate_text(completed.stdout, max_output_bytes)
-    stderr, stderr_truncated = _truncate_text(completed.stderr, max_output_bytes)
+    stdout, stdout_truncated = _truncate_text(completed_stdout, max_output_bytes)
+    stderr, stderr_truncated = _truncate_text(completed_stderr, max_output_bytes)
     return AttackToolResult(
         schema_version=1,
         command_policy_id=command_policy_id,
@@ -108,7 +120,8 @@ def run_attack_script(
         scenario_name=scenario_name,
         backend_name=backend_name,
         stage=stage,
-        returncode=completed.returncode,
+        live_cloud_allowed=allow_live_cloud,
+        returncode=returncode,
         stdout=stdout,
         stderr=stderr,
         stdout_truncated=stdout_truncated,
@@ -143,7 +156,7 @@ def _validate_attack_manifest(manifest_path: Path | None, run_dir: Path) -> Path
     return resolved_manifest
 
 
-def _validate_local_target_url(target_url: str) -> str:
+def _validate_target_url(target_url: str, *, allow_live_cloud: bool = False) -> str:
     parsed = urlparse(target_url)
     if parsed.scheme == "offline":
         return "offline"
@@ -165,6 +178,8 @@ def _validate_local_target_url(target_url: str) -> str:
     else:
         if address.is_loopback:
             return "local-http"
+    if allow_live_cloud:
+        return "external-http"
     raise ValueError(f"Attack target host must be local or LocalStack-scoped: {hostname}")
 
 
@@ -183,3 +198,11 @@ def _truncate_text(value: str, max_bytes: int) -> tuple[str, bool]:
     if max_bytes <= 0:
         return "", True
     return encoded[:max_bytes].decode("utf-8", errors="replace").rstrip() + "\n... truncated ...", True
+
+
+def _coerce_timeout_output(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value

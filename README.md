@@ -138,6 +138,8 @@ nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 
 `status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
 
+Runtime attack probes stay local by default. Future non-local HTTP(S) probe targets require `--allow-live-cloud`, and the approval is recorded in `events.jsonl`; current built-in scenarios still resolve to local/offline sandbox targets.
+
 Open the latest report:
 
 ```powershell

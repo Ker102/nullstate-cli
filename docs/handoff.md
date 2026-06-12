@@ -280,6 +280,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - evidence integrity manifests with optional HMAC signing through `nullstate evidence-manifest`
 - evidence hash verification through `nullstate evidence-verify`
 - review-hardening fixes for fail-closed `policy-result` inputs, copied evidence manifests, and malformed manifest CLI errors
+- default-off live-cloud approval gate through `nullstate run --allow-live-cloud`
 
 Do not jump straight to full SaaS before stabilizing:
 
@@ -287,7 +288,7 @@ Do not jump straight to full SaaS before stabilizing:
 2. local dashboard
 3. richer GitHub Actions examples and integration templates
 4. live upload implementation after a real ingestion API exists
-5. real cloud ingestion service
+5. real cloud ingestion service and real-cloud adapters only after endpoint allowlists are specified
 
 ## Branch and release guidance
 

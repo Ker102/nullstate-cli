@@ -52,6 +52,7 @@ class AttackRunnerTests(unittest.TestCase):
             self.assertEqual(payload["command_policy_id"], "generated-attack-script-v1")
             self.assertEqual(payload["returncode"], 0)
             self.assertEqual(payload["target_classification"], "local-http")
+            self.assertFalse(payload["live_cloud_allowed"])
             self.assertRegex(str(payload["attack_script_sha256"]), r"^[0-9a-f]{64}$")
             self.assertRegex(str(payload["manifest_sha256"]), r"^[0-9a-f]{64}$")
             self.assertFalse(payload["stdout_truncated"])
@@ -123,6 +124,34 @@ class AttackRunnerTests(unittest.TestCase):
                     stage="before",
                 )
 
+    def test_allows_non_local_http_target_only_with_live_cloud_gate(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text(
+                "import argparse\n"
+                "parser = argparse.ArgumentParser()\n"
+                "parser.add_argument('--target-url')\n"
+                "parser.add_argument('--stage')\n"
+                "args = parser.parse_args()\n"
+                "print(f'target={args.target_url} stage={args.stage}')\n",
+                encoding="utf-8",
+            )
+
+            result = run_attack_script(
+                attack_script,
+                run_dir=run_dir,
+                target_url="https://example.com",
+                stage="before",
+                allow_live_cloud=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.target_classification, "external-http")
+            payload = result.to_dict()
+            self.assertTrue(payload["live_cloud_allowed"])
+            self.assertIn("target=https://example.com stage=before", result.stdout)
+
     def test_allows_offline_local_loopback_and_localstack_targets(self):
         with TemporaryDirectory() as raw_tmp:
             run_dir = Path(raw_tmp)
@@ -173,6 +202,31 @@ class AttackRunnerTests(unittest.TestCase):
             self.assertFalse(result.stderr_truncated)
             self.assertIn("... truncated ...", result.stdout)
             self.assertLess(len(result.stdout), 60)
+
+    def test_timeout_returns_structured_command_evidence(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text(
+                "import time\n"
+                "print('starting slow probe')\n"
+                "time.sleep(10)\n",
+                encoding="utf-8",
+            )
+
+            result = run_attack_script(
+                attack_script,
+                run_dir=run_dir,
+                target_url="offline://aws-public-s3",
+                stage="before",
+                timeout_seconds=1,
+            )
+
+            self.assertEqual(result.returncode, 124)
+            self.assertIn("timed out after 1 seconds", result.stderr)
+            self.assertEqual(result.target_classification, "offline")
+            self.assertFalse(result.live_cloud_allowed)
+            json.dumps(result.to_dict())
 
     def test_generated_aws_attack_script_reads_public_evidence_object(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), _EvidenceObjectHandler)

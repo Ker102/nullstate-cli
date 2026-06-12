@@ -305,7 +305,7 @@ Enterprise guardrails for this layer:
 - The command policy is scenario-template based. The model can reason about the attack path, but it cannot choose an arbitrary shell command.
 - `nullstate policy init` creates a policy file and `policy init --scenario <name>` creates a narrower preset for one scenario/backend pair. `run --policy-file` enforces allowed scenarios, backends, stages, generated `attack.py` flags, target classifications, command policy IDs, timeout ceilings, and output-size ceilings before execution.
 - `nullstate policy validate` checks a policy file without running a scenario and can write `policy-validation.json` for CI evidence.
-- Runtime targets should remain local sandbox endpoints unless a future `--allow-live-cloud` flag is implemented and recorded.
+- Runtime targets remain local sandbox endpoints unless `--allow-live-cloud` is explicitly supplied and recorded.
 - `red-tool` events include a command schema version and reproducibility hashes for the generated `attack.py` and manifest.
 - Probe stdout and stderr should be capped before upload, ticket attachment, or long-term evidence retention.
 - Reports must distinguish observed runtime evidence from deterministic simulation and emulator-inconclusive probes.
@@ -420,7 +420,7 @@ The important boundaries are:
 - Secrets are loaded from environment variables or ignored local env files.
 - Run artifacts must be reviewed before publishing.
 - `nullstate scrub` should run before public case-study publishing, CI upload, or support bundle sharing.
-- A future `--allow-live-cloud` gate should be required before any non-local cloud endpoint is targeted.
+- `--allow-live-cloud` is required before any non-local cloud endpoint is targeted.
 
 ## Extension Points
 

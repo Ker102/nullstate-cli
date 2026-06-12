@@ -87,6 +87,12 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Signed manifests use HMAC-SHA256 with a key read from the environment; key values are not written to artifacts.
   - Verification reports signature status and exits `2` for missing, unavailable, invalid, or tampered signatures when signature checking is requested or required.
   - Public-key package/release provenance remains a separate future hardening item.
+- `feat: add live cloud approval gate` (this checkpoint)
+  - Added default-off `--allow-live-cloud` to `nullstate run`.
+  - Non-local HTTP(S) attack probe targets remain rejected unless the gate is explicitly enabled.
+  - Start events record operator approval, and red-tool events record `live_cloud_allowed` plus `external-http` classification when applicable.
+  - Attack command timeouts now return structured red-tool evidence with return code `124` instead of a traceback.
+  - Built-in scenarios still resolve to local/offline targets; real cloud adapters remain future work.
 
 ## In Progress
 
