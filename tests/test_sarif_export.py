@@ -33,6 +33,9 @@ class SarifExportTests(unittest.TestCase):
             self.assertIn("S3 public access block controls are disabled.", result["message"]["text"])
             self.assertNotIn("logicalLocations", result)
             location = result["locations"][0]
+            self.assertIn("physicalLocation", location)
+            self.assertTrue(location["physicalLocation"]["artifactLocation"]["uri"].endswith("findings.json"))
+            self.assertEqual(location["physicalLocation"]["region"]["startLine"], 1)
             self.assertEqual(
                 location["logicalLocations"][0]["fullyQualifiedName"],
                 "aws_s3_bucket_public_access_block.public_logs",

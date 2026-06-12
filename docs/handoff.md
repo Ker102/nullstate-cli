@@ -270,6 +270,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 
 - provider presets for Google, Claude, custom, and generic OpenAI-compatible endpoints
 - SARIF export and GitHub Actions code-scanning workflow
+- SARIF physical locations for GitHub Code Scanning upload
 - CI summaries, fail-on-severity gates, and baseline comparison
 - upload dry-run planning for future cloud ingestion
 - upload scrub preflight warnings for raw runs

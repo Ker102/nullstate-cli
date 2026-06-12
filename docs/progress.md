@@ -123,6 +123,9 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Signing uses GitHub OIDC and does not require long-lived signing keys.
 - `docs: add release signature verification examples` (this checkpoint)
   - Documented Cosign verification for release wheel signatures and adjacent `.sigstore.json` bundles.
+- `fix: add SARIF physical locations` (this checkpoint)
+  - GitHub Code Scanning rejected SARIF without `physicalLocation`.
+  - SARIF results now point to the run `findings.json` artifact while preserving the Terraform resource as a logical location.
 
 ## In Progress
 

@@ -23,7 +23,8 @@ def write_sarif(run_dir: Path, output_path: Path | None = None) -> dict[str, Any
 def build_sarif(run_dir: Path) -> dict[str, Any]:
     findings = _read_findings(run_dir / "findings.json")
     rules = _rules_from_findings(findings)
-    results = [_result_from_finding(finding) for finding in findings]
+    artifact_uri = (run_dir / "findings.json").as_posix()
+    results = [_result_from_finding(finding, artifact_uri=artifact_uri) for finding in findings]
     return {
         "$schema": SARIF_SCHEMA,
         "version": "2.1.0",
@@ -80,7 +81,7 @@ def _rules_from_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]]
     return rules
 
 
-def _result_from_finding(finding: dict[str, Any]) -> dict[str, Any]:
+def _result_from_finding(finding: dict[str, Any], *, artifact_uri: str) -> dict[str, Any]:
     rule_id = str(finding.get("rule_id") or "NULLSTATE_FINDING")
     resource_address = str(finding.get("resource_address") or "unknown")
     summary = str(finding.get("summary") or rule_id)
@@ -92,6 +93,14 @@ def _result_from_finding(finding: dict[str, Any]) -> dict[str, Any]:
         "message": {"text": text},
         "locations": [
             {
+                "physicalLocation": {
+                    "artifactLocation": {
+                        "uri": artifact_uri,
+                    },
+                    "region": {
+                        "startLine": 1,
+                    },
+                },
                 "logicalLocations": [
                     {
                         "name": resource_address,
