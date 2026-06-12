@@ -410,4 +410,4 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-t
 
 Working now: live LocalStack AWS/Azure storage scenarios, offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
 
-Experimental: richer scenario-specific attack scripts, live Kubernetes/Compose/on-prem adapters, richer resolved-dependency SBOMs, and automatic artifact scrubbing.
+Experimental: richer scenario-specific attack scripts, live Kubernetes/Compose/on-prem adapters, richer resolved-dependency SBOMs, and broader artifact redaction coverage.

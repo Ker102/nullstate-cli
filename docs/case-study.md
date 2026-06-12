@@ -270,8 +270,8 @@ Final portfolio version should include:
 - Add per-scenario command allowlists beyond Python scripts when needed.
 - Add `nullstate run --auto-sandbox` for known local targets.
 - Add custom LocalStack port support so AWS and Azure sandboxes can run side by side.
-- Add an artifact scrubber before publishing reports.
-- Add SBOM, package signing, and release provenance.
+- Expand artifact redaction coverage before publishing reports.
+- Expand release SBOM quality, package signing, and provenance verification.
 - Add more Azure, AWS, Kubernetes, Docker Compose, and on-prem digital-twin scenarios.
 - Build a portfolio demo page with embedded screenshots, architecture diagram, and video.
 

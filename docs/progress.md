@@ -107,6 +107,9 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Raw runs are marked `upload_recommended: false` and produce a CLI warning.
   - Scrubbed run copies with `scrub-report.json` are marked `upload_recommended: true`.
   - Live upload remains blocked until an ingestion API exists.
+- `docs: align productization status wording` (this checkpoint)
+  - Removed older future-tense scrubber and release-provenance wording from security, case-study, failure-mode, and README status docs.
+  - Kept future scope focused on broader redaction rules, richer SBOMs, package signing, and live ingestion.
 
 ## In Progress
 
@@ -122,5 +125,4 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 - Upload dry-run to live upload transition once an ingestion API exists.
 - Richer resolved-dependency SBOM generation once a lockfile-based release pipeline exists.
-- Docs consistency pass for older future-tense scrubber wording.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

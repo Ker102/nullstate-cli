@@ -40,4 +40,4 @@ Control: deterministic detector and deterministic remediation are the source of 
 
 Impact: public case study leaks private information.
 
-Control: review artifacts before publishing; future `scrub` command should automate this.
+Control: review artifacts before publishing; run `nullstate scrub` first and review `scrub-report.json`.

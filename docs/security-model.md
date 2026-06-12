@@ -38,7 +38,7 @@ Runtime attack probes target only local sandbox URLs such as `offline://...`, `l
 - `.env` and Terraform state are ignored.
 - `.env.example` documents required names without values.
 - Artifact review is mandatory before publishing a case study, support bundle, screenshot, or demo archive.
-- A future artifact scrubber should redact tokens, tenant IDs, subscription IDs, account IDs, private endpoints, Terraform state values, and model endpoint keys before upload.
+- `nullstate scrub` creates a redacted copy before upload, support sharing, or public case-study publishing.
 
 ## Container security
 
@@ -62,7 +62,7 @@ This allows demos to show real command execution against local sandbox endpoints
 Enterprise hardening should add:
 
 - explicit allowlist policy for each scenario and backend pair
-- publish-time artifact scrubber
+- publish-time artifact scrubber with organization-specific redaction rules
 - `--allow-live-cloud` gate, default off
 
 ## CI/CD security
@@ -87,6 +87,6 @@ Artifacts must be reviewed before publishing. Do not publish tokens, real tenant
 ## Future improvements
 
 - Richer resolved-dependency SBOM generation from lock files.
-- Artifact scrubbing command.
+- Broader organization-specific artifact redaction rules.
 - Policy-as-code guardrails for agent tools.
 - Live-cloud approval gate with auditable operator intent.
