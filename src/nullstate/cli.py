@@ -928,6 +928,9 @@ def upload(
     plan = write_upload_plan(run_dir, endpoint=endpoint, token_env=token_env)
     plan_path = run_dir / UPLOAD_PLAN_FILENAME
     console.print(f"Upload plan: {plan_path}")
+    scrub_preflight = (plan.get("preflight") or {}).get("scrub") or {}
+    for warning in scrub_preflight.get("warnings") or []:
+        console.print(f"Warning: {warning}")
     console.print(
         f"Run {plan['run']['id']} · dry_run={plan['dry_run']} · "
         f"token_present={plan['auth']['token_present']}"

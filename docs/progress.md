@@ -102,6 +102,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - The SBOM records the root package and declared runtime dependencies in SPDX 2.3 JSON.
   - Added a GitHub artifact attestation for the SBOM predicate over `dist/*`.
   - Documented package provenance and SBOM attestation verification commands.
+- `feat: add upload scrub preflight` (this checkpoint)
+  - Added `preflight.scrub` metadata to `upload-plan.json`.
+  - Raw runs are marked `upload_recommended: false` and produce a CLI warning.
+  - Scrubbed run copies with `scrub-report.json` are marked `upload_recommended: true`.
+  - Live upload remains blocked until an ingestion API exists.
 
 ## In Progress
 
@@ -117,4 +122,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 - Upload dry-run to live upload transition once an ingestion API exists.
 - Richer resolved-dependency SBOM generation once a lockfile-based release pipeline exists.
+- Docs consistency pass for older future-tense scrubber wording.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

@@ -71,7 +71,30 @@ def build_upload_plan(
             "token_present": bool(os.getenv(token_env)),
             "token_value_included": False,
         },
+        "preflight": {
+            "scrub": _build_scrub_preflight(run_dir),
+        },
         "notes": "Dry run only. No network request was sent and token values are never written.",
+    }
+
+
+def _build_scrub_preflight(run_dir: Path) -> dict[str, Any]:
+    report_path = run_dir / "scrub-report.json"
+    if report_path.is_file():
+        return {
+            "status": "scrubbed",
+            "scrub_report_present": True,
+            "scrub_report_path": report_path.relative_to(run_dir).as_posix(),
+            "upload_recommended": True,
+            "warnings": [],
+        }
+    return {
+        "status": "not_performed",
+        "scrub_report_present": False,
+        "upload_recommended": False,
+        "warnings": [
+            "Run has not been scrubbed. Run nullstate scrub before sharing or future cloud upload.",
+        ],
     }
 
 

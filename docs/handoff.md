@@ -272,6 +272,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - SARIF export and GitHub Actions code-scanning workflow
 - CI summaries, fail-on-severity gates, and baseline comparison
 - upload dry-run planning for future cloud ingestion
+- upload scrub preflight warnings for raw runs
 - red-tool policy scaffold and standalone `policy-result.json`
 - scenario-scoped policy presets through `nullstate policy init --scenario <name>`
 - scenario/backend allowlists in red-tool policy files

@@ -16,6 +16,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Attack artifact hashes | implemented | `red-tool` events include script and manifest SHA-256 values |
 | Output truncation metadata | implemented | `red-tool` events identify truncated stdout/stderr |
 | Non-destructive artifact scrubber | implemented | `nullstate scrub` copies and redacts run artifacts |
+| Upload scrub preflight | implemented | `nullstate upload --dry-run` records scrub readiness and warns on raw runs |
 | Report evidence classification | implemented | reports distinguish runtime, inconclusive, and offline simulation |
 | Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
 | Red-tool policy scaffold | implemented | `nullstate policy init`, scenario presets, and `run --policy-file` enforce scenario, backend, stage, argument, target, command, timeout, and output fields |
@@ -94,6 +95,8 @@ Before publishing, uploading, or attaching run bundles, run `nullstate scrub`. T
 - raw model prompts if they contain customer context
 
 The scrubber writes `scrub-report.json`, listing which files were processed and which redaction rules matched.
+
+`nullstate upload --dry-run` now checks for `scrub-report.json` in the selected run directory and records `preflight.scrub` in `upload-plan.json`. Raw runs remain allowed for local planning, but the plan marks them `upload_recommended: false` and prints a warning.
 
 ### Evidence Classification
 

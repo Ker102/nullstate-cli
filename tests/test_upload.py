@@ -44,7 +44,12 @@ class UploadCommandTests(unittest.TestCase):
             self.assertGreaterEqual(plan["bundle"]["artifact_count"], 5)
             self.assertFalse(plan["auth"]["token_present"])
             self.assertEqual(plan["auth"]["token_env"], "NULLSTATE_CLOUD_TOKEN")
+            self.assertEqual(plan["preflight"]["scrub"]["status"], "not_performed")
+            self.assertFalse(plan["preflight"]["scrub"]["scrub_report_present"])
+            self.assertFalse(plan["preflight"]["scrub"]["upload_recommended"])
+            self.assertIn("Run has not been scrubbed", plan["preflight"]["scrub"]["warnings"][0])
             self.assertIn("Upload plan:", completed.stdout)
+            self.assertIn("Run has not been scrubbed", completed.stdout)
 
     def test_upload_dry_run_records_token_presence_without_leaking_secret(self):
         with TemporaryDirectory() as raw_tmp:
@@ -76,6 +81,57 @@ class UploadCommandTests(unittest.TestCase):
             self.assertTrue(plan["auth"]["token_present"])
             self.assertNotIn("super-secret-token", plan_text)
             self.assertNotIn("super-secret-token", completed.stdout)
+
+    def test_upload_dry_run_detects_scrubbed_run_copy(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            runs_dir = root / "runs"
+            run_dir = _minimal_run(runs_dir)
+            scrubbed_runs_dir = root / "scrubbed-runs"
+
+            scrub_completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "scrub",
+                    run_dir.name,
+                    "--runs-dir",
+                    str(runs_dir),
+                    "--output-dir",
+                    str(scrubbed_runs_dir),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(scrub_completed.returncode, 0, scrub_completed.stderr)
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "upload",
+                    run_dir.name,
+                    "--runs-dir",
+                    str(scrubbed_runs_dir),
+                    "--dry-run",
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            scrubbed_run_dir = scrubbed_runs_dir / run_dir.name
+            plan = json.loads((scrubbed_run_dir / "upload-plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(plan["preflight"]["scrub"]["status"], "scrubbed")
+            self.assertTrue(plan["preflight"]["scrub"]["scrub_report_present"])
+            self.assertTrue(plan["preflight"]["scrub"]["upload_recommended"])
+            self.assertEqual(plan["preflight"]["scrub"]["scrub_report_path"], "scrub-report.json")
+            self.assertEqual(plan["preflight"]["scrub"]["warnings"], [])
+            self.assertNotIn("Run has not been scrubbed", completed.stdout)
 
 
 def _minimal_run(runs_dir: Path) -> Path:

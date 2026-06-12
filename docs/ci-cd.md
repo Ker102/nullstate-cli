@@ -57,7 +57,7 @@ The repository includes `.github/workflows/nullstate-sarif.yml` as the first Git
 
 Run `nullstate scrub` before attaching bundles or reports to public issues, support tickets, or case-study artifacts.
 
-`nullstate upload --dry-run` writes `upload-plan.json` beside the run bundle. It prepares the future Nullstate Cloud ingestion request shape without sending network traffic or storing token values.
+`nullstate upload --dry-run` writes `upload-plan.json` beside the run bundle. It prepares the future Nullstate Cloud ingestion request shape without sending network traffic or storing token values. The plan includes scrub preflight metadata and warns when the selected run does not contain `scrub-report.json`.
 
 ## Security checks
 

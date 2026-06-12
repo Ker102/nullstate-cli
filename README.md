@@ -366,7 +366,7 @@ nullstate upload --dry-run
 nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstate.dev/v1/runs --dry-run
 ```
 
-`upload-plan.json` records the target endpoint, bundle checksum, artifact count, and whether `NULLSTATE_CLOUD_TOKEN` is present. It never stores token values.
+`upload-plan.json` records the target endpoint, bundle checksum, artifact count, token presence, and scrub preflight status. It never stores token values. Raw runs are allowed in dry-run mode but marked `upload_recommended: false`; run `nullstate scrub` first and upload from `scrubbed-runs/` before sharing or future cloud ingestion.
 
 ## Documentation
 
