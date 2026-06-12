@@ -550,12 +550,25 @@ def scenarios_status(name: str = typer.Argument(..., help="Scenario name.")) -> 
 @policy_app.command("init")
 def policy_init(
     output: Path = typer.Option(Path(DEFAULT_POLICY_FILENAME), "--output", "-o", help="Policy JSON output path."),
+    scenario: str | None = typer.Option(None, "--scenario", help="Create a policy preset scoped to one known scenario."),
 ) -> None:
     """Create a starter red-tool execution policy."""
-    payload = write_default_policy(output)
+    scenario_spec = None
+    if scenario is not None:
+        try:
+            scenario_spec = get_scenario(scenario)
+        except KeyError as error:
+            raise typer.BadParameter(str(error)) from error
+    payload = (
+        write_default_policy(output, scenario_name=scenario_spec.name, backend_name=scenario_spec.backend)
+        if scenario_spec is not None
+        else write_default_policy(output)
+    )
     console.print(f"Policy: {output}")
     console.print(
-        "Allowed targets="
+        "Preset="
+        + str(payload["preset"])
+        + " - Allowed targets="
         + ", ".join(payload["allowed_target_classifications"])
         + " · command policies="
         + ", ".join(payload["allowed_command_policy_ids"])

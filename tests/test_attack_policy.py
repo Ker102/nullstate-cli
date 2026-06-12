@@ -35,6 +35,65 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertEqual(payload["max_output_bytes"], 12000)
             self.assertIn("Policy:", completed.stdout)
 
+    def test_policy_init_writes_scenario_scoped_preset(self):
+        with TemporaryDirectory() as raw_tmp:
+            output = Path(raw_tmp) / "aws-policy.json"
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "policy",
+                    "init",
+                    "--scenario",
+                    "aws-public-s3",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(payload["schema_version"], 1)
+            self.assertEqual(payload["preset"], "scenario:aws-public-s3")
+            self.assertEqual(payload["allowed_scenarios"], ["aws-public-s3"])
+            self.assertEqual(payload["allowed_backends"], ["localstack-aws"])
+            self.assertIn("generated-attack-script-v1", payload["allowed_command_policy_ids"])
+            self.assertIn("local-http", payload["allowed_target_classifications"])
+            self.assertIn("--manifest", payload["allowed_attack_script_args"])
+            self.assertEqual(payload["max_timeout_seconds"], 30)
+            self.assertEqual(payload["max_output_bytes"], 12000)
+            self.assertIn("scenario:aws-public-s3", completed.stdout)
+
+    def test_policy_init_rejects_unknown_scenario_preset(self):
+        with TemporaryDirectory() as raw_tmp:
+            output = Path(raw_tmp) / "unknown-policy.json"
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "policy",
+                    "init",
+                    "--scenario",
+                    "missing-scenario",
+                    "--output",
+                    str(output),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("Unknown scenario", completed.stderr)
+            self.assertFalse(output.exists())
+
     def test_attack_runner_rejects_policy_denied_target_classification(self):
         with TemporaryDirectory() as raw_tmp:
             run_dir = Path(raw_tmp)

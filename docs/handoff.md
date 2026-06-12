@@ -273,6 +273,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - CI summaries, fail-on-severity gates, and baseline comparison
 - upload dry-run planning for future cloud ingestion
 - red-tool policy scaffold and standalone `policy-result.json`
+- scenario-scoped policy presets through `nullstate policy init --scenario <name>`
 - scenario/backend allowlists in red-tool policy files
 - command argument, stage, timeout, and output-size controls in red-tool policy files
 - policy validation output through `nullstate policy validate`

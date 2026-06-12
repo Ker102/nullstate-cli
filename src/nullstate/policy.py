@@ -49,6 +49,7 @@ class AttackPolicy:
 def default_policy_payload() -> dict[str, Any]:
     return {
         "schema_version": POLICY_SCHEMA_VERSION,
+        "preset": "default",
         "allowed_target_classifications": sorted(DEFAULT_ALLOWED_TARGET_CLASSIFICATIONS),
         "allowed_command_policy_ids": sorted(DEFAULT_ALLOWED_COMMAND_POLICY_IDS),
         "allowed_scenarios": sorted(DEFAULT_ALLOWED_SCENARIOS),
@@ -61,8 +62,24 @@ def default_policy_payload() -> dict[str, Any]:
     }
 
 
-def write_default_policy(path: Path) -> dict[str, Any]:
+def scenario_policy_payload(scenario_name: str, backend_name: str) -> dict[str, Any]:
     payload = default_policy_payload()
+    payload["preset"] = f"scenario:{scenario_name}"
+    payload["allowed_scenarios"] = [scenario_name]
+    payload["allowed_backends"] = [backend_name]
+    payload["notes"] = (
+        "Controls constrained red-tool execution for one scenario/backend pair. "
+        "This does not grant arbitrary shell access."
+    )
+    return payload
+
+
+def write_default_policy(path: Path, *, scenario_name: str | None = None, backend_name: str | None = None) -> dict[str, Any]:
+    payload = (
+        scenario_policy_payload(scenario_name, backend_name)
+        if scenario_name is not None and backend_name is not None
+        else default_policy_payload()
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload

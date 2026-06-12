@@ -77,6 +77,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Fixed GitHub SARIF upload validation by moving finding logical locations under SARIF result locations.
   - Reworked scrubber test fixture values/naming so CodeQL does not treat the test artifact as clear-text secret storage.
   - GitHub has not re-run these checks yet because the fixes remain local on this branch.
+- `feat: add scenario policy presets` (this checkpoint)
+  - Added `nullstate policy init --scenario <name>`.
+  - Scenario presets narrow generated `allowed_scenarios` and `allowed_backends` to one known scenario/backend pair.
+  - Plain `nullstate policy init` still writes the broad starter policy for compatibility.
+  - Unknown scenario names fail before writing a policy file.
 
 ## In Progress
 
@@ -90,6 +95,6 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Next Candidates
 
-- Per-scenario command policy presets for different generated probes.
 - Upload dry-run to live upload transition once an ingestion API exists.
 - Cryptographic signing and signature verification for `evidence-manifest.json`.
+- Live LocalStack Azure validation once the account has Azure Emulator entitlement.

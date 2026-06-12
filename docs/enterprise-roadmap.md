@@ -268,7 +268,7 @@ Before businesses can rely on it, the product needs:
 ### P2: Enterprise controls
 
 - policy file for allowed scenarios, backends, stages, targets, commands, timeouts, and output limits
-- baseline policy scaffold through `nullstate policy init`
+- baseline and scenario-scoped policy scaffolds through `nullstate policy init`
 - organization-level config
 - evidence integrity manifest through `nullstate evidence-manifest`
 - evidence hash verification through `nullstate evidence-verify`

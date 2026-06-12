@@ -133,6 +133,7 @@ nullstate sandbox status localstack-azure
 nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
 nullstate policy init --output nullstate-policy.json
+nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 ```
 
 `status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
@@ -325,11 +326,12 @@ Create and use a red-tool policy file:
 
 ```powershell
 nullstate policy init --output nullstate-policy.json
+nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 nullstate policy validate nullstate-policy.json --output policy-validation.json
 nullstate run examples/aws-public-s3 --offline --mock-agents --policy-file nullstate-policy.json
 ```
 
-The policy file allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, and `local-http`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture. `nullstate policy validate` checks the policy without running a scenario and exits with code `2` when the file is malformed or invalid.
+The policy file allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, and `local-http`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture. `policy init --scenario` creates a narrower preset for one known scenario/backend pair while keeping the same runner constraints. `nullstate policy validate` checks the policy without running a scenario and exits with code `2` when the file is malformed or invalid.
 
 Create an evidence integrity manifest before attaching a run to a ticket, case study, or support workflow:
 
