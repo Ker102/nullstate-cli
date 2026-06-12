@@ -785,11 +785,18 @@ def evidence_manifest(
         "-o",
         help=f"Output JSON path. Defaults to {EVIDENCE_MANIFEST_FILENAME} in the run directory.",
     ),
+    signing_key_env: str | None = typer.Option(None, "--signing-key-env", help="Environment variable containing an evidence signing key."),
 ) -> None:
     """Write an integrity manifest for shareable run evidence artifacts."""
     run_dir = _resolve_run_dir(run_id, runs_dir)
+    signing_key = _resolve_optional_secret_env(signing_key_env)
     try:
-        payload = write_evidence_manifest(run_dir, output_path=output)
+        payload = write_evidence_manifest(
+            run_dir,
+            output_path=output,
+            signing_key=signing_key,
+            signing_key_id=signing_key_env,
+        )
     except ValueError as error:
         raise typer.BadParameter(str(error)) from error
     manifest_path = output or run_dir / EVIDENCE_MANIFEST_FILENAME
@@ -821,11 +828,18 @@ def evidence_verify(
         "-o",
         help=f"Output JSON path. Defaults to {EVIDENCE_VERIFICATION_FILENAME} in the run directory.",
     ),
+    signing_key_env: str | None = typer.Option(None, "--signing-key-env", help="Environment variable containing an evidence signing key."),
 ) -> None:
     """Verify run artifacts against an evidence integrity manifest."""
     run_dir = _resolve_run_dir(run_id, runs_dir)
+    signing_key = _resolve_optional_secret_env(signing_key_env)
     try:
-        payload = verify_evidence_manifest(run_dir, manifest_path=manifest, output_path=output)
+        payload = verify_evidence_manifest(
+            run_dir,
+            manifest_path=manifest,
+            output_path=output,
+            signing_key=signing_key,
+        )
     except ValueError as error:
         raise typer.BadParameter(str(error)) from error
     result_path = output or run_dir / EVIDENCE_VERIFICATION_FILENAME
@@ -1254,6 +1268,15 @@ def _localstack_azure_auth_env(backend_name: str, *, offline: bool) -> dict[str,
         "ARM_TENANT_ID": null_uuid,
         "ARM_SUBSCRIPTION_ID": null_uuid,
     }
+
+
+def _resolve_optional_secret_env(env_name: str | None) -> str | None:
+    if env_name is None:
+        return None
+    value = os.getenv(env_name)
+    if not value:
+        raise typer.BadParameter(f"Environment variable {env_name!r} is not set.")
+    return value
 
 
 def _resolve_agent_api_key(role: str) -> str:

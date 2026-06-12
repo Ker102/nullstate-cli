@@ -85,6 +85,32 @@ class EvidenceManifestTests(unittest.TestCase):
             payload = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["run"]["id"], run_dir.name)
 
+    def test_evidence_manifest_can_be_signed_with_env_key(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            env = _signed_env()
+
+            completed = _run_nullstate(
+                "evidence-manifest",
+                run_dir.name,
+                "--runs-dir",
+                str(runs_dir),
+                "--signing-key-env",
+                "NULLSTATE_TEST_SIGNING_KEY",
+                env=env,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            manifest_text = (run_dir / "evidence-manifest.json").read_text(encoding="utf-8")
+            self.assertNotIn(env["NULLSTATE_TEST_SIGNING_KEY"], manifest_text)
+            payload = json.loads(manifest_text)
+            self.assertEqual(payload["signing"]["status"], "signed")
+            self.assertEqual(payload["signing"]["algorithm"], "hmac-sha256")
+            self.assertEqual(payload["signing"]["key_id"], "NULLSTATE_TEST_SIGNING_KEY")
+            self.assertRegex(payload["signing"]["signature"], r"^[0-9a-f]{64}$")
+            self.assertIn("signing=signed", completed.stdout)
+
     def test_evidence_verify_passes_for_unchanged_manifest_artifacts(self):
         with TemporaryDirectory() as raw_tmp:
             runs_dir = Path(raw_tmp) / "runs"
@@ -106,6 +132,71 @@ class EvidenceManifestTests(unittest.TestCase):
             self.assertGreaterEqual(payload["checked_artifact_count"], 5)
             self.assertIn("Evidence verification:", completed.stdout)
             self.assertIn("status=passed", completed.stdout)
+
+    def test_evidence_verify_checks_signed_manifest(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            env = _signed_env()
+            _run_nullstate(
+                "evidence-manifest",
+                run_dir.name,
+                "--runs-dir",
+                str(runs_dir),
+                "--signing-key-env",
+                "NULLSTATE_TEST_SIGNING_KEY",
+                env=env,
+            )
+
+            completed = _run_nullstate(
+                "evidence-verify",
+                run_dir.name,
+                "--runs-dir",
+                str(runs_dir),
+                "--signing-key-env",
+                "NULLSTATE_TEST_SIGNING_KEY",
+                env=env,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads((run_dir / "evidence-verification.json").read_text(encoding="utf-8"))
+            self.assertEqual(payload["status"], "passed")
+            self.assertEqual(payload["signature"]["status"], "verified")
+            self.assertEqual(payload["failure_count"], 0)
+
+    def test_evidence_verify_fails_when_signed_manifest_is_changed(self):
+        with TemporaryDirectory() as raw_tmp:
+            runs_dir = Path(raw_tmp) / "runs"
+            run_dir = _minimal_run(runs_dir)
+            env = _signed_env()
+            _run_nullstate(
+                "evidence-manifest",
+                run_dir.name,
+                "--runs-dir",
+                str(runs_dir),
+                "--signing-key-env",
+                "NULLSTATE_TEST_SIGNING_KEY",
+                env=env,
+            )
+            manifest_path = run_dir / "evidence-manifest.json"
+            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+            payload["run"]["target"] = "tampered-target"
+            manifest_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+            completed = _run_nullstate(
+                "evidence-verify",
+                run_dir.name,
+                "--runs-dir",
+                str(runs_dir),
+                "--signing-key-env",
+                "NULLSTATE_TEST_SIGNING_KEY",
+                env=env,
+            )
+
+            self.assertEqual(completed.returncode, 2, completed.stdout)
+            result = json.loads((run_dir / "evidence-verification.json").read_text(encoding="utf-8"))
+            self.assertEqual(result["signature"]["status"], "failed")
+            self.assertIn({"path": None, "reason": "invalid_signature"}, result["failures"])
 
     def test_evidence_verify_fails_when_artifact_hash_changes(self):
         with TemporaryDirectory() as raw_tmp:
@@ -228,13 +319,22 @@ def _minimal_run(runs_dir: Path, *, run_id: str = "20260601-120000") -> Path:
     return run_dir
 
 
-def _run_nullstate(*args: str) -> subprocess.CompletedProcess[str]:
+def _run_nullstate(*args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-m", "nullstate", *args],
         text=True,
         capture_output=True,
         check=False,
+        env=env,
     )
+
+
+def _signed_env() -> dict[str, str]:
+    import os
+
+    env = os.environ.copy()
+    env["NULLSTATE_TEST_SIGNING_KEY"] = "test-only-signing-key"
+    return env
 
 
 if __name__ == "__main__":

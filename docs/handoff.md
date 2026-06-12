@@ -277,7 +277,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - scenario/backend allowlists in red-tool policy files
 - command argument, stage, timeout, and output-size controls in red-tool policy files
 - policy validation output through `nullstate policy validate`
-- unsigned evidence integrity manifests through `nullstate evidence-manifest`
+- evidence integrity manifests with optional HMAC signing through `nullstate evidence-manifest`
 - evidence hash verification through `nullstate evidence-verify`
 - review-hardening fixes for fail-closed `policy-result` inputs, copied evidence manifests, and malformed manifest CLI errors
 

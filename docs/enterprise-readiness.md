@@ -20,8 +20,8 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
 | Red-tool policy scaffold | implemented | `nullstate policy init`, scenario presets, and `run --policy-file` enforce scenario, backend, stage, argument, target, command, timeout, and output fields |
 | Policy validation artifact | implemented | `nullstate policy validate` writes optional `policy-validation.json` |
-| Evidence integrity manifest | implemented | `nullstate evidence-manifest` writes SHA-256 artifact inventory with explicit unsigned status |
-| Evidence manifest verification | implemented | `nullstate evidence-verify` detects missing or changed manifest artifacts and copied manifests for another run |
+| Evidence integrity manifest | implemented | `nullstate evidence-manifest` writes SHA-256 artifact inventory with optional HMAC evidence signing |
+| Evidence manifest verification | implemented | `nullstate evidence-verify` detects missing or changed manifest artifacts, copied manifests, and invalid HMAC signatures |
 
 ## Required Before Enterprise Claims
 
@@ -73,7 +73,7 @@ Future event metadata should add:
 
 These fields make evidence reproducible and easier to audit in CI, support, and compliance workflows.
 
-`nullstate evidence-manifest` adds a run-level artifact inventory for support, case-study, and future ingestion workflows. It records SHA-256 hashes and file sizes for shareable artifacts while excluding copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. `nullstate evidence-verify` recomputes recorded hashes and writes `evidence-verification.json`, exiting with code `2` when a listed artifact is missing, changed, or tied to a different declared run identity. The current manifest is deliberately marked `unsigned`; enterprise signing should add a real signature, signing key identity, and verification workflow.
+`nullstate evidence-manifest` adds a run-level artifact inventory for support, case-study, and future ingestion workflows. It records SHA-256 hashes and file sizes for shareable artifacts while excluding copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. `--signing-key-env` adds a shared-key HMAC-SHA256 evidence signature using a secret from the environment; the key value is never written to the manifest. `nullstate evidence-verify` recomputes recorded hashes and writes `evidence-verification.json`, exiting with code `2` when a listed artifact is missing, changed, tied to a different declared run identity, or has an invalid signature. Future release hardening should still add public-key package signing and provenance for distributed artifacts.
 
 ### Artifact Scrubbing
 
@@ -105,7 +105,7 @@ If a report says "exploited", it should include observed command evidence or exp
 
 1. Add `--allow-live-cloud` as a future disabled gate before any real cloud adapter work.
 2. Run live LocalStack Azure validation and document emulator-specific limitations.
-3. Add cryptographic signing and signature verification for `evidence-manifest.json`.
+3. Add public-key package signing and release provenance for distributed artifacts.
 
 ## Commercial Boundary
 

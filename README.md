@@ -340,9 +340,12 @@ nullstate evidence-manifest
 nullstate evidence-verify
 nullstate evidence-manifest 20260608-224625 --runs-dir runs --output artifacts/evidence-manifest.json
 nullstate evidence-verify 20260608-224625 --runs-dir runs --manifest artifacts/evidence-manifest.json
+$env:NULLSTATE_EVIDENCE_SIGNING_KEY = "<secret>"
+nullstate evidence-manifest --signing-key-env NULLSTATE_EVIDENCE_SIGNING_KEY
+nullstate evidence-verify --signing-key-env NULLSTATE_EVIDENCE_SIGNING_KEY
 ```
 
-The manifest inventories shareable run artifacts with SHA-256 hashes, excludes copied workspaces and Terraform internals, and records signing as `unsigned` until cryptographic signing is implemented. `nullstate evidence-verify` recomputes those hashes and writes `evidence-verification.json`; it exits with code `2` when a recorded artifact is missing or changed.
+The manifest inventories shareable run artifacts with SHA-256 hashes, excludes copied workspaces and Terraform internals, and can optionally add a shared-key HMAC-SHA256 evidence signature. `nullstate evidence-verify` recomputes hashes, checks signed manifests when `--signing-key-env` is supplied, and writes `evidence-verification.json`; it exits with code `2` when a recorded artifact is missing, changed, copied from another run, or has an invalid signature. Signing keys are read from environment variables and are never written to the manifest.
 
 Create a baseline from a known run so CI can ignore known findings and fail on new ones:
 

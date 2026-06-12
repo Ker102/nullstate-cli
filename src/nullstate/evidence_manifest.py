@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,10 +15,21 @@ EVIDENCE_MANIFEST_FILENAME = "evidence-manifest.json"
 EVIDENCE_VERIFICATION_FILENAME = "evidence-verification.json"
 
 
-def write_evidence_manifest(run_dir: Path, output_path: Path | None = None) -> dict[str, Any]:
+def write_evidence_manifest(
+    run_dir: Path,
+    output_path: Path | None = None,
+    *,
+    signing_key: str | None = None,
+    signing_key_id: str | None = None,
+) -> dict[str, Any]:
     run_dir = run_dir.resolve()
     target = output_path or run_dir / EVIDENCE_MANIFEST_FILENAME
-    payload = build_evidence_manifest(run_dir, output_path=target)
+    payload = build_evidence_manifest(
+        run_dir,
+        output_path=target,
+        signing_key=signing_key,
+        signing_key_id=signing_key_id,
+    )
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
@@ -28,11 +40,14 @@ def verify_evidence_manifest(
     *,
     manifest_path: Path | None = None,
     output_path: Path | None = None,
+    signing_key: str | None = None,
 ) -> dict[str, Any]:
     run_dir = run_dir.resolve()
     source = manifest_path or run_dir / EVIDENCE_MANIFEST_FILENAME
     manifest = _read_json(source, default={})
     failures = _verify_manifest_identity(run_dir, manifest)
+    signature_status, signature_failures = _verify_manifest_signature(manifest, signing_key=signing_key)
+    failures.extend(signature_failures)
     failures.extend(_verify_manifest_artifacts(run_dir, manifest))
     artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), list) else []
     payload = {
@@ -49,6 +64,7 @@ def verify_evidence_manifest(
             "schema_version": manifest.get("schema_version"),
             "hash_algorithm": (manifest.get("integrity") or {}).get("hash_algorithm"),
         },
+        "signature": signature_status,
         "status": "failed" if failures else "passed",
         "checked_artifact_count": len(artifacts),
         "failure_count": len(failures),
@@ -60,7 +76,13 @@ def verify_evidence_manifest(
     return payload
 
 
-def build_evidence_manifest(run_dir: Path, *, output_path: Path | None = None) -> dict[str, Any]:
+def build_evidence_manifest(
+    run_dir: Path,
+    *,
+    output_path: Path | None = None,
+    signing_key: str | None = None,
+    signing_key_id: str | None = None,
+) -> dict[str, Any]:
     run_dir = run_dir.resolve()
     if not (run_dir / "report.md").is_file():
         raise ValueError(f"Run directory does not contain report.md: {run_dir}")
@@ -68,7 +90,7 @@ def build_evidence_manifest(run_dir: Path, *, output_path: Path | None = None) -
     events = _read_events(run_dir / "events.jsonl")
     attack_manifest = _read_json(run_dir / "attack-manifest.json", default={})
     artifacts = _artifact_inventory(run_dir, output_path=output_path)
-    return {
+    payload = {
         "schema_version": EVIDENCE_MANIFEST_SCHEMA_VERSION,
         "product": "nullstate",
         "product_version": __version__,
@@ -100,6 +122,9 @@ def build_evidence_manifest(run_dir: Path, *, output_path: Path | None = None) -
             "notes": "This manifest records artifact integrity hashes. Cryptographic signing is not enabled yet.",
         },
     }
+    if signing_key is not None:
+        _sign_manifest(payload, signing_key=signing_key, key_id=signing_key_id)
+    return payload
 
 
 def _artifact_inventory(run_dir: Path, *, output_path: Path | None) -> list[dict[str, Any]]:
@@ -220,6 +245,70 @@ def _verify_manifest_identity(run_dir: Path, manifest: dict[str, Any]) -> list[d
                 }
             )
     return failures
+
+
+def _sign_manifest(payload: dict[str, Any], *, signing_key: str, key_id: str | None) -> None:
+    payload["signing"] = {
+        "status": "signed",
+        "algorithm": "hmac-sha256",
+        "key_id": key_id,
+        "signature": None,
+        "notes": "Shared-key HMAC evidence signature. Keep the signing key outside run artifacts.",
+    }
+    payload["signing"]["signature"] = _manifest_signature(payload, signing_key)
+
+
+def _verify_manifest_signature(
+    manifest: dict[str, Any],
+    *,
+    signing_key: str | None,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    signing = manifest.get("signing")
+    if not isinstance(signing, dict):
+        signing = {}
+    status = signing.get("status") or "unsigned"
+    algorithm = signing.get("algorithm")
+    signature = signing.get("signature")
+    result = {
+        "status": "unsigned" if status == "unsigned" else "not_checked",
+        "algorithm": algorithm,
+        "key_id": signing.get("key_id"),
+    }
+
+    if status == "unsigned":
+        if signing_key is None:
+            return result, []
+        result["status"] = "failed"
+        return result, [{"path": None, "reason": "missing_signature"}]
+
+    if status != "signed" or algorithm != "hmac-sha256" or not isinstance(signature, str):
+        result["status"] = "failed"
+        return result, [{"path": None, "reason": "invalid_signature_metadata"}]
+
+    if signing_key is None:
+        result["status"] = "failed"
+        return result, [{"path": None, "reason": "signature_key_unavailable"}]
+
+    expected_signature = _manifest_signature(manifest, signing_key)
+    if not hmac.compare_digest(signature, expected_signature):
+        result["status"] = "failed"
+        return result, [{"path": None, "reason": "invalid_signature"}]
+
+    result["status"] = "verified"
+    return result, []
+
+
+def _manifest_signature(payload: dict[str, Any], signing_key: str) -> str:
+    canonical = _canonical_manifest_bytes(payload)
+    return hmac.new(signing_key.encode("utf-8"), canonical, hashlib.sha256).hexdigest()
+
+
+def _canonical_manifest_bytes(payload: dict[str, Any]) -> bytes:
+    canonical_payload = json.loads(json.dumps(payload, sort_keys=True))
+    signing = canonical_payload.get("signing")
+    if isinstance(signing, dict):
+        signing["signature"] = None
+    return json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
 def _path_basename(path: str) -> str:

@@ -82,6 +82,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Scenario presets narrow generated `allowed_scenarios` and `allowed_backends` to one known scenario/backend pair.
   - Plain `nullstate policy init` still writes the broad starter policy for compatibility.
   - Unknown scenario names fail before writing a policy file.
+- `feat: add evidence manifest signing` (this checkpoint)
+  - Added optional `--signing-key-env` support to `nullstate evidence-manifest` and `nullstate evidence-verify`.
+  - Signed manifests use HMAC-SHA256 with a key read from the environment; key values are not written to artifacts.
+  - Verification reports signature status and exits `2` for missing, unavailable, invalid, or tampered signatures when signature checking is requested or required.
+  - Public-key package/release provenance remains a separate future hardening item.
 
 ## In Progress
 
@@ -96,5 +101,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Cryptographic signing and signature verification for `evidence-manifest.json`.
+- Public-key package signing and release provenance for distributed artifacts.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.
