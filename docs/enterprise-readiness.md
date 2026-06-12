@@ -26,6 +26,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Release provenance | implemented | tagged release workflow writes `release-manifest.json` and creates GitHub artifact attestations for `dist/*` |
 | Release SBOM | implemented | tagged release workflow installs the built wheel into a clean environment, validates `sbom.spdx.json` locally and with SPDX tools, and attests it with GitHub artifact attestations |
 | Keyless release signing | implemented | tagged release workflow signs primary release assets with Sigstore through GitHub OIDC |
+| Release dry-run rehearsal | implemented | manual `workflow_dispatch` runs release validation without creating a GitHub release |
 
 ## Required Before Enterprise Claims
 
@@ -82,6 +83,8 @@ These fields make evidence reproducible and easier to audit in CI, support, and 
 
 Tagged package releases write `release-manifest.json` with SHA-256 digests and `sbom.spdx.json` from the built wheel installed into a clean environment. The workflow validates the SBOM with local structural checks and `pyspdxtools` before manifest generation and attestation. GitHub artifact attestations cover both build provenance and the SPDX SBOM predicate for `dist/*`. Sigstore keyless signing publishes adjacent `.sigstore.json` bundles for the wheel, sdist, SBOM, and release manifest. This is release supply-chain provenance; it is separate from run evidence HMAC signatures.
 
+The same release workflow can be run manually with `dry_run=true` before tagging. Manual dry runs exercise the release build, validation, attestation, signing, and signature-bundle checks while skipping GitHub release creation.
+
 ### Artifact Scrubbing
 
 Before publishing, uploading, or attaching run bundles, run `nullstate scrub`. The scrubber writes a sanitized copy and redacts:
@@ -113,7 +116,7 @@ If a report says "exploited", it should include observed command evidence or exp
 ## Near-Term Readiness Tasks
 
 1. Run live LocalStack Azure validation and document emulator-specific limitations.
-2. Add release publish dry-run rehearsal before tagging.
+2. Add post-release verification checklist for the first tagged release.
 3. Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.
 
 ## Commercial Boundary

@@ -129,6 +129,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 - `ci: add spdx tools sbom validation` (this checkpoint)
   - Added release workflow validation with `spdx-tools==0.8.5` and `pyspdxtools`.
   - SPDX tools run after local SBOM structure checks and before release manifest generation.
+- `ci: add release dry-run rehearsal` (this checkpoint)
+  - Added manual `workflow_dispatch` support to the release workflow.
+  - Manual release dry runs execute build, validation, attestation, signing, and signature-bundle checks without creating a GitHub release.
+  - The GitHub release creation step now runs only on tag pushes.
 
 ## In Progress
 
@@ -143,5 +147,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Release publish dry-run rehearsal before tagging.
+- Post-release verification checklist for the first tagged release.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

@@ -68,6 +68,9 @@ Run `nullstate scrub` before attaching bundles or reports to public issues, supp
 ## Release flow
 
 ```text
+manual workflow_dispatch dry_run=true
+-> release workflow rehearses package build, SBOM validation, attestations, signing, and signature checks
+-> no GitHub release is created
 merge to main
 -> update CHANGELOG.md
 -> tag v0.1.0
@@ -91,6 +94,8 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-t
 `release-manifest.json` is uploaded beside the wheel, sdist, and `sbom.spdx.json`. It is a checksum index for release assets; GitHub artifact attestations provide build provenance and bind the SPDX SBOM predicate to those assets. The SBOM is generated from the built wheel installed into a clean `.sbom-venv`, so runtime package versions are captured from the installed release artifact. The workflow validates SPDX version, package fields, root package presence, relationships, and then runs `pyspdxtools` from `spdx-tools==0.8.5` before manifest generation or attestation.
 
 After attestations, the workflow signs the wheel, sdist, SBOM, and release manifest with Sigstore keyless signing through GitHub OIDC. It fails before release creation if any primary artifact is missing its adjacent `.sigstore.json` bundle.
+
+Use the manual `Release` workflow with `dry_run=true` before tagging. The dry run executes the release build and validation pipeline but skips `gh release create`; the GitHub release step is guarded to run only on tag pushes.
 
 Verify a downloaded wheel signature with Cosign. Replace the tag in `--certificate-identity` with the release tag being checked:
 

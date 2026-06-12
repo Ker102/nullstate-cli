@@ -26,6 +26,8 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("contents: write", text)
         self.assertIn("id-token: write", text)
         self.assertIn("attestations: write", text)
+        self.assertIn("workflow_dispatch:", text)
+        self.assertIn("dry_run:", text)
         self.assertIn("python -m build", text)
         self.assertIn("release-manifest.json", text)
         self.assertIn("sbom.spdx.json", text)
@@ -61,6 +63,10 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("release-signing-artifacts: false", text)
         self.assertIn("Validate release signatures", text)
         self.assertIn('signature_path = path.with_name(path.name + ".sigstore.json")', text)
+        self.assertIn("Release dry-run summary", text)
+        self.assertIn("github.event_name == 'workflow_dispatch'", text)
+        self.assertIn("No GitHub release was created.", text)
+        self.assertIn("if: github.event_name == 'push'", text)
         self.assertIn('gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes', text)
 
     def test_release_docs_include_sbom_attestation_verification(self):

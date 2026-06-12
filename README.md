@@ -408,6 +408,8 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-t
 
 Sigstore signing bundles are uploaded as adjacent release assets such as `nullstate-...whl.sigstore.json`.
 
+Before tagging, run the `Release` workflow manually with `dry_run=true` to rehearse the build, SBOM validation, attestations, signing, and signature-bundle checks without creating a GitHub release.
+
 Verify a wheel signature with Cosign by matching the artifact to its adjacent bundle and the release workflow identity:
 
 ```powershell

@@ -4,6 +4,13 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run release build, validation, attestation, and signing without creating a GitHub release."
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -256,7 +263,21 @@ jobs:
           if missing:
               raise SystemExit(f"Missing Sigstore signing artifacts: {missing}")
           PY
+      - name: Release dry-run summary
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          print("Release dry-run completed.")
+          print("No GitHub release was created.")
+          print("Artifacts prepared for rehearsal:")
+          for path in sorted(Path("dist").iterdir()):
+              if path.is_file():
+                  print(f"- {path}")
+          PY
       - name: Create GitHub release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes

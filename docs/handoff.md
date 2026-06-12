@@ -288,6 +288,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - release SBOM validation before manifest generation and attestation
 - SPDX tools validation for generated release SBOMs
 - keyless Sigstore release signing for primary release assets
+- manual release dry-run rehearsal before tagging
 
 Do not jump straight to full SaaS before stabilizing:
 
