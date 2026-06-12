@@ -61,12 +61,19 @@ def run_attack_script(
     resolved_manifest = _validate_attack_manifest(manifest_path, resolved_run_dir)
     target_classification = _validate_local_target_url(target_url)
     command_policy_id = "generated-attack-script-v1"
+    attack_script_args = {"--target-url", "--stage"}
+    if resolved_manifest is not None:
+        attack_script_args.add("--manifest")
     enforce_attack_policy(
         policy,
         target_classification=target_classification,
         command_policy_id=command_policy_id,
         scenario_name=scenario_name,
         backend_name=backend_name,
+        stage=stage,
+        attack_script_args=attack_script_args,
+        timeout_seconds=timeout_seconds,
+        max_output_bytes=max_output_bytes,
     )
 
     command = [

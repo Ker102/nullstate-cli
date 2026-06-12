@@ -28,6 +28,11 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertIn("local-http", payload["allowed_target_classifications"])
             self.assertIn("aws-public-s3", payload["allowed_scenarios"])
             self.assertIn("localstack-aws", payload["allowed_backends"])
+            self.assertIn("before", payload["allowed_stages"])
+            self.assertIn("--target-url", payload["allowed_attack_script_args"])
+            self.assertIn("--manifest", payload["allowed_attack_script_args"])
+            self.assertEqual(payload["max_timeout_seconds"], 30)
+            self.assertEqual(payload["max_output_bytes"], 12000)
             self.assertIn("Policy:", completed.stdout)
 
     def test_attack_runner_rejects_policy_denied_target_classification(self):
@@ -40,6 +45,10 @@ class AttackPolicyTests(unittest.TestCase):
                 allowed_command_policy_ids={"generated-attack-script-v1"},
                 allowed_scenarios=None,
                 allowed_backends=None,
+                allowed_stages=None,
+                allowed_attack_script_args=None,
+                max_timeout_seconds=None,
+                max_output_bytes=None,
             )
 
             with self.assertRaisesRegex(ValueError, "target classification"):
@@ -61,6 +70,10 @@ class AttackPolicyTests(unittest.TestCase):
                 allowed_command_policy_ids={"future-command-template"},
                 allowed_scenarios=None,
                 allowed_backends=None,
+                allowed_stages=None,
+                allowed_attack_script_args=None,
+                max_timeout_seconds=None,
+                max_output_bytes=None,
             )
 
             with self.assertRaisesRegex(ValueError, "command policy"):
@@ -82,6 +95,10 @@ class AttackPolicyTests(unittest.TestCase):
                 allowed_command_policy_ids={"generated-attack-script-v1"},
                 allowed_scenarios={"azure-public-blob"},
                 allowed_backends=None,
+                allowed_stages=None,
+                allowed_attack_script_args=None,
+                max_timeout_seconds=None,
+                max_output_bytes=None,
             )
 
             with self.assertRaisesRegex(ValueError, "scenario"):
@@ -104,6 +121,10 @@ class AttackPolicyTests(unittest.TestCase):
                 allowed_command_policy_ids={"generated-attack-script-v1"},
                 allowed_scenarios=None,
                 allowed_backends={"localstack-azure"},
+                allowed_stages=None,
+                allowed_attack_script_args=None,
+                max_timeout_seconds=None,
+                max_output_bytes=None,
             )
 
             with self.assertRaisesRegex(ValueError, "backend"):
@@ -113,6 +134,111 @@ class AttackPolicyTests(unittest.TestCase):
                     target_url="offline://aws-public-s3",
                     stage="before",
                     backend_name="localstack-aws",
+                    policy=policy,
+                )
+
+    def test_attack_runner_rejects_policy_denied_stage(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+            policy = AttackPolicy(
+                allowed_target_classifications={"offline"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_scenarios=None,
+                allowed_backends=None,
+                allowed_stages={"after"},
+                allowed_attack_script_args=None,
+                max_timeout_seconds=None,
+                max_output_bytes=None,
+            )
+
+            with self.assertRaisesRegex(ValueError, "stage"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="offline://aws-public-s3",
+                    stage="before",
+                    policy=policy,
+                )
+
+    def test_attack_runner_rejects_timeout_above_policy_ceiling(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+            policy = AttackPolicy(
+                allowed_target_classifications={"offline"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_scenarios=None,
+                allowed_backends=None,
+                allowed_stages=None,
+                allowed_attack_script_args=None,
+                max_timeout_seconds=5,
+                max_output_bytes=None,
+            )
+
+            with self.assertRaisesRegex(ValueError, "timeout"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="offline://aws-public-s3",
+                    stage="before",
+                    timeout_seconds=30,
+                    policy=policy,
+                )
+
+    def test_attack_runner_rejects_output_limit_above_policy_ceiling(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+            policy = AttackPolicy(
+                allowed_target_classifications={"offline"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_scenarios=None,
+                allowed_backends=None,
+                allowed_stages=None,
+                allowed_attack_script_args=None,
+                max_timeout_seconds=None,
+                max_output_bytes=1024,
+            )
+
+            with self.assertRaisesRegex(ValueError, "output"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="offline://aws-public-s3",
+                    stage="before",
+                    max_output_bytes=12_000,
+                    policy=policy,
+                )
+
+    def test_attack_runner_rejects_policy_denied_manifest_argument(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+            manifest = run_dir / "attack-manifest.json"
+            manifest.write_text("{}", encoding="utf-8")
+            policy = AttackPolicy(
+                allowed_target_classifications={"offline"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_scenarios=None,
+                allowed_backends=None,
+                allowed_stages=None,
+                allowed_attack_script_args={"--target-url", "--stage"},
+                max_timeout_seconds=None,
+                max_output_bytes=None,
+            )
+
+            with self.assertRaisesRegex(ValueError, "argument"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="offline://aws-public-s3",
+                    stage="before",
+                    manifest_path=manifest,
                     policy=policy,
                 )
 

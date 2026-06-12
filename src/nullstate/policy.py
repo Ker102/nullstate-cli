@@ -10,6 +10,10 @@ POLICY_SCHEMA_VERSION = 1
 DEFAULT_POLICY_FILENAME = "nullstate-policy.json"
 DEFAULT_ALLOWED_TARGET_CLASSIFICATIONS = {"offline", "local", "local-http"}
 DEFAULT_ALLOWED_COMMAND_POLICY_IDS = {"generated-attack-script-v1"}
+DEFAULT_ALLOWED_ATTACK_SCRIPT_ARGS = {"--manifest", "--stage", "--target-url"}
+DEFAULT_ALLOWED_STAGES = {"after", "before"}
+DEFAULT_MAX_TIMEOUT_SECONDS = 30
+DEFAULT_MAX_OUTPUT_BYTES = 12_000
 DEFAULT_ALLOWED_SCENARIOS = {
     "aws-public-s3",
     "azure-public-blob",
@@ -34,6 +38,10 @@ class AttackPolicy:
     allowed_command_policy_ids: set[str]
     allowed_scenarios: set[str] | None = None
     allowed_backends: set[str] | None = None
+    allowed_stages: set[str] | None = None
+    allowed_attack_script_args: set[str] | None = None
+    max_timeout_seconds: int | None = None
+    max_output_bytes: int | None = None
 
 
 def default_policy_payload() -> dict[str, Any]:
@@ -43,6 +51,10 @@ def default_policy_payload() -> dict[str, Any]:
         "allowed_command_policy_ids": sorted(DEFAULT_ALLOWED_COMMAND_POLICY_IDS),
         "allowed_scenarios": sorted(DEFAULT_ALLOWED_SCENARIOS),
         "allowed_backends": sorted(DEFAULT_ALLOWED_BACKENDS),
+        "allowed_stages": sorted(DEFAULT_ALLOWED_STAGES),
+        "allowed_attack_script_args": sorted(DEFAULT_ALLOWED_ATTACK_SCRIPT_ARGS),
+        "max_timeout_seconds": DEFAULT_MAX_TIMEOUT_SECONDS,
+        "max_output_bytes": DEFAULT_MAX_OUTPUT_BYTES,
         "notes": "Controls constrained red-tool execution. This does not grant arbitrary shell access.",
     }
 
@@ -63,6 +75,10 @@ def load_attack_policy(path: Path | None) -> AttackPolicy | None:
         allowed_command_policy_ids=set(_string_list(payload, "allowed_command_policy_ids")),
         allowed_scenarios=_optional_string_set(payload, "allowed_scenarios"),
         allowed_backends=_optional_string_set(payload, "allowed_backends"),
+        allowed_stages=_optional_string_set(payload, "allowed_stages"),
+        allowed_attack_script_args=_optional_string_set(payload, "allowed_attack_script_args"),
+        max_timeout_seconds=_optional_positive_int(payload, "max_timeout_seconds"),
+        max_output_bytes=_optional_positive_int(payload, "max_output_bytes"),
     )
 
 
@@ -73,6 +89,10 @@ def enforce_attack_policy(
     command_policy_id: str,
     scenario_name: str | None = None,
     backend_name: str | None = None,
+    stage: str | None = None,
+    attack_script_args: set[str] | None = None,
+    timeout_seconds: int | None = None,
+    max_output_bytes: int | None = None,
 ) -> None:
     if policy is None:
         return
@@ -84,6 +104,21 @@ def enforce_attack_policy(
         raise ValueError(f"Attack scenario {scenario_name!r} is not allowed by policy.")
     if policy.allowed_backends is not None and backend_name not in policy.allowed_backends:
         raise ValueError(f"Attack backend {backend_name!r} is not allowed by policy.")
+    if policy.allowed_stages is not None and stage not in policy.allowed_stages:
+        raise ValueError(f"Attack stage {stage!r} is not allowed by policy.")
+    if policy.allowed_attack_script_args is not None:
+        requested_args = attack_script_args or set()
+        denied_args = sorted(requested_args - policy.allowed_attack_script_args)
+        if denied_args:
+            raise ValueError(f"Attack script argument {denied_args[0]!r} is not allowed by policy.")
+    if policy.max_timeout_seconds is not None and timeout_seconds is not None and timeout_seconds > policy.max_timeout_seconds:
+        raise ValueError(
+            f"Attack timeout {timeout_seconds} seconds exceeds policy maximum {policy.max_timeout_seconds} seconds."
+        )
+    if policy.max_output_bytes is not None and max_output_bytes is not None and max_output_bytes > policy.max_output_bytes:
+        raise ValueError(
+            f"Attack output limit {max_output_bytes} bytes exceeds policy maximum {policy.max_output_bytes} bytes."
+        )
 
 
 def _string_list(payload: dict[str, Any], key: str) -> list[str]:
@@ -97,3 +132,12 @@ def _optional_string_set(payload: dict[str, Any], key: str) -> set[str] | None:
     if key not in payload:
         return None
     return set(_string_list(payload, key))
+
+
+def _optional_positive_int(payload: dict[str, Any], key: str) -> int | None:
+    if key not in payload:
+        return None
+    value = payload.get(key)
+    if not isinstance(value, int) or value <= 0:
+        raise ValueError(f"Policy field {key!r} must be a positive integer.")
+    return value

@@ -58,6 +58,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Extended generated policy files with `allowed_scenarios` and `allowed_backends`.
   - `run --policy-file` now enforces scenario, backend, target classification, and command policy ID before generated `attack.py` execution.
   - Older policy files without scenario/backend fields remain valid and keep enforcing their existing fields.
+- `feat: add policy command controls` (this checkpoint)
+  - Extended generated policy files with allowed stages, generated `attack.py` flags, timeout ceilings, and output-size ceilings.
+  - `run --policy-file` now enforces command controls before generated `attack.py` execution.
+  - Older policy files without command-control fields remain valid and keep enforcing their existing fields.
 
 ## In Progress
 
@@ -71,6 +75,6 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Next Candidates
 
-- Per-command argument, timeout, and output-size controls in the red-tool policy file.
+- Per-scenario command policy presets for different generated probes.
 - Upload dry-run to live upload transition once an ingestion API exists.
 - Cryptographic signing and signature verification for `evidence-manifest.json`.

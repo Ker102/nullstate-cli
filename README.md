@@ -328,7 +328,7 @@ nullstate policy init --output nullstate-policy.json
 nullstate run examples/aws-public-s3 --offline --mock-agents --policy-file nullstate-policy.json
 ```
 
-The policy file allowlists scenario names, backend names, target classifications such as `offline`, `local`, and `local-http`, plus command policy IDs such as `generated-attack-script-v1`.
+The policy file allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, and `local-http`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture.
 
 Create an evidence integrity manifest before attaching a run to a ticket, case study, or support workflow:
 
