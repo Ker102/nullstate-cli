@@ -121,6 +121,8 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added Sigstore keyless signing for the wheel, sdist, SBOM, and release manifest.
   - The release workflow now validates adjacent `.sigstore.json` bundles before creating the GitHub release.
   - Signing uses GitHub OIDC and does not require long-lived signing keys.
+- `docs: add release signature verification examples` (this checkpoint)
+  - Documented Cosign verification for release wheel signatures and adjacent `.sigstore.json` bundles.
 
 ## In Progress
 
@@ -135,5 +137,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Optional third-party SBOM validation and release signature verification examples.
+- Optional third-party SBOM validation.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

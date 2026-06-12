@@ -91,6 +91,13 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-t
 
 After attestations, the workflow signs the wheel, sdist, SBOM, and release manifest with Sigstore keyless signing through GitHub OIDC. It fails before release creation if any primary artifact is missing its adjacent `.sigstore.json` bundle.
 
+Verify a downloaded wheel signature with Cosign. Replace the tag in `--certificate-identity` with the release tag being checked:
+
+```powershell
+$wheel = Get-ChildItem dist\nullstate-*.whl | Select-Object -First 1
+cosign verify-blob $wheel.FullName --bundle "$($wheel.FullName).sigstore.json" --certificate-identity "https://github.com/Ker102/nullstate-cli/.github/workflows/release.yml@refs/tags/v0.1.0" --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
+
 ## Required repository settings
 
 Configure in GitHub after publishing:

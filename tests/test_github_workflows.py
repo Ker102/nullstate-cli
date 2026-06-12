@@ -72,6 +72,9 @@ class GithubWorkflowTests(unittest.TestCase):
             "gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3",
             docs_text,
         )
+        self.assertIn("cosign verify-blob", docs_text)
+        self.assertIn("https://github.com/Ker102/nullstate-cli/.github/workflows/release.yml@refs/tags/v0.1.0", docs_text)
+        self.assertIn("https://token.actions.githubusercontent.com", docs_text)
 
 
 if __name__ == "__main__":

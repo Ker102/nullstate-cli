@@ -408,6 +408,13 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-t
 
 Sigstore signing bundles are uploaded as adjacent release assets such as `nullstate-...whl.sigstore.json`.
 
+Verify a wheel signature with Cosign by matching the artifact to its adjacent bundle and the release workflow identity:
+
+```powershell
+$wheel = Get-ChildItem dist\nullstate-*.whl | Select-Object -First 1
+cosign verify-blob $wheel.FullName --bundle "$($wheel.FullName).sigstore.json" --certificate-identity "https://github.com/Ker102/nullstate-cli/.github/workflows/release.yml@refs/tags/v0.1.0" --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
+
 ## Status
 
 Working now: live LocalStack AWS/Azure storage scenarios, offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
