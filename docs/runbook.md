@@ -119,6 +119,51 @@ python -m nullstate scrub 20260509-200601 --runs-dir runs --output-dir scrubbed-
 
 `scrub` writes a copied run directory under `scrubbed-runs/` and leaves the original run untouched. It refuses to overwrite an existing scrubbed copy. Review `scrub-report.json` before sharing.
 
+## First Tagged Release Checklist
+
+Use this checklist before the first product tag. Do not tag, publish a release, merge to `main`, or push to `main` until the freeze is explicitly lifted.
+
+Confirm the release candidate PR checks are green:
+
+```powershell
+gh pr checks 24
+```
+
+Rehearse the release workflow without creating a GitHub release:
+
+```powershell
+gh workflow run Release --field dry_run=true
+gh run list --workflow Release --limit 1
+```
+
+After the approved merge and tag process, inspect the published release:
+
+```powershell
+gh release view v0.1.0
+gh release download v0.1.0 --dir dist
+```
+
+Verify the package provenance and SBOM attestations:
+
+```powershell
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3
+```
+
+Verify the Sigstore bundle for the downloaded wheel:
+
+```powershell
+$wheel = Get-ChildItem dist\nullstate-*.whl | Select-Object -First 1
+cosign verify-blob $wheel.FullName --bundle "$($wheel.FullName).sigstore.json" --certificate-identity "https://github.com/Ker102/nullstate-cli/.github/workflows/release.yml@refs/tags/v0.1.0" --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
+
+Confirm the release assets include:
+
+- wheel and source distribution
+- `release-manifest.json`
+- `sbom.spdx.json`
+- adjacent `.sigstore.json` bundles for the primary release artifacts
+
 ## Model endpoint setup
 
 For self-hosted vLLM, SGLang, or a private OpenAI-compatible proxy serving both red and blue roles, set:

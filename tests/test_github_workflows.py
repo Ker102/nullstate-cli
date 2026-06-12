@@ -74,6 +74,7 @@ class GithubWorkflowTests(unittest.TestCase):
             [
                 Path("README.md").read_text(encoding="utf-8"),
                 Path("docs/ci-cd.md").read_text(encoding="utf-8"),
+                Path("docs/runbook.md").read_text(encoding="utf-8"),
             ]
         )
 
@@ -84,6 +85,9 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("cosign verify-blob", docs_text)
         self.assertIn("https://github.com/Ker102/nullstate-cli/.github/workflows/release.yml@refs/tags/v0.1.0", docs_text)
         self.assertIn("https://token.actions.githubusercontent.com", docs_text)
+        self.assertIn("First Tagged Release Checklist", docs_text)
+        self.assertIn("gh workflow run Release --field dry_run=true", docs_text)
+        self.assertIn("gh release view v0.1.0", docs_text)
 
 
 if __name__ == "__main__":

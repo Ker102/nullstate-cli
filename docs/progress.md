@@ -133,6 +133,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added manual `workflow_dispatch` support to the release workflow.
   - Manual release dry runs execute build, validation, attestation, signing, and signature-bundle checks without creating a GitHub release.
   - The GitHub release creation step now runs only on tag pushes.
+- `docs: add first release verification checklist` (this checkpoint)
+  - Added a runbook checklist for the first tagged release.
+  - Captures PR check review, manual release dry-run rehearsal, release inspection, GitHub attestation verification, and Sigstore bundle verification.
+  - Keeps the freeze rule explicit: no tagging, release publishing, or `main` updates until approved.
 
 ## In Progress
 
@@ -147,5 +151,4 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Post-release verification checklist for the first tagged release.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

@@ -1,6 +1,6 @@
 # Nullstate Project Handoff
 
-Last updated: 2026-06-11
+Last updated: 2026-06-12
 
 ## Read this first
 
@@ -289,6 +289,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - SPDX tools validation for generated release SBOMs
 - keyless Sigstore release signing for primary release assets
 - manual release dry-run rehearsal before tagging
+- first tagged release verification checklist in the runbook
 
 Do not jump straight to full SaaS before stabilizing:
 
