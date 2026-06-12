@@ -126,6 +126,9 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 - `fix: add SARIF physical locations` (this checkpoint)
   - GitHub Code Scanning rejected SARIF without `physicalLocation`.
   - SARIF results now point to the run `findings.json` artifact while preserving the Terraform resource as a logical location.
+- `ci: add spdx tools sbom validation` (this checkpoint)
+  - Added release workflow validation with `spdx-tools==0.8.5` and `pyspdxtools`.
+  - SPDX tools run after local SBOM structure checks and before release manifest generation.
 
 ## In Progress
 
@@ -140,5 +143,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Optional third-party SBOM validation.
+- Release publish dry-run rehearsal before tagging.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

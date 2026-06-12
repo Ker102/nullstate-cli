@@ -179,6 +179,10 @@ jobs:
           if missing_relationship_targets:
               raise SystemExit(f"SBOM relationships reference unknown packages: {missing_relationship_targets}")
           PY
+      - name: Validate SBOM with SPDX tools
+        run: |
+          .sbom-venv/bin/python -m pip install spdx-tools==0.8.5
+          .sbom-venv/bin/pyspdxtools -i dist/sbom.spdx.json
       - name: Generate release manifest
         run: |
           python - <<'PY'

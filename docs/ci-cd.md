@@ -74,6 +74,7 @@ merge to main
 -> release workflow builds package
 -> sbom.spdx.json records the installed wheel and runtime dependency versions
 -> SBOM validation checks required package fields and root-package relationships
+-> SPDX tools validate the generated SBOM document
 -> release-manifest.json records SHA-256 digests and sizes
 -> GitHub artifact attestations bind provenance and SBOM data to dist/*
 -> Sigstore keyless signing writes .sigstore.json bundles beside primary release assets
@@ -87,7 +88,7 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
 gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3
 ```
 
-`release-manifest.json` is uploaded beside the wheel, sdist, and `sbom.spdx.json`. It is a checksum index for release assets; GitHub artifact attestations provide build provenance and bind the SPDX SBOM predicate to those assets. The SBOM is generated from the built wheel installed into a clean `.sbom-venv`, so runtime package versions are captured from the installed release artifact. The workflow validates SPDX version, package fields, root package presence, and relationships before manifest generation or attestation.
+`release-manifest.json` is uploaded beside the wheel, sdist, and `sbom.spdx.json`. It is a checksum index for release assets; GitHub artifact attestations provide build provenance and bind the SPDX SBOM predicate to those assets. The SBOM is generated from the built wheel installed into a clean `.sbom-venv`, so runtime package versions are captured from the installed release artifact. The workflow validates SPDX version, package fields, root package presence, relationships, and then runs `pyspdxtools` from `spdx-tools==0.8.5` before manifest generation or attestation.
 
 After attestations, the workflow signs the wheel, sdist, SBOM, and release manifest with Sigstore keyless signing through GitHub OIDC. It fails before release creation if any primary artifact is missing its adjacent `.sigstore.json` bundle.
 

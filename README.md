@@ -399,7 +399,7 @@ The `Media` prerelease is only used to host README assets. Product releases shou
 
 The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.1`.
 
-Tagged releases build wheel/sdist artifacts, upload `release-manifest.json` with SHA-256 digests, generate and validate `sbom.spdx.json` from the built wheel installed into a clean environment, create GitHub artifact attestations for package provenance and the SBOM, and publish keyless Sigstore `.sigstore.json` signing bundles beside release assets. Verify a downloaded wheel with:
+Tagged releases build wheel/sdist artifacts, upload `release-manifest.json` with SHA-256 digests, generate and validate `sbom.spdx.json` from the built wheel installed into a clean environment, validate the SBOM again with SPDX Python tools, create GitHub artifact attestations for package provenance and the SBOM, and publish keyless Sigstore `.sigstore.json` signing bundles beside release assets. Verify a downloaded wheel with:
 
 ```powershell
 gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli

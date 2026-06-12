@@ -277,7 +277,7 @@ Before businesses can rely on it, the product needs:
 - release package provenance through GitHub artifact attestations
 - release SBOM attestation through GitHub artifact attestations
 - keyless release signing through Sigstore
-- optional third-party SBOM validation and signature verification examples
+- release publish dry-run rehearsal before tagging
 
 ### P3: Growth and brand
 
