@@ -76,6 +76,7 @@ merge to main
 -> SBOM validation checks required package fields and root-package relationships
 -> release-manifest.json records SHA-256 digests and sizes
 -> GitHub artifact attestations bind provenance and SBOM data to dist/*
+-> Sigstore keyless signing writes .sigstore.json bundles beside primary release assets
 -> GitHub release created with generated notes
 ```
 
@@ -87,6 +88,8 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-t
 ```
 
 `release-manifest.json` is uploaded beside the wheel, sdist, and `sbom.spdx.json`. It is a checksum index for release assets; GitHub artifact attestations provide build provenance and bind the SPDX SBOM predicate to those assets. The SBOM is generated from the built wheel installed into a clean `.sbom-venv`, so runtime package versions are captured from the installed release artifact. The workflow validates SPDX version, package fields, root package presence, and relationships before manifest generation or attestation.
+
+After attestations, the workflow signs the wheel, sdist, SBOM, and release manifest with Sigstore keyless signing through GitHub OIDC. It fails before release creation if any primary artifact is missing its adjacent `.sigstore.json` bundle.
 
 ## Required repository settings
 

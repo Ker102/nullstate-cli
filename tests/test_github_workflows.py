@@ -49,6 +49,15 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("subject-path: dist/*", text)
         self.assertIn("Attest release SBOM", text)
         self.assertIn("sbom-path: dist/sbom.spdx.json", text)
+        self.assertIn("Sign release artifacts", text)
+        self.assertIn("sigstore/gh-action-sigstore-python@v3.4.0", text)
+        self.assertIn("dist/*.whl", text)
+        self.assertIn("dist/*.tar.gz", text)
+        self.assertIn("dist/sbom.spdx.json", text)
+        self.assertIn("dist/release-manifest.json", text)
+        self.assertIn("release-signing-artifacts: false", text)
+        self.assertIn("Validate release signatures", text)
+        self.assertIn('signature_path = path.with_name(path.name + ".sigstore.json")', text)
         self.assertIn('gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes', text)
 
     def test_release_docs_include_sbom_attestation_verification(self):

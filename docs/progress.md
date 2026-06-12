@@ -117,6 +117,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 - `ci: validate release sbom` (this checkpoint)
   - Added release workflow validation for `dist/sbom.spdx.json` before manifest generation and attestation.
   - Validation checks SPDX version, required package fields, root package presence, packaging-tool exclusion, and root-package relationships.
+- `ci: add keyless release signing` (this checkpoint)
+  - Added Sigstore keyless signing for the wheel, sdist, SBOM, and release manifest.
+  - The release workflow now validates adjacent `.sigstore.json` bundles before creating the GitHub release.
+  - Signing uses GitHub OIDC and does not require long-lived signing keys.
 
 ## In Progress
 
@@ -131,5 +135,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Package signing and optional third-party SBOM validation.
+- Optional third-party SBOM validation and release signature verification examples.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

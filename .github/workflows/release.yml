@@ -221,6 +221,37 @@ jobs:
         with:
           subject-path: dist/*
           sbom-path: dist/sbom.spdx.json
+      - name: Sign release artifacts
+        uses: sigstore/gh-action-sigstore-python@v3.4.0
+        with:
+          inputs: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/sbom.spdx.json
+            dist/release-manifest.json
+          release-signing-artifacts: false
+      - name: Validate release signatures
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          artifacts = [
+              *Path("dist").glob("*.whl"),
+              *Path("dist").glob("*.tar.gz"),
+              Path("dist/sbom.spdx.json"),
+              Path("dist/release-manifest.json"),
+          ]
+          missing = []
+          for path in artifacts:
+              if not path.is_file():
+                  missing.append(str(path))
+                  continue
+              signature_path = path.with_name(path.name + ".sigstore.json")
+              if not signature_path.is_file():
+                  missing.append(str(signature_path))
+          if missing:
+              raise SystemExit(f"Missing Sigstore signing artifacts: {missing}")
+          PY
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
