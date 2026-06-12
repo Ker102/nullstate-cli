@@ -275,6 +275,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - red-tool policy scaffold and standalone `policy-result.json`
 - scenario/backend allowlists in red-tool policy files
 - command argument, stage, timeout, and output-size controls in red-tool policy files
+- policy validation output through `nullstate policy validate`
 - unsigned evidence integrity manifests through `nullstate evidence-manifest`
 - evidence hash verification through `nullstate evidence-verify`
 

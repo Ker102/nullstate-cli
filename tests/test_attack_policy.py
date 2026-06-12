@@ -320,6 +320,97 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertNotEqual(completed.returncode, 0)
             self.assertIn("scenario", completed.stderr)
 
+    def test_policy_validate_accepts_valid_policy_and_writes_result(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            policy_path = root / "policy.json"
+            output_path = root / "policy-validation.json"
+            _write_policy(policy_path)
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "policy",
+                    "validate",
+                    str(policy_path),
+                    "--output",
+                    str(output_path),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            payload = json.loads(output_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["schema_version"], 1)
+            self.assertEqual(payload["status"], "valid")
+            self.assertEqual(payload["policy"]["path"], str(policy_path))
+            self.assertEqual(payload["policy"]["schema_version"], 1)
+            self.assertIn("allowed_target_classifications", payload["policy"]["fields"])
+            self.assertIn("Policy validation:", completed.stdout)
+            self.assertIn("status=valid", completed.stdout)
+
+    def test_policy_validate_reports_invalid_policy_and_exits_nonzero(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            policy_path = root / "policy.json"
+            output_path = root / "policy-validation.json"
+            policy_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "allowed_target_classifications": "offline",
+                        "allowed_command_policy_ids": ["generated-attack-script-v1"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "policy",
+                    "validate",
+                    str(policy_path),
+                    "--output",
+                    str(output_path),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 2)
+            self.assertTrue(output_path.is_file(), completed.stderr)
+            payload = json.loads(output_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["status"], "invalid")
+            self.assertIn("allowed_target_classifications", payload["error"])
+            self.assertIn("status=invalid", completed.stdout)
+
+
+def _write_policy(path: Path) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "allowed_target_classifications": ["offline", "local-http"],
+                "allowed_command_policy_ids": ["generated-attack-script-v1"],
+                "allowed_scenarios": ["aws-public-s3"],
+                "allowed_backends": ["localstack-aws"],
+                "allowed_stages": ["before", "after"],
+                "allowed_attack_script_args": ["--target-url", "--stage", "--manifest"],
+                "max_timeout_seconds": 30,
+                "max_output_bytes": 12000,
+            }
+        ),
+        encoding="utf-8",
+    )
+
 
 if __name__ == "__main__":
     unittest.main()

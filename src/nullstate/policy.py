@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,7 @@ DEFAULT_ALLOWED_ATTACK_SCRIPT_ARGS = {"--manifest", "--stage", "--target-url"}
 DEFAULT_ALLOWED_STAGES = {"after", "before"}
 DEFAULT_MAX_TIMEOUT_SECONDS = 30
 DEFAULT_MAX_OUTPUT_BYTES = 12_000
+POLICY_VALIDATION_FILENAME = "policy-validation.json"
 DEFAULT_ALLOWED_SCENARIOS = {
     "aws-public-s3",
     "azure-public-blob",
@@ -66,10 +68,55 @@ def write_default_policy(path: Path) -> dict[str, Any]:
     return payload
 
 
+def write_policy_validation(path: Path, output_path: Path) -> dict[str, Any]:
+    payload = build_policy_validation(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return payload
+
+
+def build_policy_validation(path: Path) -> dict[str, Any]:
+    try:
+        policy = load_attack_policy(path)
+    except (OSError, json.JSONDecodeError, ValueError) as error:
+        return {
+            "schema_version": 1,
+            "generated_at": datetime.now(UTC).isoformat(),
+            "status": "invalid",
+            "valid": False,
+            "policy": {
+                "path": str(path),
+                "schema_version": _safe_schema_version(path),
+                "fields": [],
+            },
+            "warnings": [],
+            "error": str(error),
+        }
+    if policy is None:
+        raise ValueError("Policy validation requires a policy path.")
+    payload = _read_policy_payload(path)
+    fields = sorted(key for key in payload if key != "notes")
+    warnings = _policy_validation_warnings(policy)
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(UTC).isoformat(),
+        "status": "valid",
+        "valid": True,
+        "policy": {
+            "path": str(path),
+            "schema_version": payload.get("schema_version"),
+            "fields": fields,
+            "constrained_field_count": len(fields),
+        },
+        "warnings": warnings,
+        "error": None,
+    }
+
+
 def load_attack_policy(path: Path | None) -> AttackPolicy | None:
     if path is None:
         return None
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = _read_policy_payload(path)
     return AttackPolicy(
         allowed_target_classifications=set(_string_list(payload, "allowed_target_classifications")),
         allowed_command_policy_ids=set(_string_list(payload, "allowed_command_policy_ids")),
@@ -141,3 +188,34 @@ def _optional_positive_int(payload: dict[str, Any], key: str) -> int | None:
     if not isinstance(value, int) or value <= 0:
         raise ValueError(f"Policy field {key!r} must be a positive integer.")
     return value
+
+
+def _read_policy_payload(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Policy file must contain a JSON object.")
+    return payload
+
+
+def _safe_schema_version(path: Path) -> Any:
+    try:
+        payload = _read_policy_payload(path)
+    except (OSError, json.JSONDecodeError, ValueError):
+        return None
+    return payload.get("schema_version")
+
+
+def _policy_validation_warnings(policy: AttackPolicy) -> list[str]:
+    warnings = []
+    optional_fields = {
+        "allowed_scenarios": policy.allowed_scenarios,
+        "allowed_backends": policy.allowed_backends,
+        "allowed_stages": policy.allowed_stages,
+        "allowed_attack_script_args": policy.allowed_attack_script_args,
+        "max_timeout_seconds": policy.max_timeout_seconds,
+        "max_output_bytes": policy.max_output_bytes,
+    }
+    for field_name, value in optional_fields.items():
+        if value is None:
+            warnings.append(f"Optional policy field {field_name!r} is omitted; that dimension is not constrained.")
+    return warnings

@@ -62,6 +62,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Extended generated policy files with allowed stages, generated `attack.py` flags, timeout ceilings, and output-size ceilings.
   - `run --policy-file` now enforces command controls before generated `attack.py` execution.
   - Older policy files without command-control fields remain valid and keep enforcing their existing fields.
+- `feat: add policy validation command` (this checkpoint)
+  - Added `nullstate policy validate`.
+  - Writes optional `policy-validation.json` for CI evidence.
+  - Exits with code `2` when the policy file is malformed or invalid.
 
 ## In Progress
 

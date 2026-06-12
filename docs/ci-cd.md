@@ -21,6 +21,7 @@ The PR workflow runs:
 Use offline mode for deterministic pull request evidence when no sandbox is available:
 
 ```powershell
+python -m nullstate policy validate nullstate-policy.json --output artifacts/policy-validation.json
 python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none --runs-dir runs/ci
 python -m nullstate policy-result --runs-dir runs/ci --fail-on-severity high
 python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
@@ -33,6 +34,8 @@ python -m nullstate upload --runs-dir runs/ci --dry-run
 `--ci` writes `ci-summary.json` into the run directory and exits with code `2` when the original findings meet or exceed `--fail-on-severity`. Supported thresholds are `none`, `low`, `medium`, `high`, and `critical`.
 
 `nullstate policy-result` writes `policy-result.json` from an existing run. Use it when a pipeline needs a standalone JSON decision artifact without re-running the scenario.
+
+`nullstate policy validate` checks a red-tool policy file without running a scenario. It writes `policy-validation.json` when `--output` is supplied and exits with code `2` when the file is malformed or invalid.
 
 Use `--fail-on-severity none` for demonstration or pure upload workflows. Use `--fail-on-severity high` or `--fail-on-severity critical` for enforcing PR gates; if the job must both fail and upload SARIF, run the upload step with explicit `continue-on-error` handling or split export and enforcement into separate steps.
 

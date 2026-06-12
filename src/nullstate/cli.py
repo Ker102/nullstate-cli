@@ -34,7 +34,14 @@ from .evidence_manifest import (
 from .findings import find_scenario_findings
 from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
-from .policy import DEFAULT_POLICY_FILENAME, load_attack_policy, write_default_policy
+from .policy import (
+    DEFAULT_POLICY_FILENAME,
+    POLICY_VALIDATION_FILENAME,
+    build_policy_validation,
+    load_attack_policy,
+    write_default_policy,
+    write_policy_validation,
+)
 from .policy_result import POLICY_RESULT_FILENAME, write_policy_result
 from .remediation import remediate_scenario_files
 from .report import render_report
@@ -554,6 +561,25 @@ def policy_init(
         + ", ".join(payload["allowed_command_policy_ids"])
     )
     _print_next_steps([f"nullstate run examples/aws-public-s3 --offline --policy-file {output}"])
+
+
+@policy_app.command("validate")
+def policy_validate(
+    policy_file: Path = typer.Argument(Path(DEFAULT_POLICY_FILENAME), help="Policy JSON file to validate."),
+    output: Path | None = typer.Option(None, "--output", "-o", help=f"Optional JSON result path. Suggested: {POLICY_VALIDATION_FILENAME}."),
+) -> None:
+    """Validate a red-tool execution policy without running a scenario."""
+    payload = write_policy_validation(policy_file, output) if output is not None else build_policy_validation(policy_file)
+    if output is not None:
+        console.print(f"Policy validation: {output}")
+    else:
+        console.print(f"Policy validation: {policy_file}")
+    console.print(
+        f"status={payload['status']} - fields={len(payload['policy']['fields'])} - "
+        f"warnings={len(payload['warnings'])}"
+    )
+    if payload["status"] != "valid":
+        raise typer.Exit(code=2)
 
 
 @sandbox_app.command("status")
