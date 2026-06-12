@@ -26,6 +26,8 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertEqual(payload["schema_version"], 1)
             self.assertIn("generated-attack-script-v1", payload["allowed_command_policy_ids"])
             self.assertIn("local-http", payload["allowed_target_classifications"])
+            self.assertIn("aws-public-s3", payload["allowed_scenarios"])
+            self.assertIn("localstack-aws", payload["allowed_backends"])
             self.assertIn("Policy:", completed.stdout)
 
     def test_attack_runner_rejects_policy_denied_target_classification(self):
@@ -36,6 +38,8 @@ class AttackPolicyTests(unittest.TestCase):
             policy = AttackPolicy(
                 allowed_target_classifications={"offline"},
                 allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_scenarios=None,
+                allowed_backends=None,
             )
 
             with self.assertRaisesRegex(ValueError, "target classification"):
@@ -55,6 +59,8 @@ class AttackPolicyTests(unittest.TestCase):
             policy = AttackPolicy(
                 allowed_target_classifications={"offline"},
                 allowed_command_policy_ids={"future-command-template"},
+                allowed_scenarios=None,
+                allowed_backends=None,
             )
 
             with self.assertRaisesRegex(ValueError, "command policy"):
@@ -63,6 +69,50 @@ class AttackPolicyTests(unittest.TestCase):
                     run_dir=run_dir,
                     target_url="offline://aws-public-s3",
                     stage="before",
+                    policy=policy,
+                )
+
+    def test_attack_runner_rejects_policy_denied_scenario(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+            policy = AttackPolicy(
+                allowed_target_classifications={"offline"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_scenarios={"azure-public-blob"},
+                allowed_backends=None,
+            )
+
+            with self.assertRaisesRegex(ValueError, "scenario"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="offline://aws-public-s3",
+                    stage="before",
+                    scenario_name="aws-public-s3",
+                    policy=policy,
+                )
+
+    def test_attack_runner_rejects_policy_denied_backend(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+            policy = AttackPolicy(
+                allowed_target_classifications={"offline"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_scenarios=None,
+                allowed_backends={"localstack-azure"},
+            )
+
+            with self.assertRaisesRegex(ValueError, "backend"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="offline://aws-public-s3",
+                    stage="before",
+                    backend_name="localstack-aws",
                     policy=policy,
                 )
 
@@ -103,6 +153,46 @@ class AttackPolicyTests(unittest.TestCase):
 
             self.assertNotEqual(completed.returncode, 0)
             self.assertIn("target classification", completed.stderr)
+
+    def test_run_rejects_policy_file_that_denies_scenario(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            runs_dir = root / "runs"
+            policy_path = root / "policy.json"
+            policy_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "allowed_target_classifications": ["offline"],
+                        "allowed_command_policy_ids": ["generated-attack-script-v1"],
+                        "allowed_scenarios": ["azure-public-blob"],
+                        "allowed_backends": ["localstack-aws"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "run",
+                    "examples/aws-public-s3",
+                    "--offline",
+                    "--mock-agents",
+                    "--policy-file",
+                    str(policy_path),
+                    "--runs-dir",
+                    str(runs_dir),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("scenario", completed.stderr)
 
 
 if __name__ == "__main__":

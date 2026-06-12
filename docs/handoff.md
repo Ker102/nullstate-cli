@@ -119,8 +119,8 @@ Working features:
   - attack runner rejects non-local HTTP targets by default
   - allowed targets are offline, local, loopback, localhost, and LocalStack-scoped HTTP(S)
   - `nullstate policy init` creates a red-tool allowlist policy scaffold
-  - `nullstate run --policy-file` enforces allowed target classifications and command policy IDs
-  - `red-tool` payloads include schema version, command policy ID, target classification, SHA-256 hashes, and stdout/stderr truncation flags
+  - `nullstate run --policy-file` enforces allowed scenarios, backends, target classifications, and command policy IDs
+  - `red-tool` payloads include schema version, scenario, backend, command policy ID, target classification, SHA-256 hashes, and stdout/stderr truncation flags
   - `nullstate scrub` creates non-destructive scrubbed run copies and `scrub-report.json`
 - Sandbox startup hardening:
   - `sandbox up` now verifies that a named Docker container remains running after `docker run -d`
@@ -273,6 +273,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - CI summaries, fail-on-severity gates, and baseline comparison
 - upload dry-run planning for future cloud ingestion
 - red-tool policy scaffold and standalone `policy-result.json`
+- scenario/backend allowlists in red-tool policy files
 - unsigned evidence integrity manifests through `nullstate evidence-manifest`
 - evidence hash verification through `nullstate evidence-verify`
 

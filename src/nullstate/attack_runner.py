@@ -20,6 +20,8 @@ class AttackToolResult:
     command: list[str]
     target_url: str
     target_classification: str
+    scenario_name: str | None
+    backend_name: str | None
     stage: str
     returncode: int
     stdout: str
@@ -47,6 +49,8 @@ def run_attack_script(
     target_url: str,
     stage: str,
     manifest_path: Path | None = None,
+    scenario_name: str | None = None,
+    backend_name: str | None = None,
     timeout_seconds: int = 30,
     max_output_bytes: int = 12_000,
     policy: AttackPolicy | None = None,
@@ -61,6 +65,8 @@ def run_attack_script(
         policy,
         target_classification=target_classification,
         command_policy_id=command_policy_id,
+        scenario_name=scenario_name,
+        backend_name=backend_name,
     )
 
     command = [
@@ -92,6 +98,8 @@ def run_attack_script(
         command=command,
         target_url=target_url,
         target_classification=target_classification,
+        scenario_name=scenario_name,
+        backend_name=backend_name,
         stage=stage,
         returncode=completed.returncode,
         stdout=stdout,

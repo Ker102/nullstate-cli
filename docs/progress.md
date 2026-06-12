@@ -54,6 +54,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Writes `evidence-verification.json` with pass/fail status, checked artifact count, and mismatch details.
   - Exits with code `2` when a manifest-listed artifact is missing or changed.
   - Keeps cryptographic signature verification as future hardening.
+- `feat: add policy scenario backend allowlists` (this checkpoint)
+  - Extended generated policy files with `allowed_scenarios` and `allowed_backends`.
+  - `run --policy-file` now enforces scenario, backend, target classification, and command policy ID before generated `attack.py` execution.
+  - Older policy files without scenario/backend fields remain valid and keep enforcing their existing fields.
 
 ## In Progress
 
@@ -67,6 +71,6 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Next Candidates
 
-- Richer per-scenario policy fields beyond target classification and command policy ID.
+- Per-command argument, timeout, and output-size controls in the red-tool policy file.
 - Upload dry-run to live upload transition once an ingestion API exists.
 - Cryptographic signing and signature verification for `evidence-manifest.json`.

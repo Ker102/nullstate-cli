@@ -339,6 +339,8 @@ def run(
         target_url=attack_target_url,
         stage="before",
         manifest_path=attack_manifest_path,
+        scenario_name=scenario_spec.name,
+        backend_name=backend.name,
         policy=attack_policy,
     )
     events.write("red-tool", "Allowlisted attack command completed", **before_tool.to_dict())
@@ -424,6 +426,8 @@ def run(
         target_url=attack_target_url,
         stage="after",
         manifest_path=attack_manifest_path,
+        scenario_name=scenario_spec.name,
+        backend_name=backend.name,
         policy=attack_policy,
     )
     events.write("red-tool", "Allowlisted attack command completed", **after_tool.to_dict())

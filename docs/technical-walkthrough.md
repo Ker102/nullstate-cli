@@ -303,7 +303,7 @@ This gives the report real command evidence while avoiding unrestricted red-agen
 Enterprise guardrails for this layer:
 
 - The command policy is scenario-template based. The model can reason about the attack path, but it cannot choose an arbitrary shell command.
-- `nullstate policy init` creates a policy file and `run --policy-file` enforces allowed target classifications and command policy IDs before execution.
+- `nullstate policy init` creates a policy file and `run --policy-file` enforces allowed scenarios, backends, target classifications, and command policy IDs before execution.
 - Runtime targets should remain local sandbox endpoints unless a future `--allow-live-cloud` flag is implemented and recorded.
 - `red-tool` events include a command schema version and reproducibility hashes for the generated `attack.py` and manifest.
 - Probe stdout and stderr should be capped before upload, ticket attachment, or long-term evidence retention.
