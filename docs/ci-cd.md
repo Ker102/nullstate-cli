@@ -72,18 +72,20 @@ merge to main
 -> update CHANGELOG.md
 -> tag v0.1.0
 -> release workflow builds package
+-> sbom.spdx.json records package and runtime dependencies
 -> release-manifest.json records SHA-256 digests and sizes
--> GitHub artifact attestations bind provenance to dist/*
+-> GitHub artifact attestations bind provenance and SBOM data to dist/*
 -> GitHub release created with generated notes
 ```
 
-After a tagged release is published, verify package provenance with GitHub CLI:
+After a tagged release is published, verify package provenance and the attached SBOM predicate with GitHub CLI:
 
 ```powershell
 gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3
 ```
 
-`release-manifest.json` is uploaded beside the wheel and sdist. It is a checksum index for release assets; GitHub artifact attestations provide the build provenance for those assets.
+`release-manifest.json` is uploaded beside the wheel, sdist, and `sbom.spdx.json`. It is a checksum index for release assets; GitHub artifact attestations provide build provenance and bind the SPDX SBOM predicate to those assets.
 
 ## Required repository settings
 

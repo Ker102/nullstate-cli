@@ -245,8 +245,9 @@ Before businesses can rely on it, the product needs:
 6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
 7. SARIF or JSON export for security tooling. SARIF export and JSON policy-result output are now available.
 8. Reproducible run manifests. `nullstate evidence-manifest` inventories shareable artifacts with SHA-256 hashes and optional HMAC evidence signing, and `nullstate evidence-verify` checks them later.
-9. Versioned remediation rules.
-10. Safe defaults that never target real cloud unless explicitly enabled.
+9. Release supply-chain provenance. Tagged releases publish a checksum manifest, generate `sbom.spdx.json`, and create GitHub artifact attestations for package artifacts and the SBOM predicate.
+10. Versioned remediation rules.
+11. Safe defaults that never target real cloud unless explicitly enabled.
 
 ## Next Feature Priorities
 
@@ -274,7 +275,8 @@ Before businesses can rely on it, the product needs:
 - evidence hash verification through `nullstate evidence-verify`
 - signed run evidence through optional HMAC evidence-manifest signatures
 - release package provenance through GitHub artifact attestations
-- SBOM attestation as future supply-chain hardening
+- release SBOM attestation through GitHub artifact attestations
+- richer resolved-dependency SBOMs from lock files
 
 ### P3: Growth and brand
 

@@ -22,6 +22,87 @@ jobs:
         run: |
           python -m pip install build
           python -m build
+      - name: Generate release SBOM
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          import tomllib
+          from datetime import UTC, datetime
+          from pathlib import Path
+
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          project = pyproject["project"]
+          package_name = project["name"]
+          tag = os.environ["GITHUB_REF_NAME"]
+          version = tag.removeprefix("v")
+
+          def spdx_id(value):
+              normalized = re.sub(r"[^A-Za-z0-9.-]", "-", value)
+              return f"SPDXRef-Package-{normalized}"
+
+          root_id = spdx_id(package_name)
+          packages = [
+              {
+                  "SPDXID": root_id,
+                  "copyrightText": "NOASSERTION",
+                  "downloadLocation": "NOASSERTION",
+                  "filesAnalyzed": False,
+                  "licenseConcluded": "NOASSERTION",
+                  "licenseDeclared": "NOASSERTION",
+                  "name": package_name,
+                  "versionInfo": version,
+              }
+          ]
+          relationships = [
+              {
+                  "relatedSpdxElement": root_id,
+                  "relationshipType": "DESCRIBES",
+                  "spdxElementId": "SPDXRef-DOCUMENT",
+              }
+          ]
+
+          for dependency in project.get("dependencies", []):
+              dependency_name = re.split(r"[<>=!~;\[\], ]", dependency, maxsplit=1)[0]
+              dependency_id = spdx_id(dependency_name)
+              packages.append(
+                  {
+                      "SPDXID": dependency_id,
+                      "copyrightText": "NOASSERTION",
+                      "downloadLocation": "NOASSERTION",
+                      "filesAnalyzed": False,
+                      "licenseConcluded": "NOASSERTION",
+                      "licenseDeclared": "NOASSERTION",
+                      "name": dependency_name,
+                  }
+              )
+              relationships.append(
+                  {
+                      "relatedSpdxElement": dependency_id,
+                      "relationshipType": "DEPENDS_ON",
+                      "spdxElementId": root_id,
+                  }
+              )
+
+          sbom = {
+              "SPDXID": "SPDXRef-DOCUMENT",
+              "creationInfo": {
+                  "created": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                  "creators": ["Tool: nullstate-release-workflow"],
+              },
+              "dataLicense": "CC0-1.0",
+              "documentNamespace": f"https://github.com/Ker102/nullstate-cli/releases/tag/{tag}/sbom.spdx.json",
+              "name": f"{package_name}-{version}",
+              "packages": packages,
+              "relationships": relationships,
+              "spdxVersion": "SPDX-2.3",
+          }
+          Path("dist/sbom.spdx.json").write_text(
+              json.dumps(sbom, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
       - name: Generate release manifest
         run: |
           python - <<'PY'
@@ -59,6 +140,11 @@ jobs:
         uses: actions/attest@v4
         with:
           subject-path: dist/*
+      - name: Attest release SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/*
+          sbom-path: dist/sbom.spdx.json
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

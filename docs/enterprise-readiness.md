@@ -23,6 +23,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Evidence integrity manifest | implemented | `nullstate evidence-manifest` writes SHA-256 artifact inventory with optional HMAC evidence signing |
 | Evidence manifest verification | implemented | `nullstate evidence-verify` detects missing or changed manifest artifacts, copied manifests, and invalid HMAC signatures |
 | Release provenance | implemented | tagged release workflow writes `release-manifest.json` and creates GitHub artifact attestations for `dist/*` |
+| Release SBOM | implemented | tagged release workflow writes `sbom.spdx.json` and attests it with GitHub artifact attestations |
 
 ## Required Before Enterprise Claims
 
@@ -77,7 +78,7 @@ These fields make evidence reproducible and easier to audit in CI, support, and 
 
 `nullstate evidence-manifest` adds a run-level artifact inventory for support, case-study, and future ingestion workflows. It records SHA-256 hashes and file sizes for shareable artifacts while excluding copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. `--signing-key-env` adds a shared-key HMAC-SHA256 evidence signature using a secret from the environment; the key value is never written to the manifest. `nullstate evidence-verify` recomputes recorded hashes and writes `evidence-verification.json`, exiting with code `2` when a listed artifact is missing, changed, tied to a different declared run identity, or has an invalid signature.
 
-Tagged package releases write `release-manifest.json` with SHA-256 digests and use GitHub artifact attestations for `dist/*`. This is release build provenance; it is separate from run evidence HMAC signatures.
+Tagged package releases write `release-manifest.json` with SHA-256 digests and `sbom.spdx.json` with the root package plus declared runtime dependencies. GitHub artifact attestations cover both build provenance and the SPDX SBOM predicate for `dist/*`. This is release supply-chain provenance; it is separate from run evidence HMAC signatures.
 
 ### Artifact Scrubbing
 
@@ -108,7 +109,7 @@ If a report says "exploited", it should include observed command evidence or exp
 ## Near-Term Readiness Tasks
 
 1. Run live LocalStack Azure validation and document emulator-specific limitations.
-2. Add SBOM attestation for release artifacts.
+2. Expand release SBOM generation from declared dependencies to resolved lockfile data.
 3. Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.
 
 ## Commercial Boundary

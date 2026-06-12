@@ -97,7 +97,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Hardened the tag release workflow with GitHub artifact attestation permissions.
   - Added `release-manifest.json` with SHA-256 digests and sizes for built wheel/sdist artifacts.
   - Added `actions/attest@v4` provenance attestation for `dist/*` release assets.
-  - SBOM attestation remains future supply-chain hardening.
+- `ci: add release sbom attestation` (this checkpoint)
+  - Added `sbom.spdx.json` generation to the tag release workflow.
+  - The SBOM records the root package and declared runtime dependencies in SPDX 2.3 JSON.
+  - Added a GitHub artifact attestation for the SBOM predicate over `dist/*`.
+  - Documented package provenance and SBOM attestation verification commands.
 
 ## In Progress
 
@@ -112,5 +116,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- SBOM attestation for release artifacts.
+- Richer resolved-dependency SBOM generation once a lockfile-based release pipeline exists.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

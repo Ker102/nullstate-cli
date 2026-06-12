@@ -28,10 +28,30 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("attestations: write", text)
         self.assertIn("python -m build", text)
         self.assertIn("release-manifest.json", text)
+        self.assertIn("sbom.spdx.json", text)
+        self.assertIn("spdxVersion", text)
+        self.assertIn("tomllib", text)
+        self.assertIn("relationships", text)
+        self.assertIn('r"[<>=!~;\\[\\], ]"', text)
         self.assertIn("hashlib.sha256", text)
         self.assertIn("actions/attest@v4", text)
         self.assertIn("subject-path: dist/*", text)
+        self.assertIn("Attest release SBOM", text)
+        self.assertIn("sbom-path: dist/sbom.spdx.json", text)
         self.assertIn('gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes', text)
+
+    def test_release_docs_include_sbom_attestation_verification(self):
+        docs_text = "\n".join(
+            [
+                Path("README.md").read_text(encoding="utf-8"),
+                Path("docs/ci-cd.md").read_text(encoding="utf-8"),
+            ]
+        )
+
+        self.assertIn(
+            "gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3",
+            docs_text,
+        )
 
 
 if __name__ == "__main__":

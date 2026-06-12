@@ -282,6 +282,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - review-hardening fixes for fail-closed `policy-result` inputs, copied evidence manifests, and malformed manifest CLI errors
 - default-off live-cloud approval gate through `nullstate run --allow-live-cloud`
 - release manifest and GitHub artifact attestations for tagged package releases
+- release SBOM generation and SBOM artifact attestation for tagged package releases
 
 Do not jump straight to full SaaS before stabilizing:
 
