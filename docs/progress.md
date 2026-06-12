@@ -110,6 +110,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 - `docs: align productization status wording` (this checkpoint)
   - Removed older future-tense scrubber and release-provenance wording from security, case-study, failure-mode, and README status docs.
   - Kept future scope focused on broader redaction rules, richer SBOMs, package signing, and live ingestion.
+- `ci: generate sbom from installed wheel` (this checkpoint)
+  - Release workflow now installs the built wheel into `.sbom-venv` before generating `sbom.spdx.json`.
+  - SBOM packages now come from installed runtime distributions and include package versions.
+  - SBOM dependency relationships are derived from installed package metadata when both sides are present.
 
 ## In Progress
 
@@ -124,5 +128,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Richer resolved-dependency SBOM generation once a lockfile-based release pipeline exists.
+- Package signing and richer external SBOM validation.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.

@@ -24,7 +24,11 @@ jobs:
           python -m build
       - name: Generate release SBOM
         run: |
-          python - <<'PY'
+          python -m venv .sbom-venv
+          .sbom-venv/bin/python -m pip install --upgrade pip
+          .sbom-venv/bin/python -m pip install dist/*.whl
+          .sbom-venv/bin/python - <<'PY'
+          import importlib.metadata
           import json
           import os
           import re
@@ -36,25 +40,46 @@ jobs:
           project = pyproject["project"]
           package_name = project["name"]
           tag = os.environ["GITHUB_REF_NAME"]
-          version = tag.removeprefix("v")
+          excluded_tools = {"pip", "setuptools", "wheel"}
+
+          def normalized_name(value):
+              return re.sub(r"[-_.]+", "-", value).lower()
 
           def spdx_id(value):
               normalized = re.sub(r"[^A-Za-z0-9.-]", "-", value)
               return f"SPDXRef-Package-{normalized}"
 
+          installed_distributions = {}
+          for distribution in importlib.metadata.distributions():
+              name = distribution.metadata.get("Name")
+              if not name:
+                  continue
+              normalized = normalized_name(name)
+              if normalized in excluded_tools:
+                  continue
+              installed_distributions[normalized] = distribution
+
+          root_distribution = installed_distributions.get(normalized_name(package_name))
+          if root_distribution is None:
+              raise SystemExit(f"Package {package_name!r} was not installed into the SBOM environment.")
+
           root_id = spdx_id(package_name)
-          packages = [
-              {
-                  "SPDXID": root_id,
-                  "copyrightText": "NOASSERTION",
-                  "downloadLocation": "NOASSERTION",
-                  "filesAnalyzed": False,
-                  "licenseConcluded": "NOASSERTION",
-                  "licenseDeclared": "NOASSERTION",
-                  "name": package_name,
-                  "versionInfo": version,
-              }
-          ]
+          packages = []
+          for _, distribution in sorted(installed_distributions.items()):
+              name = distribution.metadata["Name"]
+              packages.append(
+                  {
+                      "SPDXID": spdx_id(name),
+                      "copyrightText": "NOASSERTION",
+                      "downloadLocation": "NOASSERTION",
+                      "filesAnalyzed": False,
+                      "licenseConcluded": "NOASSERTION",
+                      "licenseDeclared": "NOASSERTION",
+                      "name": name,
+                      "versionInfo": distribution.version,
+                  }
+              )
+
           relationships = [
               {
                   "relatedSpdxElement": root_id,
@@ -62,28 +87,27 @@ jobs:
                   "spdxElementId": "SPDXRef-DOCUMENT",
               }
           ]
-
-          for dependency in project.get("dependencies", []):
-              dependency_name = re.split(r"[<>=!~;\[\], ]", dependency, maxsplit=1)[0]
-              dependency_id = spdx_id(dependency_name)
-              packages.append(
-                  {
-                      "SPDXID": dependency_id,
-                      "copyrightText": "NOASSERTION",
-                      "downloadLocation": "NOASSERTION",
-                      "filesAnalyzed": False,
-                      "licenseConcluded": "NOASSERTION",
-                      "licenseDeclared": "NOASSERTION",
-                      "name": dependency_name,
-                  }
-              )
-              relationships.append(
-                  {
-                      "relatedSpdxElement": dependency_id,
-                      "relationshipType": "DEPENDS_ON",
-                      "spdxElementId": root_id,
-                  }
-              )
+          relationship_keys = {("SPDXRef-DOCUMENT", root_id, "DESCRIBES")}
+          for _, distribution in sorted(installed_distributions.items()):
+              source_name = distribution.metadata["Name"]
+              source_id = spdx_id(source_name)
+              for requirement in distribution.requires or []:
+                  dependency_name = re.split(r"[<>=!~;\[\], ]", requirement, maxsplit=1)[0]
+                  dependency = installed_distributions.get(normalized_name(dependency_name))
+                  if dependency is None:
+                      continue
+                  dependency_id = spdx_id(dependency.metadata["Name"])
+                  key = (source_id, dependency_id, "DEPENDS_ON")
+                  if key in relationship_keys or source_id == dependency_id:
+                      continue
+                  relationship_keys.add(key)
+                  relationships.append(
+                      {
+                          "relatedSpdxElement": dependency_id,
+                          "relationshipType": "DEPENDS_ON",
+                          "spdxElementId": source_id,
+                      }
+                  )
 
           sbom = {
               "SPDXID": "SPDXRef-DOCUMENT",
@@ -93,7 +117,7 @@ jobs:
               },
               "dataLicense": "CC0-1.0",
               "documentNamespace": f"https://github.com/Ker102/nullstate-cli/releases/tag/{tag}/sbom.spdx.json",
-              "name": f"{package_name}-{version}",
+              "name": f"{package_name}-{root_distribution.version}",
               "packages": packages,
               "relationships": relationships,
               "spdxVersion": "SPDX-2.3",
