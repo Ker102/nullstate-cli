@@ -73,6 +73,7 @@ merge to main
 -> tag v0.1.0
 -> release workflow builds package
 -> sbom.spdx.json records the installed wheel and runtime dependency versions
+-> SBOM validation checks required package fields and root-package relationships
 -> release-manifest.json records SHA-256 digests and sizes
 -> GitHub artifact attestations bind provenance and SBOM data to dist/*
 -> GitHub release created with generated notes
@@ -85,7 +86,7 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
 gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3
 ```
 
-`release-manifest.json` is uploaded beside the wheel, sdist, and `sbom.spdx.json`. It is a checksum index for release assets; GitHub artifact attestations provide build provenance and bind the SPDX SBOM predicate to those assets. The SBOM is generated from the built wheel installed into a clean `.sbom-venv`, so runtime package versions are captured from the installed release artifact.
+`release-manifest.json` is uploaded beside the wheel, sdist, and `sbom.spdx.json`. It is a checksum index for release assets; GitHub artifact attestations provide build provenance and bind the SPDX SBOM predicate to those assets. The SBOM is generated from the built wheel installed into a clean `.sbom-venv`, so runtime package versions are captured from the installed release artifact. The workflow validates SPDX version, package fields, root package presence, and relationships before manifest generation or attestation.
 
 ## Required repository settings
 

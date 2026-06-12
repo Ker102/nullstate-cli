@@ -127,6 +127,58 @@ jobs:
               encoding="utf-8",
           )
           PY
+      - name: Validate release SBOM
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          sbom_path = Path("dist/sbom.spdx.json")
+          sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
+          if sbom.get("spdxVersion") != "SPDX-2.3":
+              raise SystemExit("SBOM must use SPDX-2.3.")
+
+          packages = sbom.get("packages")
+          if not isinstance(packages, list) or not packages:
+              raise SystemExit("SBOM must contain at least one package.")
+
+          required_package_fields = {"SPDXID", "name", "versionInfo"}
+          forbidden_packages = {"pip", "setuptools", "wheel"}
+          package_ids = set()
+          root_package_id = None
+          for package in packages:
+              missing = required_package_fields - set(package)
+              if missing:
+                  raise SystemExit(f"SBOM package is missing required fields: {sorted(missing)}")
+              package_name = str(package["name"])
+              normalized_name = package_name.lower().replace("_", "-")
+              if normalized_name in forbidden_packages:
+                  raise SystemExit(f"SBOM must not include packaging tool: {package_name}")
+              package_ids.add(package["SPDXID"])
+              if normalized_name == "nullstate":
+                  root_package_id = package["SPDXID"]
+
+          if root_package_id is None:
+              raise SystemExit("SBOM must include the nullstate root package.")
+
+          relationships = sbom.get("relationships")
+          if not isinstance(relationships, list) or not any(
+              relationship.get("spdxElementId") == "SPDXRef-DOCUMENT"
+              and relationship.get("relationshipType") == "DESCRIBES"
+              and relationship.get("relatedSpdxElement") == root_package_id
+              for relationship in relationships
+          ):
+              raise SystemExit("SBOM must describe the nullstate root package.")
+
+          missing_relationship_targets = [
+              relationship.get("relatedSpdxElement")
+              for relationship in relationships
+              if relationship.get("relatedSpdxElement") not in package_ids
+              and relationship.get("relatedSpdxElement") != "SPDXRef-DOCUMENT"
+          ]
+          if missing_relationship_targets:
+              raise SystemExit(f"SBOM relationships reference unknown packages: {missing_relationship_targets}")
+          PY
       - name: Generate release manifest
         run: |
           python - <<'PY'

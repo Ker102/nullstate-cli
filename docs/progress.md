@@ -114,6 +114,9 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Release workflow now installs the built wheel into `.sbom-venv` before generating `sbom.spdx.json`.
   - SBOM packages now come from installed runtime distributions and include package versions.
   - SBOM dependency relationships are derived from installed package metadata when both sides are present.
+- `ci: validate release sbom` (this checkpoint)
+  - Added release workflow validation for `dist/sbom.spdx.json` before manifest generation and attestation.
+  - Validation checks SPDX version, required package fields, root package presence, packaging-tool exclusion, and root-package relationships.
 
 ## In Progress
 
@@ -128,5 +131,5 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Next Candidates
 
 - Upload dry-run to live upload transition once an ingestion API exists.
-- Package signing and richer external SBOM validation.
+- Package signing and optional third-party SBOM validation.
 - Live LocalStack Azure validation once the account has Azure Emulator entitlement.
