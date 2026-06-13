@@ -5,10 +5,11 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 
 REMEDIATION_METADATA_SCHEMA_VERSION = 1
+REMEDIATION_METADATA_SCHEMA_ID = "https://schemas.nullstate.dev/remediation-metadata.schema.json"
 REMEDIATION_METADATA_FILENAME = "remediation.json"
 REMEDIATION_RULESET_VERSION = "2026.06.1"
 
@@ -71,7 +72,8 @@ def remediate_scenario_files(scenario_name: str, terraform_dir: Path) -> PatchRe
 
 
 def build_remediation_metadata(scenario_name: str, patch_result: PatchResult) -> dict[str, object]:
-    return {
+    metadata: dict[str, object] = {
+        "$schema": REMEDIATION_METADATA_SCHEMA_ID,
         "schema_version": REMEDIATION_METADATA_SCHEMA_VERSION,
         "scenario": scenario_name,
         "changed": patch_result.changed,
@@ -79,6 +81,46 @@ def build_remediation_metadata(scenario_name: str, patch_result: PatchResult) ->
         "ruleset_version": patch_result.ruleset_version,
         "rules_applied": list(patch_result.rules_applied),
     }
+    errors = validate_remediation_metadata(metadata)
+    if errors:
+        raise ValueError("Invalid remediation metadata: " + "; ".join(errors))
+    return metadata
+
+
+def validate_remediation_metadata(metadata: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(metadata, dict):
+        return ["remediation metadata must be an object"]
+
+    if metadata.get("$schema") != REMEDIATION_METADATA_SCHEMA_ID:
+        errors.append("$schema must reference the nullstate remediation metadata schema")
+    if metadata.get("schema_version") != REMEDIATION_METADATA_SCHEMA_VERSION:
+        errors.append("schema_version must be 1")
+
+    scenario = metadata.get("scenario")
+    if not isinstance(scenario, str) or not scenario.strip():
+        errors.append("scenario is required")
+
+    if not isinstance(metadata.get("changed"), bool):
+        errors.append("changed must be a boolean")
+
+    changed_files = metadata.get("changed_files")
+    if not isinstance(changed_files, list):
+        errors.append("changed_files must be a list")
+    elif any(not isinstance(item, str) or not item.strip() for item in changed_files):
+        errors.append("changed_files must contain nonempty strings")
+
+    ruleset_version = metadata.get("ruleset_version")
+    if not isinstance(ruleset_version, str) or not ruleset_version.strip():
+        errors.append("ruleset_version is required")
+
+    rules_applied = metadata.get("rules_applied")
+    if not isinstance(rules_applied, list):
+        errors.append("rules_applied must be a list")
+    elif any(not isinstance(item, str) or not item.strip() for item in rules_applied):
+        errors.append("rules_applied must contain nonempty strings")
+
+    return errors
 
 
 def _remediate_files(

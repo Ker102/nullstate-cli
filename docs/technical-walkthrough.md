@@ -378,7 +378,7 @@ Each run writes:
 | `attack.py` | Generated constrained attack artifact |
 | `attack-manifest.json` | Scenario, backend, target URL, and resource hints for constrained probes |
 | `remediation.patch` | Terraform remediation diff |
-| `remediation.json` | Versioned deterministic remediation ruleset metadata |
+| `remediation.json` | Schema-validated deterministic remediation ruleset metadata |
 | `metrics.json` | Model calls, token counts, latency, endpoint metrics |
 | `ci-summary.json` | Machine-readable CI verdict when `--ci` is used |
 | `policy-result.json` | Standalone JSON policy decision for an existing run |
@@ -389,6 +389,8 @@ Each run writes:
 | `workspace/` | Copied and remediated IaC workspace |
 
 `nullstate report` opens the latest report by default, including reports nested under named run directories.
+
+`remediation.json` includes a `$schema` pointer to `docs/schemas/remediation-metadata.schema.json`, and generated remediation metadata is validated before it is used by reports, bundles, and run artifacts.
 
 `nullstate bundle` writes `run-bundle.json`, the portable evidence contract for local dashboards, CI upload, support bundles, and future Nullstate Cloud ingestion. The bundle includes a `$schema` pointer to `docs/schemas/run-bundle.schema.json`, and the CLI validates the bundle shape before writing it. The bundle also includes `remediation.json` metadata when available so downstream tools can display the remediation ruleset version and rule IDs.
 

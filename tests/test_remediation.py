@@ -1,12 +1,57 @@
+import json
 import textwrap
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from nullstate.remediation import remediate_scenario_files, remediate_terraform_files
+from nullstate.remediation import (
+    REMEDIATION_METADATA_SCHEMA_ID,
+    PatchResult,
+    build_remediation_metadata,
+    remediate_scenario_files,
+    remediate_terraform_files,
+    validate_remediation_metadata,
+)
 
 
 class RemediationTests(unittest.TestCase):
+    def test_build_remediation_metadata_includes_schema_contract(self):
+        metadata = build_remediation_metadata(
+            "aws-public-s3",
+            PatchResult(
+                changed=True,
+                diff="",
+                changed_files=["main.tf"],
+                rules_applied=("AWS_S3_BLOCK_PUBLIC_ACCESS",),
+            ),
+        )
+
+        self.assertEqual(metadata["$schema"], REMEDIATION_METADATA_SCHEMA_ID)
+        self.assertEqual(metadata["schema_version"], 1)
+        self.assertEqual(metadata["scenario"], "aws-public-s3")
+        self.assertEqual(metadata["changed"], True)
+        self.assertEqual(metadata["changed_files"], ["main.tf"])
+        self.assertEqual(metadata["rules_applied"], ["AWS_S3_BLOCK_PUBLIC_ACCESS"])
+
+    def test_validate_remediation_metadata_reports_contract_errors(self):
+        errors = validate_remediation_metadata({"schema_version": 1})
+
+        self.assertIn("$schema must reference the nullstate remediation metadata schema", errors)
+        self.assertIn("scenario is required", errors)
+        self.assertIn("changed must be a boolean", errors)
+        self.assertIn("changed_files must be a list", errors)
+        self.assertIn("ruleset_version is required", errors)
+        self.assertIn("rules_applied must be a list", errors)
+
+    def test_remediation_metadata_schema_document_matches_generated_contract(self):
+        schema_path = Path("docs/schemas/remediation-metadata.schema.json")
+        self.assertTrue(schema_path.is_file())
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(schema["$id"], REMEDIATION_METADATA_SCHEMA_ID)
+        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertIn("rules_applied", schema["required"])
+
     def test_makes_public_container_private_and_disables_nested_public_items(self):
         with TemporaryDirectory() as raw_tmp:
             tmp = Path(raw_tmp)

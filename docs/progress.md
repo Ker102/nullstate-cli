@@ -169,6 +169,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/schemas/nullstate-policy.schema.json` as the v1 red-tool policy contract.
   - Generated policy files now include a `$schema` pointer.
   - `nullstate policy init` validates generated policy shape before writing and prints validation status.
+- `feat: validate remediation metadata schema` (this checkpoint)
+  - Added `docs/schemas/remediation-metadata.schema.json` as the v1 deterministic remediation metadata contract.
+  - Generated `remediation.json` now includes a `$schema` pointer.
+  - Remediation metadata is validated before reports, bundles, and run artifacts consume it.
 
 ## In Progress
 

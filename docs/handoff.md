@@ -296,7 +296,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - keyless Sigstore release signing for primary release assets
 - manual release dry-run rehearsal before tagging
 - first tagged release verification checklist in the runbook
-- versioned remediation metadata through `remediation.json`, report sections, and run-bundle evidence
+- versioned remediation metadata through schema-validated `remediation.json`, report sections, and run-bundle evidence
 - run-bundle v1 schema documentation and local bundle validation
 - deeper local dashboard evidence view with remediation, bundle contract, and artifact inventory sections
 - enforcing GitHub Actions template under `docs/templates/github-actions/nullstate-enforcing.yml`
