@@ -59,4 +59,4 @@ nullstate is a local-first CLI that analyzes IaC, runs or simulates sandbox atta
 ## Next improvements
 
 - Run live LocalStack Azure validation when the account has Azure Emulator entitlement.
-- Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.
+- Add live-cloud adapters only with provider-specific endpoint allowlists and approval workflows.

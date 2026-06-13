@@ -26,6 +26,10 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertEqual(payload["schema_version"], 1)
             self.assertIn("generated-attack-script-v1", payload["allowed_command_policy_ids"])
             self.assertIn("local-http", payload["allowed_target_classifications"])
+            self.assertIn("localhost", payload["allowed_target_hosts"])
+            self.assertIn("127.0.0.1", payload["allowed_target_hosts"])
+            self.assertIn("localhost.localstack.cloud", payload["allowed_target_hosts"])
+            self.assertIn("*.localhost.localstack.cloud", payload["allowed_target_hosts"])
             self.assertIn("aws-public-s3", payload["allowed_scenarios"])
             self.assertIn("localstack-aws", payload["allowed_backends"])
             self.assertIn("before", payload["allowed_stages"])
@@ -64,6 +68,7 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertEqual(payload["allowed_backends"], ["localstack-aws"])
             self.assertIn("generated-attack-script-v1", payload["allowed_command_policy_ids"])
             self.assertIn("local-http", payload["allowed_target_classifications"])
+            self.assertIn("localhost.localstack.cloud", payload["allowed_target_hosts"])
             self.assertIn("--manifest", payload["allowed_attack_script_args"])
             self.assertEqual(payload["max_timeout_seconds"], 30)
             self.assertEqual(payload["max_output_bytes"], 12000)
@@ -118,6 +123,71 @@ class AttackPolicyTests(unittest.TestCase):
                     stage="before",
                     policy=policy,
                 )
+
+    def test_attack_runner_rejects_policy_denied_target_host(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text("print('allowed script')\n", encoding="utf-8")
+            policy = AttackPolicy(
+                allowed_target_classifications={"external-http"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_target_hosts={"storage.allowed.example"},
+                allowed_scenarios=None,
+                allowed_backends=None,
+                allowed_stages=None,
+                allowed_attack_script_args=None,
+                max_timeout_seconds=None,
+                max_output_bytes=None,
+            )
+
+            with self.assertRaisesRegex(ValueError, "target host"):
+                run_attack_script(
+                    attack_script,
+                    run_dir=run_dir,
+                    target_url="https://storage.example.com/blob",
+                    stage="before",
+                    policy=policy,
+                    allow_live_cloud=True,
+                )
+
+    def test_attack_runner_allows_policy_wildcard_target_host(self):
+        with TemporaryDirectory() as raw_tmp:
+            run_dir = Path(raw_tmp)
+            attack_script = run_dir / "attack.py"
+            attack_script.write_text(
+                "import argparse\n"
+                "parser = argparse.ArgumentParser()\n"
+                "parser.add_argument('--target-url')\n"
+                "parser.add_argument('--stage')\n"
+                "args = parser.parse_args()\n"
+                "print(f'target={args.target_url} stage={args.stage}')\n",
+                encoding="utf-8",
+            )
+            policy = AttackPolicy(
+                allowed_target_classifications={"external-http"},
+                allowed_command_policy_ids={"generated-attack-script-v1"},
+                allowed_target_hosts={"*.blob.core.windows.net"},
+                allowed_scenarios=None,
+                allowed_backends=None,
+                allowed_stages={"before"},
+                allowed_attack_script_args={"--target-url", "--stage"},
+                max_timeout_seconds=30,
+                max_output_bytes=12_000,
+            )
+
+            result = run_attack_script(
+                attack_script,
+                run_dir=run_dir,
+                target_url="https://demo.blob.core.windows.net/container/evidence.txt",
+                stage="before",
+                policy=policy,
+                allow_live_cloud=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.target_classification, "external-http")
+            self.assertIn("target=https://demo.blob.core.windows.net/container/evidence.txt", result.stdout)
 
     def test_attack_runner_rejects_policy_denied_command_policy_id(self):
         with TemporaryDirectory() as raw_tmp:

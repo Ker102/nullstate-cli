@@ -138,7 +138,7 @@ nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 
 `status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
 
-Runtime attack probes stay local by default. Future non-local HTTP(S) probe targets require `--allow-live-cloud`, and the approval is recorded in `events.jsonl`; current built-in scenarios still resolve to local/offline sandbox targets.
+Runtime attack probes stay local by default. Future non-local HTTP(S) probe targets require `--allow-live-cloud`, and the approval is recorded in `events.jsonl`; when a policy file includes `allowed_target_hosts`, the target hostname must also match that allowlist. Current built-in scenarios still resolve to local/offline sandbox targets.
 
 Open the latest report:
 
@@ -338,7 +338,7 @@ nullstate policy validate nullstate-policy.json --output policy-validation.json
 nullstate run examples/aws-public-s3 --offline --mock-agents --policy-file nullstate-policy.json
 ```
 
-The policy file allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, and `local-http`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture. `policy init --scenario` creates a narrower preset for one known scenario/backend pair while keeping the same runner constraints. `nullstate policy validate` checks the policy without running a scenario and exits with code `2` when the file is malformed or invalid.
+The policy file allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, `local-http`, and future `external-http`, target hostnames such as `localhost.localstack.cloud` or `*.blob.core.windows.net`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture. `policy init --scenario` creates a narrower preset for one known scenario/backend pair while keeping the same runner constraints. `nullstate policy validate` checks the policy without running a scenario and exits with code `2` when the file is malformed or invalid.
 
 Create an evidence integrity manifest before attaching a run to a ticket, case study, or support workflow:
 

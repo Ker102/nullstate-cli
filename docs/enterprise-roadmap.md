@@ -239,7 +239,7 @@ Before businesses can rely on it, the product needs:
 
 1. Real exploit probes for core scenarios.
 2. Clear distinction between simulated, inferred, and observed evidence.
-3. Policy-defined command allowlists. Baseline scenario, backend, stage, argument, target, command, timeout, and output enforcement is now available.
+3. Policy-defined command allowlists. Baseline scenario, backend, stage, argument, target classification, target host, command, timeout, and output enforcement is now available.
 4. Artifact scrubbing.
 5. Stable scenario schema.
 6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
@@ -268,7 +268,7 @@ Before businesses can rely on it, the product needs:
 
 ### P2: Enterprise controls
 
-- policy file for allowed scenarios, backends, stages, targets, commands, timeouts, and output limits
+- policy file for allowed scenarios, backends, stages, target classifications, target hosts, commands, timeouts, and output limits
 - baseline and scenario-scoped policy scaffolds through `nullstate policy init`
 - organization-level config
 - evidence integrity manifest through `nullstate evidence-manifest`
@@ -339,7 +339,7 @@ Business:
 ### Days 31-60
 
 - additional AWS/Azure scenario pack
-- policy file for allowed commands/targets
+- policy file for allowed commands, target classifications, and target hosts
 - evidence integrity manifest
 - signed evidence manifest verification
 - case-study-driven landing page

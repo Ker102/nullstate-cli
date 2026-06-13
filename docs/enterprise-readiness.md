@@ -19,7 +19,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Upload scrub preflight | implemented | `nullstate upload --dry-run` records scrub readiness and warns on raw runs |
 | Report evidence classification | implemented | reports distinguish runtime, inconclusive, and offline simulation |
 | Local dashboard and bundle | implemented | `nullstate dashboard`, `nullstate bundle`, and `docs/schemas/run-bundle.schema.json` |
-| Red-tool policy scaffold | implemented | `nullstate policy init`, scenario presets, and `run --policy-file` enforce scenario, backend, stage, argument, target, command, timeout, and output fields |
+| Red-tool policy scaffold | implemented | `nullstate policy init`, scenario presets, and `run --policy-file` enforce scenario, backend, stage, argument, target classification, target host, command, timeout, and output fields |
 | Policy validation artifact | implemented | `nullstate policy validate` writes optional `policy-validation.json` |
 | Evidence integrity manifest | implemented | `nullstate evidence-manifest` writes SHA-256 artifact inventory with optional HMAC evidence signing |
 | Evidence manifest verification | implemented | `nullstate evidence-verify` detects missing or changed manifest artifacts, copied manifests, and invalid HMAC signatures |
@@ -41,7 +41,7 @@ Default runtime targets remain local:
 - `localhost`
 - `localhost.localstack.cloud`
 
-The attack runner rejects non-local HTTP targets by default. Any real cloud mode requires the explicit `--allow-live-cloud` flag, default off. The run records operator approval in `events.jsonl`, and red-tool events record whether the live-cloud gate was enabled for the executed command.
+The attack runner rejects non-local HTTP targets by default. Any real cloud mode requires the explicit `--allow-live-cloud` flag, default off. The run records operator approval in `events.jsonl`, and red-tool events record whether the live-cloud gate was enabled for the executed command. Policy files can additionally constrain HTTP(S) targets with `allowed_target_hosts`, using exact hostnames or `*.domain` wildcard suffixes.
 
 ### Command Allowlist Policy
 
@@ -53,11 +53,11 @@ The red runner should stay template-based. A scenario policy should define:
 - allowed CLI arguments
 - maximum timeout
 - maximum stdout/stderr bytes
-- allowed target URL schemes and host patterns
+- allowed target classifications and host patterns
 
 The model may explain an attack path, but it should not create arbitrary shell commands.
 
-`nullstate policy init` creates the first JSON policy scaffold. `nullstate policy init --scenario <name>` creates a narrower preset for one known scenario/backend pair, which is useful for CI jobs that should not allow every scaffolded scenario. `nullstate policy validate` checks that scaffold before CI runs or local scenarios. `nullstate run --policy-file` enforces allowed scenario names, backend names, stages, generated `attack.py` flags, target classifications, command policy IDs, timeout ceilings, and output-size ceilings before `attack.py` can execute. This is intentionally narrower than a full policy engine, but it creates the product contract for future richer per-scenario command policies.
+`nullstate policy init` creates the first JSON policy scaffold. `nullstate policy init --scenario <name>` creates a narrower preset for one known scenario/backend pair, which is useful for CI jobs that should not allow every scaffolded scenario. `nullstate policy validate` checks that scaffold before CI runs or local scenarios. `nullstate run --policy-file` enforces allowed scenario names, backend names, stages, generated `attack.py` flags, target classifications, target hosts, command policy IDs, timeout ceilings, and output-size ceilings before `attack.py` can execute. This is intentionally narrower than a full policy engine, but it creates the product contract for future richer per-scenario command policies.
 
 ### Event Schema Hardening
 
@@ -123,7 +123,7 @@ If a report says "exploited", it should include observed command evidence or exp
 ## Near-Term Readiness Tasks
 
 1. Run live LocalStack Azure validation and document emulator-specific limitations.
-2. Add live-cloud adapters only after endpoint allowlists and approval workflows are specified.
+2. Add live-cloud adapters only with provider-specific endpoint allowlists and approval workflows.
 
 ## Commercial Boundary
 

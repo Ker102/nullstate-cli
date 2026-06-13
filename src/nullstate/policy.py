@@ -5,11 +5,19 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 
 POLICY_SCHEMA_VERSION = 1
 DEFAULT_POLICY_FILENAME = "nullstate-policy.json"
 DEFAULT_ALLOWED_TARGET_CLASSIFICATIONS = {"offline", "local", "local-http"}
+DEFAULT_ALLOWED_TARGET_HOSTS = {
+    "*.localhost.localstack.cloud",
+    "127.0.0.1",
+    "::1",
+    "localhost",
+    "localhost.localstack.cloud",
+}
 DEFAULT_ALLOWED_COMMAND_POLICY_IDS = {"generated-attack-script-v1"}
 DEFAULT_ALLOWED_ATTACK_SCRIPT_ARGS = {"--manifest", "--stage", "--target-url"}
 DEFAULT_ALLOWED_STAGES = {"after", "before"}
@@ -38,6 +46,7 @@ DEFAULT_ALLOWED_BACKENDS = {
 class AttackPolicy:
     allowed_target_classifications: set[str]
     allowed_command_policy_ids: set[str]
+    allowed_target_hosts: set[str] | None = None
     allowed_scenarios: set[str] | None = None
     allowed_backends: set[str] | None = None
     allowed_stages: set[str] | None = None
@@ -51,6 +60,7 @@ def default_policy_payload() -> dict[str, Any]:
         "schema_version": POLICY_SCHEMA_VERSION,
         "preset": "default",
         "allowed_target_classifications": sorted(DEFAULT_ALLOWED_TARGET_CLASSIFICATIONS),
+        "allowed_target_hosts": sorted(DEFAULT_ALLOWED_TARGET_HOSTS),
         "allowed_command_policy_ids": sorted(DEFAULT_ALLOWED_COMMAND_POLICY_IDS),
         "allowed_scenarios": sorted(DEFAULT_ALLOWED_SCENARIOS),
         "allowed_backends": sorted(DEFAULT_ALLOWED_BACKENDS),
@@ -137,6 +147,7 @@ def load_attack_policy(path: Path | None) -> AttackPolicy | None:
     return AttackPolicy(
         allowed_target_classifications=set(_string_list(payload, "allowed_target_classifications")),
         allowed_command_policy_ids=set(_string_list(payload, "allowed_command_policy_ids")),
+        allowed_target_hosts=_optional_string_set(payload, "allowed_target_hosts"),
         allowed_scenarios=_optional_string_set(payload, "allowed_scenarios"),
         allowed_backends=_optional_string_set(payload, "allowed_backends"),
         allowed_stages=_optional_string_set(payload, "allowed_stages"),
@@ -150,6 +161,7 @@ def enforce_attack_policy(
     policy: AttackPolicy | None,
     *,
     target_classification: str,
+    target_url: str | None = None,
     command_policy_id: str,
     scenario_name: str | None = None,
     backend_name: str | None = None,
@@ -162,6 +174,8 @@ def enforce_attack_policy(
         return
     if target_classification not in policy.allowed_target_classifications:
         raise ValueError(f"Attack target classification {target_classification!r} is not allowed by policy.")
+    if policy.allowed_target_hosts is not None:
+        _enforce_target_host_policy(target_url, policy.allowed_target_hosts)
     if command_policy_id not in policy.allowed_command_policy_ids:
         raise ValueError(f"Attack command policy {command_policy_id!r} is not allowed by policy.")
     if policy.allowed_scenarios is not None and scenario_name not in policy.allowed_scenarios:
@@ -207,6 +221,29 @@ def _optional_positive_int(payload: dict[str, Any], key: str) -> int | None:
     return value
 
 
+def _enforce_target_host_policy(target_url: str | None, allowed_target_hosts: set[str]) -> None:
+    if target_url is None:
+        raise ValueError("Attack target host is required for host allowlist policy enforcement.")
+    parsed = urlparse(target_url)
+    if parsed.scheme not in {"http", "https"}:
+        return
+    hostname = (parsed.hostname or "").lower()
+    if not hostname:
+        raise ValueError("Attack target host is required for host allowlist policy enforcement.")
+    if not _target_host_allowed(hostname, allowed_target_hosts):
+        raise ValueError(f"Attack target host {hostname!r} is not allowed by policy.")
+
+
+def _target_host_allowed(hostname: str, allowed_target_hosts: set[str]) -> bool:
+    normalized_hosts = {host.lower() for host in allowed_target_hosts}
+    if hostname in normalized_hosts:
+        return True
+    for pattern in normalized_hosts:
+        if pattern.startswith("*.") and hostname.endswith(pattern[1:]):
+            return True
+    return False
+
+
 def _read_policy_payload(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -227,6 +264,7 @@ def _policy_validation_warnings(policy: AttackPolicy) -> list[str]:
     optional_fields = {
         "allowed_scenarios": policy.allowed_scenarios,
         "allowed_backends": policy.allowed_backends,
+        "allowed_target_hosts": policy.allowed_target_hosts,
         "allowed_stages": policy.allowed_stages,
         "allowed_attack_script_args": policy.allowed_attack_script_args,
         "max_timeout_seconds": policy.max_timeout_seconds,

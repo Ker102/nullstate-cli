@@ -119,7 +119,7 @@ Working features:
   - attack runner rejects non-local HTTP targets by default
   - allowed targets are offline, local, loopback, localhost, and LocalStack-scoped HTTP(S)
   - `nullstate policy init` creates a red-tool allowlist policy scaffold
-  - `nullstate run --policy-file` enforces allowed scenarios, backends, stages, generated `attack.py` flags, target classifications, command policy IDs, timeout ceilings, and output-size ceilings
+  - `nullstate run --policy-file` enforces allowed scenarios, backends, stages, generated `attack.py` flags, target classifications, target hosts, command policy IDs, timeout ceilings, and output-size ceilings
   - `red-tool` payloads include schema version, scenario, backend, command policy ID, target classification, SHA-256 hashes, and stdout/stderr truncation flags
   - `nullstate scrub` creates non-destructive scrubbed run copies and `scrub-report.json`
 - Sandbox startup hardening:
@@ -277,6 +277,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - red-tool policy scaffold and standalone `policy-result.json`
 - scenario-scoped policy presets through `nullstate policy init --scenario <name>`
 - scenario/backend allowlists in red-tool policy files
+- target host allowlists in red-tool policy files
 - command argument, stage, timeout, and output-size controls in red-tool policy files
 - policy validation output through `nullstate policy validate`
 - evidence integrity manifests with optional HMAC signing through `nullstate evidence-manifest`
@@ -298,7 +299,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 Do not jump straight to full SaaS before stabilizing:
 
 1. live upload implementation after a real ingestion API exists
-2. real cloud ingestion service and real-cloud adapters only after endpoint allowlists are specified
+2. real cloud ingestion service and real-cloud adapters with provider-specific endpoint policies
 
 ## Branch and release guidance
 

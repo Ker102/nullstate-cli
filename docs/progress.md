@@ -153,6 +153,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/templates/github-actions/nullstate-enforcing.yml`.
   - Template preserves SARIF, policy-result, evidence manifest, bundle, and upload dry-run artifacts even when the enforcing gate fails.
   - Documented how to configure scenario, policy, baseline, and severity before copying into `.github/workflows/`.
+- `feat: add target host policy allowlists` (this checkpoint)
+  - Added `allowed_target_hosts` to generated red-tool policy files with conservative local defaults.
+  - `run --policy-file` now enforces exact hostnames and `*.domain` wildcard suffixes for HTTP(S) targets before generated `attack.py` execution.
+  - Older policy files without the host field remain valid and continue enforcing their existing controls.
 
 ## In Progress
 

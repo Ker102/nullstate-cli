@@ -69,6 +69,7 @@ def run_attack_script(
     enforce_attack_policy(
         policy,
         target_classification=target_classification,
+        target_url=target_url,
         command_policy_id=command_policy_id,
         scenario_name=scenario_name,
         backend_name=backend_name,

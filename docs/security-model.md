@@ -30,7 +30,7 @@
 
 V1 defaults to offline mode or LocalStack-style local endpoints. Real cloud execution is out of scope by default.
 
-Runtime attack probes target only local sandbox URLs such as `offline://...`, `local://...`, `127.0.0.1`, `localhost`, or `localhost.localstack.cloud` by default. Non-local HTTP(S) attack targets require the explicit `--allow-live-cloud` gate and record that approval in the run events. Built-in scenarios still resolve to local/offline sandbox targets until a real cloud adapter is added, so reports should not describe a run as real-cloud validation unless the target and event evidence show that mode.
+Runtime attack probes target only local sandbox URLs such as `offline://...`, `local://...`, `127.0.0.1`, `localhost`, or `localhost.localstack.cloud` by default. Non-local HTTP(S) attack targets require the explicit `--allow-live-cloud` gate and record that approval in the run events. When `run --policy-file` is used, `allowed_target_hosts` can further require the target hostname to match an exact hostname or a `*.domain` wildcard suffix. Built-in scenarios still resolve to local/offline sandbox targets until a real cloud adapter is added, so reports should not describe a run as real-cloud validation unless the target and event evidence show that mode.
 
 ## Secret handling
 
@@ -62,6 +62,7 @@ This allows demos to show real command execution against local sandbox endpoints
 Enterprise hardening should add:
 
 - explicit allowlist policy for each scenario and backend pair
+- target host allowlists for any live-cloud HTTP(S) adapter
 - publish-time artifact scrubber with organization-specific redaction rules
 - `--allow-live-cloud` gate, default off
 
