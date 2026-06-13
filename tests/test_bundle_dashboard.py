@@ -74,6 +74,14 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertIn("nullstate local dashboard", html)
             self.assertIn("Evidence timeline", html)
             self.assertIn("AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED", html)
+            self.assertIn("Remediation", html)
+            self.assertIn("AWS_S3_BLOCK_PUBLIC_ACCESS", html)
+            self.assertIn("Bundle contract", html)
+            self.assertIn(BUNDLE_SCHEMA_ID, html)
+            self.assertIn("Artifacts", html)
+            self.assertIn("report.md", html)
+            self.assertIn("border-radius: 8px", html)
+            self.assertIn("letter-spacing: 0", html)
             self.assertIn("Dashboard:", completed.stdout)
 
     def test_scrub_command_writes_sanitized_run_copy(self):

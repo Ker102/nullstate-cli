@@ -292,13 +292,13 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - first tagged release verification checklist in the runbook
 - versioned remediation metadata through `remediation.json`, report sections, and run-bundle evidence
 - run-bundle v1 schema documentation and local bundle validation
+- deeper local dashboard evidence view with remediation, bundle contract, and artifact inventory sections
 
 Do not jump straight to full SaaS before stabilizing:
 
-1. local dashboard workflow depth
-2. richer GitHub Actions examples and integration templates
-3. live upload implementation after a real ingestion API exists
-4. real cloud ingestion service and real-cloud adapters only after endpoint allowlists are specified
+1. richer GitHub Actions examples and integration templates
+2. live upload implementation after a real ingestion API exists
+3. real cloud ingestion service and real-cloud adapters only after endpoint allowlists are specified
 
 ## Branch and release guidance
 

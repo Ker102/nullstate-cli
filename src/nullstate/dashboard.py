@@ -30,8 +30,11 @@ def render_dashboard(bundle: dict[str, Any]) -> str:
     findings = evidence.get("findings") if isinstance(evidence, dict) else []
     events = evidence.get("events") if isinstance(evidence, dict) else []
     metrics = evidence.get("metrics") if isinstance(evidence, dict) else {}
+    remediation = evidence.get("remediation") if isinstance(evidence, dict) else {}
+    artifacts = bundle.get("artifacts")
 
     finding_count = len(findings) if isinstance(findings, list) else 0
+    artifact_count = len(artifacts) if isinstance(artifacts, list) else 0
     event_list = events if isinstance(events, list) else []
     red_tool_count = len([event for event in event_list if isinstance(event, dict) and event.get("phase") == "red-tool"])
     model_calls: list[Any] = []
@@ -47,17 +50,18 @@ def render_dashboard(bundle: dict[str, Any]) -> str:
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>nullstate run dashboard</title>
   <style>
-    body {{ font-family: Inter, Segoe UI, Arial, sans-serif; margin: 0; background: #08111f; color: #e6edf7; }}
-    header {{ padding: 32px; background: linear-gradient(135deg, #0f2a44, #111827); border-bottom: 1px solid #203047; }}
+    body {{ font-family: Inter, Segoe UI, Arial, sans-serif; margin: 0; background: #10131a; color: #eef3f8; }}
+    header {{ padding: 32px; background: #132238; border-bottom: 3px solid #2f9e8f; }}
     main {{ padding: 24px 32px 48px; }}
     .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }}
-    .card {{ background: #0f172a; border: 1px solid #233047; border-radius: 14px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }}
+    .card {{ background: #171b24; border: 1px solid #364052; border-radius: 8px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.22); }}
     .metric {{ font-size: 32px; font-weight: 700; margin: 6px 0; }}
-    .label {{ color: #9fb3c8; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }}
-    pre {{ white-space: pre-wrap; word-break: break-word; background: #030712; padding: 14px; border-radius: 10px; border: 1px solid #1f2937; }}
+    .label {{ color: #b5c4ce; font-size: 13px; text-transform: uppercase; letter-spacing: 0; }}
+    pre {{ white-space: pre-wrap; word-break: break-word; background: #0b0e13; padding: 14px; border-radius: 8px; border: 1px solid #303846; }}
     table {{ width: 100%; border-collapse: collapse; }}
-    td, th {{ border-bottom: 1px solid #26364d; padding: 10px; text-align: left; vertical-align: top; }}
-    a {{ color: #60a5fa; }}
+    td, th {{ border-bottom: 1px solid #384455; padding: 10px; text-align: left; vertical-align: top; }}
+    code {{ color: #8ee6d6; }}
+    a {{ color: #8ec5ff; }}
   </style>
 </head>
 <body>
@@ -72,10 +76,23 @@ def render_dashboard(bundle: dict[str, Any]) -> str:
       <div class="card"><div class="label">Findings</div><div class="metric">{finding_count}</div></div>
       <div class="card"><div class="label">Red tool events</div><div class="metric">{red_tool_count}</div></div>
       <div class="card"><div class="label">Model calls</div><div class="metric">{len(model_calls)}</div></div>
+      <div class="card"><div class="label">Artifacts</div><div class="metric">{artifact_count}</div></div>
     </section>
     <section class="card" style="margin-top: 20px;">
       <h2>Findings</h2>
       {_render_findings(findings)}
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Remediation</h2>
+      {_render_remediation(remediation)}
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Bundle contract</h2>
+      {_render_bundle_contract(bundle)}
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Artifacts</h2>
+      {_render_artifacts(artifacts)}
     </section>
     <section class="card" style="margin-top: 20px;">
       <h2>Evidence timeline</h2>
@@ -111,6 +128,56 @@ def _render_findings(findings: Any) -> str:
             "</tr>"
         )
     return "<table><thead><tr><th>Severity</th><th>Rule</th><th>Resource</th><th>Summary</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
+
+
+def _render_remediation(remediation: Any) -> str:
+    if not isinstance(remediation, dict) or not remediation:
+        return "<p>No remediation metadata.</p>"
+    rules = remediation.get("rules_applied")
+    rule_rows = []
+    if isinstance(rules, list):
+        for rule in rules:
+            rule_rows.append(f"<tr><td>{html.escape(str(rule))}</td></tr>")
+    rules_table = "<p>No rules recorded.</p>"
+    if rule_rows:
+        rules_table = "<table><thead><tr><th>Rule ID</th></tr></thead><tbody>" + "".join(rule_rows) + "</tbody></table>"
+    changed_files = remediation.get("changed_files")
+    changed_count = len(changed_files) if isinstance(changed_files, list) else 0
+    return (
+        "<p>"
+        f"Ruleset: <code>{html.escape(str(remediation.get('ruleset_version', 'unknown')))}</code> "
+        f"Scenario: <code>{html.escape(str(remediation.get('scenario', 'unknown')))}</code> "
+        f"Changed files: <strong>{changed_count}</strong>"
+        "</p>"
+        + rules_table
+    )
+
+
+def _render_bundle_contract(bundle: dict[str, Any]) -> str:
+    return (
+        "<table><tbody>"
+        f"<tr><th>Schema</th><td><code>{html.escape(str(bundle.get('$schema', 'unknown')))}</code></td></tr>"
+        f"<tr><th>Version</th><td><code>{html.escape(str(bundle.get('schema_version', 'unknown')))}</code></td></tr>"
+        f"<tr><th>Generated</th><td>{html.escape(str(bundle.get('generated_at', 'unknown')))}</td></tr>"
+        "</tbody></table>"
+    )
+
+
+def _render_artifacts(artifacts: Any) -> str:
+    if not isinstance(artifacts, list) or not artifacts:
+        return "<p>No artifacts.</p>"
+    rows = []
+    for artifact in artifacts[:100]:
+        if not isinstance(artifact, dict):
+            continue
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(str(artifact.get('path', 'unknown')))}</td>"
+            f"<td>{html.escape(str(artifact.get('size_bytes', 'unknown')))}</td>"
+            f"<td><code>{html.escape(str(artifact.get('sha256', 'unknown'))[:16])}</code></td>"
+            "</tr>"
+        )
+    return "<table><thead><tr><th>Path</th><th>Bytes</th><th>SHA-256 prefix</th></tr></thead><tbody>" + "".join(rows) + "</tbody></table>"
 
 
 def _render_events(events: Any) -> str:

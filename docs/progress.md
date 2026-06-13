@@ -145,6 +145,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/schemas/run-bundle.schema.json` as the v1 portable evidence contract.
   - Generated bundles now include a `$schema` pointer.
   - `nullstate bundle` validates the top-level bundle shape before writing and prints validation status.
+- `feat: deepen local dashboard evidence view` (this checkpoint)
+  - Added remediation metadata, bundle contract, and artifact inventory sections to `dashboard.html`.
+  - Dashboard tests now cover remediation rule IDs, schema pointers, artifacts, and basic layout constraints.
+  - Tightened dashboard card radius and label spacing to match product UI guidance.
 
 ## In Progress
 

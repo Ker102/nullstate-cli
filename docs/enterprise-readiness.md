@@ -90,6 +90,8 @@ Each run also writes `remediation.json` beside `remediation.patch`. The JSON art
 
 `run-bundle.json` is now schema-addressed and validated locally. The generated bundle includes a `$schema` field pointing at `docs/schemas/run-bundle.schema.json`, and `nullstate bundle` fails before writing if the required top-level contract is malformed.
 
+The local dashboard now surfaces the same product-critical evidence contract: findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and report excerpt. It stays single-user and file-based; team history, RBAC, scheduled scans, and compliance workflows remain paid platform scope.
+
 ### Artifact Scrubbing
 
 Before publishing, uploading, or attaching run bundles, run `nullstate scrub`. The scrubber writes a sanitized copy and redacts:

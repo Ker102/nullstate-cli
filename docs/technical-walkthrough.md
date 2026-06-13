@@ -392,7 +392,7 @@ Each run writes:
 
 `nullstate bundle` writes `run-bundle.json`, the portable evidence contract for local dashboards, CI upload, support bundles, and future Nullstate Cloud ingestion. The bundle includes a `$schema` pointer to `docs/schemas/run-bundle.schema.json`, and the CLI validates the bundle shape before writing it. The bundle also includes `remediation.json` metadata when available so downstream tools can display the remediation ruleset version and rule IDs.
 
-`nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login.
+`nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login. It summarizes findings, remediation metadata, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt.
 
 `nullstate sarif` writes `nullstate.sarif`, a SARIF 2.1.0 export with one result per finding for CI and code-scanning upload.
 

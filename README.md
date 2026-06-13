@@ -162,6 +162,8 @@ nullstate sarif
 nullstate upload --dry-run
 ```
 
+The dashboard summarizes findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt from the selected run.
+
 ## Live LocalStack demo path
 
 Use this after Docker, Terraform, LocalStack access, and model endpoint variables are configured.
