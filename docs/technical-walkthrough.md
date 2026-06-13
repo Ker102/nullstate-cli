@@ -402,7 +402,7 @@ Each run writes:
 
 `nullstate policy-result` writes the same style of threshold and baseline decision for an existing run without re-running the scenario.
 
-`nullstate evidence-manifest` writes `evidence-manifest.json`, a deterministic integrity inventory for shareable run artifacts. It excludes copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. Use `--signing-key-env` to attach a shared-key HMAC-SHA256 evidence signature from an environment secret; this is run-evidence signing, not public-key package provenance.
+`nullstate evidence-manifest` writes `evidence-manifest.json`, a deterministic integrity inventory for shareable run artifacts. The manifest includes a `$schema` pointer to `docs/schemas/evidence-manifest.schema.json`, and the CLI validates the shape before writing it. It excludes copied workspaces, Terraform internals, Python caches, the manifest file itself, and verification output. Use `--signing-key-env` to attach a shared-key HMAC-SHA256 evidence signature from an environment secret; this is run-evidence signing, not public-key package provenance.
 
 `nullstate evidence-verify` writes `evidence-verification.json` after recomputing recorded artifact hashes and file sizes. It checks only artifacts listed in the manifest, ignores unrelated new files, verifies HMAC signatures when `--signing-key-env` is supplied, and exits with code `2` when a recorded artifact is missing, changed, copied from another run, or has an invalid signature.
 

@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from nullstate.evidence_manifest import EVIDENCE_MANIFEST_SCHEMA_ID, validate_evidence_manifest
+
 
 class EvidenceManifestTests(unittest.TestCase):
     def test_evidence_manifest_writes_artifact_inventory_without_workspace_or_self(self):
@@ -35,6 +37,7 @@ class EvidenceManifestTests(unittest.TestCase):
             manifest_path = run_dir / "evidence-manifest.json"
             self.assertTrue(manifest_path.is_file())
             payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["$schema"], EVIDENCE_MANIFEST_SCHEMA_ID)
             self.assertEqual(payload["schema_version"], 1)
             self.assertEqual(payload["run"]["id"], run_dir.name)
             self.assertEqual(payload["run"]["scenario"], "aws-public-s3")
@@ -54,6 +57,7 @@ class EvidenceManifestTests(unittest.TestCase):
             self.assertEqual(payload["signing"]["status"], "unsigned")
             self.assertIsNone(payload["signing"]["signature"])
             self.assertIn("Evidence manifest:", completed.stdout)
+            self.assertIn("Evidence manifest validation: passed", completed.stdout)
 
     def test_evidence_manifest_accepts_custom_output_path(self):
         with TemporaryDirectory() as raw_tmp:
@@ -84,6 +88,29 @@ class EvidenceManifestTests(unittest.TestCase):
             self.assertFalse((run_dir / "evidence-manifest.json").exists())
             payload = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["run"]["id"], run_dir.name)
+
+    def test_evidence_manifest_validation_reports_missing_required_fields(self):
+        errors = validate_evidence_manifest({"schema_version": 1})
+
+        self.assertIn("$schema must reference the nullstate evidence-manifest schema", errors)
+        self.assertIn("product must be nullstate", errors)
+        self.assertIn("run.id is required", errors)
+        self.assertIn("artifact_count must match artifacts length", errors)
+        self.assertIn("artifacts must be a list", errors)
+        self.assertIn("integrity.hash_algorithm must be sha256", errors)
+        self.assertIn("signing must be an object", errors)
+
+    def test_evidence_manifest_schema_document_matches_generated_contract(self):
+        schema_path = Path("docs/schemas/evidence-manifest.schema.json")
+
+        self.assertTrue(schema_path.is_file())
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        self.assertEqual(schema["$id"], EVIDENCE_MANIFEST_SCHEMA_ID)
+        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertIn("run", schema["required"])
+        self.assertIn("artifacts", schema["required"])
+        self.assertIn("integrity", schema["required"])
+        self.assertIn("signing", schema["required"])
 
     def test_evidence_manifest_can_be_signed_with_env_key(self):
         with TemporaryDirectory() as raw_tmp:

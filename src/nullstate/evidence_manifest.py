@@ -11,6 +11,7 @@ from . import __version__
 
 
 EVIDENCE_MANIFEST_SCHEMA_VERSION = 1
+EVIDENCE_MANIFEST_SCHEMA_ID = "https://schemas.nullstate.dev/evidence-manifest.schema.json"
 EVIDENCE_MANIFEST_FILENAME = "evidence-manifest.json"
 EVIDENCE_VERIFICATION_FILENAME = "evidence-verification.json"
 
@@ -30,6 +31,10 @@ def write_evidence_manifest(
         signing_key=signing_key,
         signing_key_id=signing_key_id,
     )
+    errors = validate_evidence_manifest(payload)
+    if errors:
+        joined = "; ".join(errors)
+        raise ValueError(f"Invalid evidence manifest: {joined}")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
@@ -91,6 +96,7 @@ def build_evidence_manifest(
     attack_manifest = _read_json(run_dir / "attack-manifest.json", default={})
     artifacts = _artifact_inventory(run_dir, output_path=output_path)
     payload = {
+        "$schema": EVIDENCE_MANIFEST_SCHEMA_ID,
         "schema_version": EVIDENCE_MANIFEST_SCHEMA_VERSION,
         "product": "nullstate",
         "product_version": __version__,
@@ -125,6 +131,77 @@ def build_evidence_manifest(
     if signing_key is not None:
         _sign_manifest(payload, signing_key=signing_key, key_id=signing_key_id)
     return payload
+
+
+def validate_evidence_manifest(manifest: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(manifest, dict):
+        return ["evidence manifest must be an object"]
+
+    if manifest.get("$schema") != EVIDENCE_MANIFEST_SCHEMA_ID:
+        errors.append("$schema must reference the nullstate evidence-manifest schema")
+    if manifest.get("schema_version") != EVIDENCE_MANIFEST_SCHEMA_VERSION:
+        errors.append(f"schema_version must be {EVIDENCE_MANIFEST_SCHEMA_VERSION}")
+    if manifest.get("product") != "nullstate":
+        errors.append("product must be nullstate")
+    if not isinstance(manifest.get("generated_at"), str) or not manifest.get("generated_at"):
+        errors.append("generated_at is required")
+
+    run = manifest.get("run")
+    if not isinstance(run, dict):
+        errors.append("run must be an object")
+        errors.append("run.id is required")
+    elif not run.get("id"):
+        errors.append("run.id is required")
+
+    artifacts = manifest.get("artifacts")
+    artifact_count = manifest.get("artifact_count")
+    if not isinstance(artifacts, list):
+        errors.append("artifacts must be a list")
+    else:
+        for index, artifact in enumerate(artifacts):
+            if not isinstance(artifact, dict):
+                errors.append(f"artifacts[{index}] must be an object")
+                continue
+            if not artifact.get("path"):
+                errors.append(f"artifacts[{index}].path is required")
+            sha256 = artifact.get("sha256")
+            if not isinstance(sha256, str) or len(sha256) != 64 or any(char not in "0123456789abcdef" for char in sha256):
+                errors.append(f"artifacts[{index}].sha256 is required")
+            if not isinstance(artifact.get("size_bytes"), int):
+                errors.append(f"artifacts[{index}].size_bytes must be an integer")
+    if not isinstance(artifact_count, int) or not isinstance(artifacts, list) or artifact_count != len(artifacts):
+        errors.append("artifact_count must match artifacts length")
+
+    integrity = manifest.get("integrity")
+    if not isinstance(integrity, dict):
+        errors.append("integrity must be an object")
+        errors.append("integrity.hash_algorithm must be sha256")
+    else:
+        if integrity.get("hash_algorithm") != "sha256":
+            errors.append("integrity.hash_algorithm must be sha256")
+        if not isinstance(integrity.get("workspace_included"), bool):
+            errors.append("integrity.workspace_included must be a boolean")
+        if not isinstance(integrity.get("excluded_paths"), list):
+            errors.append("integrity.excluded_paths must be a list")
+
+    signing = manifest.get("signing")
+    if not isinstance(signing, dict):
+        errors.append("signing must be an object")
+    else:
+        status = signing.get("status")
+        if status not in {"unsigned", "signed"}:
+            errors.append("signing.status must be unsigned or signed")
+        if status == "signed":
+            if signing.get("algorithm") != "hmac-sha256":
+                errors.append("signing.algorithm must be hmac-sha256 for signed manifests")
+            signature = signing.get("signature")
+            if not isinstance(signature, str) or len(signature) != 64 or any(char not in "0123456789abcdef" for char in signature):
+                errors.append("signing.signature is required for signed manifests")
+        if status == "unsigned" and signing.get("signature") is not None:
+            errors.append("signing.signature must be null for unsigned manifests")
+
+    return errors
 
 
 def _artifact_inventory(run_dir: Path, *, output_path: Path | None) -> list[dict[str, Any]]:

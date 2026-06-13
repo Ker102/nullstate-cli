@@ -161,6 +161,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/schemas/upload-plan.schema.json` as the v1 dry-run upload contract.
   - Generated `upload-plan.json` now includes a `$schema` pointer plus product metadata.
   - `nullstate upload --dry-run` validates the upload plan shape before writing and prints validation status.
+- `feat: validate evidence manifest schema` (this checkpoint)
+  - Added `docs/schemas/evidence-manifest.schema.json` as the v1 shareable evidence inventory contract.
+  - Generated `evidence-manifest.json` now includes a `$schema` pointer.
+  - `nullstate evidence-manifest` validates the manifest shape before writing and prints validation status.
 
 ## In Progress
 

@@ -819,6 +819,7 @@ def evidence_manifest(
         raise typer.BadParameter(str(error)) from error
     manifest_path = output or run_dir / EVIDENCE_MANIFEST_FILENAME
     console.print(f"Evidence manifest: {manifest_path}")
+    console.print("Evidence manifest validation: passed")
     console.print(
         f"Run {payload['run']['id']} - artifacts={payload['artifact_count']} - "
         f"signing={payload['signing']['status']}"

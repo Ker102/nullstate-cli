@@ -244,7 +244,7 @@ Before businesses can rely on it, the product needs:
 5. Stable scenario schema.
 6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
 7. SARIF or JSON export for security tooling. SARIF export and JSON policy-result output are now available.
-8. Reproducible run manifests. `nullstate evidence-manifest` inventories shareable artifacts with SHA-256 hashes and optional HMAC evidence signing, and `nullstate evidence-verify` checks them later.
+8. Reproducible run manifests. `nullstate evidence-manifest` inventories shareable artifacts with SHA-256 hashes and optional HMAC evidence signing, validates the v1 schema contract before writing, and `nullstate evidence-verify` checks them later.
 9. Release supply-chain provenance. Tagged releases publish a checksum manifest, install the built wheel into a clean SBOM environment, generate `sbom.spdx.json`, create GitHub artifact attestations for package artifacts and the SBOM predicate, publish keyless Sigstore signing bundles, and support manual dry-run rehearsal before tagging.
 10. Versioned remediation rules. `remediation.json` records the ruleset version, changed files, and applied deterministic rule IDs for each run.
 11. Safe defaults that never target real cloud unless explicitly enabled.
@@ -273,6 +273,7 @@ Before businesses can rely on it, the product needs:
 - baseline and scenario-scoped policy scaffolds through `nullstate policy init`
 - organization-level config
 - evidence integrity manifest through `nullstate evidence-manifest`
+- evidence-manifest schema validation through `docs/schemas/evidence-manifest.schema.json`
 - evidence hash verification through `nullstate evidence-verify`
 - signed run evidence through optional HMAC evidence-manifest signatures
 - release package provenance through GitHub artifact attestations
