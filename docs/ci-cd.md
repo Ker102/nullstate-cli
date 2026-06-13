@@ -59,7 +59,7 @@ For a stricter copyable workflow, start from `docs/templates/github-actions/null
 
 Run `nullstate scrub` before attaching bundles or reports to public issues, support tickets, or case-study artifacts.
 
-`nullstate upload --dry-run` writes `upload-plan.json` beside the run bundle. It prepares the future Nullstate Cloud ingestion request shape without sending network traffic or storing token values. The plan includes scrub preflight metadata and warns when the selected run does not contain `scrub-report.json`.
+`nullstate upload --dry-run` writes `upload-plan.json` beside the run bundle. It prepares the future Nullstate Cloud ingestion request shape without sending network traffic or storing token values. The plan includes a `$schema` pointer to `docs/schemas/upload-plan.schema.json`, is validated locally before writing, records scrub preflight metadata, and warns when the selected run does not contain `scrub-report.json`.
 
 ## Security checks
 

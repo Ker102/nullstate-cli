@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from nullstate.upload import UPLOAD_PLAN_SCHEMA_ID, validate_upload_plan
+
 
 class UploadCommandTests(unittest.TestCase):
     def test_upload_dry_run_writes_plan_and_bundle_without_network(self):
@@ -38,6 +40,9 @@ class UploadCommandTests(unittest.TestCase):
             self.assertTrue(bundle_path.is_file())
             plan = json.loads(plan_path.read_text(encoding="utf-8"))
             self.assertTrue(plan["dry_run"])
+            self.assertEqual(plan["$schema"], UPLOAD_PLAN_SCHEMA_ID)
+            self.assertEqual(plan["schema_version"], 1)
+            self.assertEqual(plan["product"], "nullstate")
             self.assertEqual(plan["endpoint"], "https://example.invalid/v1/runs")
             self.assertEqual(plan["run"]["id"], run_dir.name)
             self.assertEqual(plan["bundle"]["path"], "run-bundle.json")
@@ -49,6 +54,7 @@ class UploadCommandTests(unittest.TestCase):
             self.assertFalse(plan["preflight"]["scrub"]["upload_recommended"])
             self.assertIn("Run has not been scrubbed", plan["preflight"]["scrub"]["warnings"][0])
             self.assertIn("Upload plan:", completed.stdout)
+            self.assertIn("Upload plan validation: passed", completed.stdout)
             self.assertIn("Run has not been scrubbed", completed.stdout)
 
     def test_upload_dry_run_records_token_presence_without_leaking_secret(self):
@@ -132,6 +138,28 @@ class UploadCommandTests(unittest.TestCase):
             self.assertEqual(plan["preflight"]["scrub"]["scrub_report_path"], "scrub-report.json")
             self.assertEqual(plan["preflight"]["scrub"]["warnings"], [])
             self.assertNotIn("Run has not been scrubbed", completed.stdout)
+
+    def test_upload_plan_validation_reports_missing_required_fields(self):
+        errors = validate_upload_plan({"schema_version": 1})
+
+        self.assertIn("$schema must reference the nullstate upload-plan schema", errors)
+        self.assertIn("product must be nullstate", errors)
+        self.assertIn("run.id is required", errors)
+        self.assertIn("bundle.sha256 is required", errors)
+        self.assertIn("auth.token_value_included must be false", errors)
+        self.assertIn("preflight.scrub must be an object", errors)
+
+    def test_upload_plan_schema_document_matches_generated_contract(self):
+        schema_path = Path("docs/schemas/upload-plan.schema.json")
+
+        self.assertTrue(schema_path.is_file())
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        self.assertEqual(schema["$id"], UPLOAD_PLAN_SCHEMA_ID)
+        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertIn("run", schema["required"])
+        self.assertIn("bundle", schema["required"])
+        self.assertIn("auth", schema["required"])
+        self.assertIn("preflight", schema["required"])
 
 
 def _minimal_run(runs_dir: Path) -> Path:

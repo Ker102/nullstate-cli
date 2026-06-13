@@ -406,7 +406,7 @@ Each run writes:
 
 `nullstate evidence-verify` writes `evidence-verification.json` after recomputing recorded artifact hashes and file sizes. It checks only artifacts listed in the manifest, ignores unrelated new files, verifies HMAC signatures when `--signing-key-env` is supplied, and exits with code `2` when a recorded artifact is missing, changed, copied from another run, or has an invalid signature.
 
-`nullstate upload --dry-run` writes `upload-plan.json`, refreshes `run-bundle.json`, records the intended endpoint and token environment variable, and confirms whether the token exists without storing the token value. It also records scrub preflight status: raw runs warn with `upload_recommended: false`, while scrubbed copies with `scrub-report.json` are marked upload-ready for the future ingestion path.
+`nullstate upload --dry-run` writes `upload-plan.json`, refreshes `run-bundle.json`, records the intended endpoint and token environment variable, and confirms whether the token exists without storing the token value. The plan includes a `$schema` pointer to `docs/schemas/upload-plan.schema.json`, and the CLI validates the shape before writing it. It also records scrub preflight status: raw runs warn with `upload_recommended: false`, while scrubbed copies with `scrub-report.json` are marked upload-ready for the future ingestion path.
 
 `nullstate scrub` creates a sanitized copy of a run under `scrubbed-runs/` and writes `scrub-report.json`. It leaves the original run untouched and refuses to overwrite an existing scrubbed copy.
 

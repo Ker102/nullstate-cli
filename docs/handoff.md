@@ -87,6 +87,8 @@ Working features:
   - `nullstate upload --dry-run`
   - refreshes `run-bundle.json`
   - writes `runs/<id>/upload-plan.json`
+  - includes a `$schema` pointer to `docs/schemas/upload-plan.schema.json`
+  - validates the upload-plan shape before writing
   - records token env presence without storing token values
 - SARIF export:
   - `nullstate sarif`
@@ -273,6 +275,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - SARIF physical locations for GitHub Code Scanning upload
 - CI summaries, fail-on-severity gates, and baseline comparison
 - upload dry-run planning for future cloud ingestion
+- upload-plan v1 schema documentation and local upload-plan validation
 - upload scrub preflight warnings for raw runs
 - red-tool policy scaffold and standalone `policy-result.json`
 - scenario-scoped policy presets through `nullstate policy init --scenario <name>`

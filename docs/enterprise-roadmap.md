@@ -183,7 +183,7 @@ The paid cloud or self-hosted app should ingest run bundles and provide team das
 
 The initial bundle artifact is `run-bundle.json`. It is the contract between the open-source CLI, free local dashboard, CI uploads, support bundles, and the future paid platform. `docs/schemas/run-bundle.schema.json` documents the v1 bundle shape, and the CLI validates generated bundles before writing them.
 
-`nullstate upload --dry-run` now creates the first no-network upload plan for that future ingestion path. It records endpoint intent, bundle checksum, artifact count, token presence, and scrub preflight status without sending data or storing token values.
+`nullstate upload --dry-run` now creates the first no-network upload plan for that future ingestion path. It records endpoint intent, bundle checksum, artifact count, token presence, and scrub preflight status without sending data or storing token values. `docs/schemas/upload-plan.schema.json` documents the v1 upload-plan shape, and the CLI validates generated plans before writing them.
 
 ## CI and managed model inference
 
@@ -265,6 +265,7 @@ Before businesses can rely on it, the product needs:
 - GitHub Actions template
 - baseline/fail-on-severity settings through `nullstate baseline` and `--baseline-file`
 - upload dry-run scaffold through `nullstate upload --dry-run`
+- upload-plan schema validation through `docs/schemas/upload-plan.schema.json`
 
 ### P2: Enterprise controls
 

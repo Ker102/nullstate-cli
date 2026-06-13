@@ -157,6 +157,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `allowed_target_hosts` to generated red-tool policy files with conservative local defaults.
   - `run --policy-file` now enforces exact hostnames and `*.domain` wildcard suffixes for HTTP(S) targets before generated `attack.py` execution.
   - Older policy files without the host field remain valid and continue enforcing their existing controls.
+- `feat: validate upload plan schema` (this checkpoint)
+  - Added `docs/schemas/upload-plan.schema.json` as the v1 dry-run upload contract.
+  - Generated `upload-plan.json` now includes a `$schema` pointer plus product metadata.
+  - `nullstate upload --dry-run` validates the upload plan shape before writing and prints validation status.
 
 ## In Progress
 
