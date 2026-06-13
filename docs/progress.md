@@ -149,6 +149,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added remediation metadata, bundle contract, and artifact inventory sections to `dashboard.html`.
   - Dashboard tests now cover remediation rule IDs, schema pointers, artifacts, and basic layout constraints.
   - Tightened dashboard card radius and label spacing to match product UI guidance.
+- `docs: add enforcing GitHub Actions template` (this checkpoint)
+  - Added `docs/templates/github-actions/nullstate-enforcing.yml`.
+  - Template preserves SARIF, policy-result, evidence manifest, bundle, and upload dry-run artifacts even when the enforcing gate fails.
+  - Documented how to configure scenario, policy, baseline, and severity before copying into `.github/workflows/`.
 
 ## In Progress
 

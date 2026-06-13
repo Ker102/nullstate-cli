@@ -17,6 +17,28 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("github/codeql-action/upload-sarif", text)
         self.assertIn("security-events: write", text)
 
+    def test_enforcing_github_actions_template_preserves_evidence(self):
+        template = Path("docs/templates/github-actions/nullstate-enforcing.yml")
+
+        self.assertTrue(template.is_file(), "Expected an enforcing GitHub Actions template to exist.")
+        text = template.read_text(encoding="utf-8")
+        docs_text = Path("docs/ci-cd.md").read_text(encoding="utf-8")
+
+        self.assertIn("continue-on-error: true", text)
+        self.assertIn("python -m nullstate policy validate", text)
+        self.assertIn("NULLSTATE_FAIL_ON_SEVERITY: high", text)
+        self.assertIn('--ci --fail-on-severity "$NULLSTATE_FAIL_ON_SEVERITY"', text)
+        self.assertIn("python -m nullstate policy-result", text)
+        self.assertIn("python -m nullstate sarif", text)
+        self.assertIn("python -m nullstate evidence-manifest", text)
+        self.assertIn("python -m nullstate evidence-verify", text)
+        self.assertIn("python -m nullstate bundle", text)
+        self.assertIn("python -m nullstate upload --runs-dir runs/ci --dry-run", text)
+        self.assertIn("github/codeql-action/upload-sarif", text)
+        self.assertIn("actions/upload-artifact", text)
+        self.assertIn("steps.nullstate_run.outcome == 'failure'", text)
+        self.assertIn("docs/templates/github-actions/nullstate-enforcing.yml", docs_text)
+
     def test_release_workflow_generates_manifest_and_attestations(self):
         workflow = Path(".github/workflows/release.yml")
 
