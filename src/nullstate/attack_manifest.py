@@ -6,6 +6,10 @@ from pathlib import Path
 from typing import Any
 
 
+ATTACK_MANIFEST_SCHEMA_ID = "https://schemas.nullstate.dev/attack-manifest.schema.json"
+ATTACK_MANIFEST_SCHEMA_VERSION = 1
+
+
 def write_attack_manifest(
     path: Path,
     *,
@@ -15,14 +19,49 @@ def write_attack_manifest(
     workspace_dir: Path,
 ) -> dict[str, Any]:
     manifest: dict[str, Any] = {
-        "schema_version": 1,
+        "$schema": ATTACK_MANIFEST_SCHEMA_ID,
+        "schema_version": ATTACK_MANIFEST_SCHEMA_VERSION,
         "scenario": scenario_name,
         "backend": backend_name,
         "target_url": target_url,
         "resources": _resource_hints(scenario_name, workspace_dir),
     }
+    errors = validate_attack_manifest(manifest)
+    if errors:
+        raise ValueError("Invalid attack manifest: " + "; ".join(errors))
     path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return manifest
+
+
+def validate_attack_manifest(manifest: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(manifest, dict):
+        return ["attack manifest must be an object"]
+
+    if manifest.get("$schema") != ATTACK_MANIFEST_SCHEMA_ID:
+        errors.append("$schema must reference the nullstate attack-manifest schema")
+    if manifest.get("schema_version") != ATTACK_MANIFEST_SCHEMA_VERSION:
+        errors.append("schema_version must be 1")
+
+    scenario = manifest.get("scenario")
+    if not isinstance(scenario, str) or not scenario.strip():
+        errors.append("scenario is required")
+
+    backend = manifest.get("backend")
+    if not isinstance(backend, str) or not backend.strip():
+        errors.append("backend is required")
+
+    target_url = manifest.get("target_url")
+    if not isinstance(target_url, str) or not target_url.strip():
+        errors.append("target_url is required")
+
+    resources = manifest.get("resources")
+    if not isinstance(resources, dict):
+        errors.append("resources must be an object")
+    elif any(not isinstance(key, str) or not isinstance(value, str) for key, value in resources.items()):
+        errors.append("resources must contain string keys and string values")
+
+    return errors
 
 
 def _resource_hints(scenario_name: str, workspace_dir: Path) -> dict[str, str]:

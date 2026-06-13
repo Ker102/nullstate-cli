@@ -10,7 +10,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Deterministic remediation | implemented | patch logic in `src/nullstate/remediation.py` |
 | Copied run workspace | implemented | original IaC directory is not mutated |
 | Constrained red runner | implemented | only run-directory `attack.py` executes |
-| Manifest-scoped probe inputs | implemented | `attack-manifest.json` carries resource hints |
+| Manifest-scoped probe inputs | implemented | `attack-manifest.json` carries schema-validated scenario, backend, target URL, and resource hints |
 | Runtime evidence logging | implemented | `red-tool` events include command output and timing |
 | Local target enforcement | implemented | attack runner rejects non-local HTTP targets by default |
 | Attack artifact hashes | implemented | `red-tool` events include script and manifest SHA-256 values |

@@ -70,6 +70,7 @@ Working features:
   - no arbitrary shell
   - command evidence logged to `events.jsonl`
 - Generated `attack-manifest.json`:
+  - schema-addressed and validated before constrained probe execution
   - scenario
   - backend
   - target URL
@@ -283,6 +284,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - target host allowlists in red-tool policy files
 - command argument, stage, timeout, and output-size controls in red-tool policy files
 - generated policy schema documentation and local generated-policy validation
+- attack-manifest schema documentation and local attack-manifest validation
 - policy validation output through `nullstate policy validate`
 - evidence integrity manifests with optional HMAC signing through `nullstate evidence-manifest`
 - evidence-manifest v1 schema documentation and local evidence-manifest validation

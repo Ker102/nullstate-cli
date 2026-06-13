@@ -173,6 +173,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/schemas/remediation-metadata.schema.json` as the v1 deterministic remediation metadata contract.
   - Generated `remediation.json` now includes a `$schema` pointer.
   - Remediation metadata is validated before reports, bundles, and run artifacts consume it.
+- `feat: validate attack manifest schema` (this checkpoint)
+  - Added `docs/schemas/attack-manifest.schema.json` as the v1 constrained probe input contract.
+  - Generated `attack-manifest.json` now includes a `$schema` pointer.
+  - `nullstate run` validates the attack manifest before constrained probe execution and prints validation status.
 
 ## In Progress
 

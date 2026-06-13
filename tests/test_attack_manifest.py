@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from nullstate.attack_manifest import write_attack_manifest
+from nullstate.attack_manifest import ATTACK_MANIFEST_SCHEMA_ID, validate_attack_manifest, write_attack_manifest
 
 
 class AttackManifestTests(unittest.TestCase):
@@ -31,6 +31,8 @@ class AttackManifestTests(unittest.TestCase):
                 workspace_dir=workspace,
             )
 
+            self.assertEqual(manifest["$schema"], ATTACK_MANIFEST_SCHEMA_ID)
+            self.assertEqual(manifest["schema_version"], 1)
             self.assertEqual(manifest["scenario"], "aws-public-s3")
             self.assertEqual(manifest["backend"], "localstack-aws")
             self.assertEqual(manifest["target_url"], "http://localhost.localstack.cloud:4566")
@@ -134,6 +136,24 @@ class AttackManifestTests(unittest.TestCase):
             self.assertEqual(manifest["resources"]["storage_account_name"], "nullstateactual")
             self.assertEqual(manifest["resources"]["container_name"], "secrets")
             self.assertEqual(manifest["resources"]["blob_name"], "evidence.txt")
+
+    def test_attack_manifest_validation_reports_contract_errors(self):
+        errors = validate_attack_manifest({"schema_version": 1})
+
+        self.assertIn("$schema must reference the nullstate attack-manifest schema", errors)
+        self.assertIn("scenario is required", errors)
+        self.assertIn("backend is required", errors)
+        self.assertIn("target_url is required", errors)
+        self.assertIn("resources must be an object", errors)
+
+    def test_attack_manifest_schema_document_matches_generated_contract(self):
+        schema_path = Path("docs/schemas/attack-manifest.schema.json")
+        self.assertTrue(schema_path.is_file())
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(schema["$id"], ATTACK_MANIFEST_SCHEMA_ID)
+        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertIn("resources", schema["required"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/attack-manifest.schema.json",
+  "title": "Nullstate attack manifest",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "$schema",
+    "schema_version",
+    "scenario",
+    "backend",
+    "target_url",
+    "resources"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/attack-manifest.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "scenario": {
+      "type": "string",
+      "minLength": 1
+    },
+    "backend": {
+      "type": "string",
+      "minLength": 1
+    },
+    "target_url": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

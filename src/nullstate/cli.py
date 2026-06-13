@@ -333,6 +333,7 @@ def run(
         target_url=attack_target_url,
         workspace_dir=workspace_dir,
     )
+    console.print("Attack manifest validation: passed")
     red_agent = LlmAgent("red", red_model, base_url=red_config.base_url, api_key=red_config.api_key, provider=red_config.provider)
     red_result = red_agent.complete(
         "You are a red-team IaC security agent constrained to the generated local sandbox and run evidence.",

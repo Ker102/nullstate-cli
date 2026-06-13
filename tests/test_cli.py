@@ -62,6 +62,7 @@ class CliTests(unittest.TestCase):
             )
 
             self.assertEqual(run_completed.returncode, 0, run_completed.stderr)
+            self.assertIn("Attack manifest validation: passed", run_completed.stdout)
             reports = list(runs_dir.glob("*/report.md"))
             findings = list(runs_dir.glob("*/findings.json"))
             metrics = list(runs_dir.glob("*/metrics.json"))

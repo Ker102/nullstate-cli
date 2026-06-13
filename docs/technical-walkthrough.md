@@ -268,7 +268,7 @@ runs/<run-id>/attack.py
 runs/<run-id>/attack-manifest.json
 ```
 
-The manifest records the scenario, backend, target URL, and resource hints that scenario probes can use without giving the model arbitrary command construction power.
+The manifest records the scenario, backend, target URL, and resource hints that scenario probes can use without giving the model arbitrary command construction power. It includes a `$schema` pointer to `docs/schemas/attack-manifest.schema.json`, and `nullstate run` validates the manifest before constrained probe execution.
 
 Then the constrained runner executes only that generated script. It enforces these boundaries:
 
@@ -376,7 +376,7 @@ Each run writes:
 | `events.jsonl` | Full event timeline |
 | `findings.json` | Structured vulnerability findings |
 | `attack.py` | Generated constrained attack artifact |
-| `attack-manifest.json` | Scenario, backend, target URL, and resource hints for constrained probes |
+| `attack-manifest.json` | Schema-validated scenario, backend, target URL, and resource hints for constrained probes |
 | `remediation.patch` | Terraform remediation diff |
 | `remediation.json` | Schema-validated deterministic remediation ruleset metadata |
 | `metrics.json` | Model calls, token counts, latency, endpoint metrics |
