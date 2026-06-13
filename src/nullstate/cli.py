@@ -582,6 +582,7 @@ def policy_init(
         else write_default_policy(output)
     )
     console.print(f"Policy: {output}")
+    console.print("Policy validation: passed")
     console.print(
         "Preset="
         + str(payload["preset"])

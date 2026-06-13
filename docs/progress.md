@@ -165,6 +165,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/schemas/evidence-manifest.schema.json` as the v1 shareable evidence inventory contract.
   - Generated `evidence-manifest.json` now includes a `$schema` pointer.
   - `nullstate evidence-manifest` validates the manifest shape before writing and prints validation status.
+- `feat: validate generated policy schema` (this checkpoint)
+  - Added `docs/schemas/nullstate-policy.schema.json` as the v1 red-tool policy contract.
+  - Generated policy files now include a `$schema` pointer.
+  - `nullstate policy init` validates generated policy shape before writing and prints validation status.
 
 ## In Progress
 

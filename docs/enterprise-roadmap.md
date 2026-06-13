@@ -239,7 +239,7 @@ Before businesses can rely on it, the product needs:
 
 1. Real exploit probes for core scenarios.
 2. Clear distinction between simulated, inferred, and observed evidence.
-3. Policy-defined command allowlists. Baseline scenario, backend, stage, argument, target classification, target host, command, timeout, and output enforcement is now available.
+3. Policy-defined command allowlists. Baseline schema-addressed scenario, backend, stage, argument, target classification, target host, command, timeout, and output enforcement is now available.
 4. Artifact scrubbing.
 5. Stable scenario schema.
 6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
@@ -271,6 +271,7 @@ Before businesses can rely on it, the product needs:
 
 - policy file for allowed scenarios, backends, stages, target classifications, target hosts, commands, timeouts, and output limits
 - baseline and scenario-scoped policy scaffolds through `nullstate policy init`
+- generated policy schema validation through `docs/schemas/nullstate-policy.schema.json`
 - organization-level config
 - evidence integrity manifest through `nullstate evidence-manifest`
 - evidence-manifest schema validation through `docs/schemas/evidence-manifest.schema.json`

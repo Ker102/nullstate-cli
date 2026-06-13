@@ -338,7 +338,7 @@ nullstate policy validate nullstate-policy.json --output policy-validation.json
 nullstate run examples/aws-public-s3 --offline --mock-agents --policy-file nullstate-policy.json
 ```
 
-The policy file allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, `local-http`, and future `external-http`, target hostnames such as `localhost.localstack.cloud` or `*.blob.core.windows.net`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture. `policy init --scenario` creates a narrower preset for one known scenario/backend pair while keeping the same runner constraints. `nullstate policy validate` checks the policy without running a scenario and exits with code `2` when the file is malformed or invalid.
+The generated policy file includes a `$schema` pointer to `docs/schemas/nullstate-policy.schema.json` and is validated before being written. It allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, `local-http`, and future `external-http`, target hostnames such as `localhost.localstack.cloud` or `*.blob.core.windows.net`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture. `policy init --scenario` creates a narrower preset for one known scenario/backend pair while keeping the same runner constraints. `nullstate policy validate` checks the policy without running a scenario and exits with code `2` when the file is malformed or invalid.
 
 Create an evidence integrity manifest before attaching a run to a ticket, case study, or support workflow:
 

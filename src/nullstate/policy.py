@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 
 POLICY_SCHEMA_VERSION = 1
+POLICY_SCHEMA_ID = "https://schemas.nullstate.dev/nullstate-policy.schema.json"
 DEFAULT_POLICY_FILENAME = "nullstate-policy.json"
 DEFAULT_ALLOWED_TARGET_CLASSIFICATIONS = {"offline", "local", "local-http"}
 DEFAULT_ALLOWED_TARGET_HOSTS = {
@@ -57,6 +58,7 @@ class AttackPolicy:
 
 def default_policy_payload() -> dict[str, Any]:
     return {
+        "$schema": POLICY_SCHEMA_ID,
         "schema_version": POLICY_SCHEMA_VERSION,
         "preset": "default",
         "allowed_target_classifications": sorted(DEFAULT_ALLOWED_TARGET_CLASSIFICATIONS),
@@ -90,6 +92,10 @@ def write_default_policy(path: Path, *, scenario_name: str | None = None, backen
         if scenario_name is not None and backend_name is not None
         else default_policy_payload()
     )
+    errors = validate_policy_payload(payload)
+    if errors:
+        joined = "; ".join(errors)
+        raise ValueError(f"Invalid policy: {joined}")
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return payload
@@ -199,6 +205,46 @@ def enforce_attack_policy(
         )
 
 
+def validate_policy_payload(payload: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["policy must be an object"]
+
+    if payload.get("$schema") != POLICY_SCHEMA_ID:
+        errors.append("$schema must reference the nullstate policy schema")
+    if payload.get("schema_version") != POLICY_SCHEMA_VERSION:
+        errors.append(f"schema_version must be {POLICY_SCHEMA_VERSION}")
+    if not isinstance(payload.get("preset"), str) or not payload.get("preset"):
+        errors.append("preset is required")
+
+    list_fields = [
+        "allowed_target_classifications",
+        "allowed_target_hosts",
+        "allowed_command_policy_ids",
+        "allowed_scenarios",
+        "allowed_backends",
+        "allowed_stages",
+        "allowed_attack_script_args",
+    ]
+    for field_name in list_fields:
+        values = payload.get(field_name)
+        if not isinstance(values, list):
+            errors.append(f"{field_name} must be a list")
+            continue
+        for index, value in enumerate(values):
+            if not isinstance(value, str) or not value:
+                errors.append(f"{field_name}[{index}] must be a non-empty string")
+
+    if not _is_positive_int(payload.get("max_timeout_seconds")):
+        errors.append("max_timeout_seconds must be a positive integer")
+    if not _is_positive_int(payload.get("max_output_bytes")):
+        errors.append("max_output_bytes must be a positive integer")
+    if "notes" in payload and not isinstance(payload.get("notes"), str):
+        errors.append("notes must be a string")
+
+    return errors
+
+
 def _string_list(payload: dict[str, Any], key: str) -> list[str]:
     values = payload.get(key)
     if not isinstance(values, list):
@@ -219,6 +265,10 @@ def _optional_positive_int(payload: dict[str, Any], key: str) -> int | None:
     if not isinstance(value, int) or value <= 0:
         raise ValueError(f"Policy field {key!r} must be a positive integer.")
     return value
+
+
+def _is_positive_int(value: Any) -> bool:
+    return isinstance(value, int) and value > 0
 
 
 def _enforce_target_host_policy(target_url: str | None, allowed_target_hosts: set[str]) -> None:

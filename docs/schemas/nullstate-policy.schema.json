@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/nullstate-policy.schema.json",
+  "title": "nullstate red-tool execution policy",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "preset",
+    "allowed_target_classifications",
+    "allowed_target_hosts",
+    "allowed_command_policy_ids",
+    "allowed_scenarios",
+    "allowed_backends",
+    "allowed_stages",
+    "allowed_attack_script_args",
+    "max_timeout_seconds",
+    "max_output_bytes"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/nullstate-policy.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "preset": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allowed_target_classifications": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "offline",
+          "local",
+          "local-http",
+          "external-http"
+        ]
+      },
+      "minItems": 1
+    },
+    "allowed_target_hosts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "allowed_command_policy_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "allowed_scenarios": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "allowed_backends": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "allowed_stages": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "before",
+          "after"
+        ]
+      }
+    },
+    "allowed_attack_script_args": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "--target-url",
+          "--stage",
+          "--manifest"
+        ]
+      }
+    },
+    "max_timeout_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_output_bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

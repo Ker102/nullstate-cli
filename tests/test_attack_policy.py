@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from nullstate.attack_runner import run_attack_script
-from nullstate.policy import AttackPolicy
+from nullstate.policy import POLICY_SCHEMA_ID, AttackPolicy, validate_policy_payload
 
 
 class AttackPolicyTests(unittest.TestCase):
@@ -23,6 +23,7 @@ class AttackPolicyTests(unittest.TestCase):
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
             payload = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(payload["$schema"], POLICY_SCHEMA_ID)
             self.assertEqual(payload["schema_version"], 1)
             self.assertIn("generated-attack-script-v1", payload["allowed_command_policy_ids"])
             self.assertIn("local-http", payload["allowed_target_classifications"])
@@ -38,6 +39,7 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertEqual(payload["max_timeout_seconds"], 30)
             self.assertEqual(payload["max_output_bytes"], 12000)
             self.assertIn("Policy:", completed.stdout)
+            self.assertIn("Policy validation: passed", completed.stdout)
 
     def test_policy_init_writes_scenario_scoped_preset(self):
         with TemporaryDirectory() as raw_tmp:
@@ -62,6 +64,7 @@ class AttackPolicyTests(unittest.TestCase):
 
             self.assertEqual(completed.returncode, 0, completed.stderr)
             payload = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(payload["$schema"], POLICY_SCHEMA_ID)
             self.assertEqual(payload["schema_version"], 1)
             self.assertEqual(payload["preset"], "scenario:aws-public-s3")
             self.assertEqual(payload["allowed_scenarios"], ["aws-public-s3"])
@@ -73,6 +76,7 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertEqual(payload["max_timeout_seconds"], 30)
             self.assertEqual(payload["max_output_bytes"], 12000)
             self.assertIn("scenario:aws-public-s3", completed.stdout)
+            self.assertIn("Policy validation: passed", completed.stdout)
 
     def test_policy_init_rejects_unknown_scenario_preset(self):
         with TemporaryDirectory() as raw_tmp:
@@ -98,6 +102,25 @@ class AttackPolicyTests(unittest.TestCase):
             self.assertNotEqual(completed.returncode, 0)
             self.assertIn("Unknown scenario", completed.stderr)
             self.assertFalse(output.exists())
+
+    def test_policy_payload_validation_reports_missing_required_fields(self):
+        errors = validate_policy_payload({"schema_version": 1})
+
+        self.assertIn("$schema must reference the nullstate policy schema", errors)
+        self.assertIn("allowed_target_classifications must be a list", errors)
+        self.assertIn("allowed_command_policy_ids must be a list", errors)
+        self.assertIn("max_timeout_seconds must be a positive integer", errors)
+
+    def test_policy_schema_document_matches_generated_contract(self):
+        schema_path = Path("docs/schemas/nullstate-policy.schema.json")
+
+        self.assertTrue(schema_path.is_file())
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        self.assertEqual(schema["$id"], POLICY_SCHEMA_ID)
+        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertIn("allowed_target_classifications", schema["required"])
+        self.assertIn("allowed_command_policy_ids", schema["required"])
+        self.assertIn("allowed_target_hosts", schema["properties"])
 
     def test_attack_runner_rejects_policy_denied_target_classification(self):
         with TemporaryDirectory() as raw_tmp:
