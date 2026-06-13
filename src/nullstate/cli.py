@@ -494,6 +494,7 @@ def run(
             new_findings=new_findings,
         )
         write_json(run_dir / CI_SUMMARY_FILENAME, ci_summary)
+        console.print("CI summary validation: passed")
 
     _print_run_summary(run_dir, findings, before_attack, after_attack)
     if ci_summary is not None:

@@ -98,7 +98,7 @@ Working features:
   - `.github/workflows/nullstate-sarif.yml` runs an offline scenario and uploads SARIF to GitHub code scanning
 - CI mode:
   - `nullstate run --ci`
-  - writes `runs/<id>/ci-summary.json`
+  - writes schema-validated `runs/<id>/ci-summary.json`
   - exits with code `2` when original findings meet or exceed `--fail-on-severity`
   - supports `none`, `low`, `medium`, `high`, and `critical` thresholds
 - Baseline comparison:
@@ -274,7 +274,7 @@ Current productization checkpoints on `feature/red-agent-runner` also include:
 - provider presets for Google, Claude, custom, and generic OpenAI-compatible endpoints
 - SARIF export and GitHub Actions code-scanning workflow
 - SARIF physical locations for GitHub Code Scanning upload
-- CI summaries, fail-on-severity gates, and baseline comparison
+- schema-validated CI summaries, fail-on-severity gates, and baseline comparison
 - upload dry-run planning for future cloud ingestion
 - upload-plan v1 schema documentation and local upload-plan validation
 - upload scrub preflight warnings for raw runs

@@ -242,7 +242,7 @@ Before businesses can rely on it, the product needs:
 3. Policy-defined command allowlists. Baseline schema-addressed scenario, backend, stage, argument, target classification, target host, command, timeout, and output enforcement is now available.
 4. Artifact scrubbing.
 5. Stable scenario schema. Generated attack manifests are now schema-addressed and validated before constrained probe execution.
-6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available.
+6. CI mode with machine-readable exit codes. Baseline `nullstate run --ci` is now available, and `ci-summary.json` is schema-addressed and validated before writing.
 7. SARIF or JSON export for security tooling. SARIF export and JSON policy-result output are now available.
 8. Reproducible run manifests. `nullstate evidence-manifest` inventories shareable artifacts with SHA-256 hashes and optional HMAC evidence signing, validates the v1 schema contract before writing, and `nullstate evidence-verify` checks them later.
 9. Release supply-chain provenance. Tagged releases publish a checksum manifest, install the built wheel into a clean SBOM environment, generate `sbom.spdx.json`, create GitHub artifact attestations for package artifacts and the SBOM predicate, publish keyless Sigstore signing bundles, and support manual dry-run rehearsal before tagging.
@@ -256,7 +256,7 @@ Before businesses can rely on it, the product needs:
 - real AWS S3 sandbox read probe
 - runtime evidence section in reports
 - artifact scrubber
-- machine-readable run verdict and exit codes through `ci-summary.json`
+- machine-readable run verdict and exit codes through schema-validated `ci-summary.json`
 
 ### P1: CI/CD adoption
 

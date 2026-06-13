@@ -177,6 +177,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/schemas/attack-manifest.schema.json` as the v1 constrained probe input contract.
   - Generated `attack-manifest.json` now includes a `$schema` pointer.
   - `nullstate run` validates the attack manifest before constrained probe execution and prints validation status.
+- `feat: validate CI summary schema` (this checkpoint)
+  - Added `docs/schemas/ci-summary.schema.json` as the v1 CI decision artifact contract.
+  - Generated `ci-summary.json` now includes a `$schema` pointer.
+  - `nullstate run --ci` validates the summary before writing and prints validation status.
 
 ## In Progress
 

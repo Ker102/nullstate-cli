@@ -380,7 +380,7 @@ Each run writes:
 | `remediation.patch` | Terraform remediation diff |
 | `remediation.json` | Schema-validated deterministic remediation ruleset metadata |
 | `metrics.json` | Model calls, token counts, latency, endpoint metrics |
-| `ci-summary.json` | Machine-readable CI verdict when `--ci` is used |
+| `ci-summary.json` | Schema-validated machine-readable CI verdict when `--ci` is used |
 | `policy-result.json` | Standalone JSON policy decision for an existing run |
 | `report.md` | Human-readable summary |
 | `evidence-manifest.json` | SHA-256 inventory for shareable run evidence when `nullstate evidence-manifest` is used |
@@ -398,7 +398,7 @@ Each run writes:
 
 `nullstate sarif` writes `nullstate.sarif`, a SARIF 2.1.0 export with one result per finding for CI and code-scanning upload.
 
-`nullstate run --ci` writes `ci-summary.json` and exits with code `2` when the run's original findings meet or exceed `--fail-on-severity`. This gives CI a stable policy gate without changing the human report.
+`nullstate run --ci` writes `ci-summary.json` and exits with code `2` when the run's original findings meet or exceed `--fail-on-severity`. The summary includes a `$schema` pointer to `docs/schemas/ci-summary.schema.json` and is validated before writing, giving CI a stable policy gate without changing the human report.
 
 `nullstate baseline` writes a JSON baseline of finding identities. When `nullstate run --ci --baseline-file` is used, known baseline findings remain visible but the CI failure threshold is evaluated against new findings only.
 

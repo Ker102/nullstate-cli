@@ -31,7 +31,7 @@ python -m nullstate bundle --runs-dir runs/ci
 python -m nullstate upload --runs-dir runs/ci --dry-run
 ```
 
-`--ci` writes `ci-summary.json` into the run directory and exits with code `2` when the original findings meet or exceed `--fail-on-severity`. Supported thresholds are `none`, `low`, `medium`, `high`, and `critical`.
+`--ci` writes `ci-summary.json` into the run directory and exits with code `2` when the original findings meet or exceed `--fail-on-severity`. Supported thresholds are `none`, `low`, `medium`, `high`, and `critical`. The summary includes a `$schema` pointer to `docs/schemas/ci-summary.schema.json` and is validated before writing.
 
 `nullstate policy-result` writes `policy-result.json` from an existing run. Use it when a pipeline needs a standalone JSON decision artifact without re-running the scenario.
 
@@ -47,7 +47,7 @@ python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --ba
 python -m nullstate policy-result --runs-dir runs/ci-next --baseline-file nullstate-baseline.json
 ```
 
-When `--baseline-file` is set, `ci-summary.json` records known and new finding counts. The severity threshold is evaluated against new findings only.
+When `--baseline-file` is set, `ci-summary.json` records known and new finding counts. The severity threshold is evaluated against new findings only, while preserving the same validated artifact contract.
 
 `nullstate sarif` reads the latest run by default, or a specific run ID when provided. It writes SARIF 2.1.0 with one result per finding and preserves severity, evidence, remediation guidance, and the IaC resource address as a logical location. Upload `artifacts/nullstate.sarif` to GitHub code scanning or another SARIF-aware security tool.
 

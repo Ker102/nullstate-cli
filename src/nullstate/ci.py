@@ -6,6 +6,8 @@ from .findings import Finding
 
 
 CI_SUMMARY_FILENAME = "ci-summary.json"
+CI_SUMMARY_SCHEMA_ID = "https://schemas.nullstate.dev/ci-summary.schema.json"
+CI_SUMMARY_SCHEMA_VERSION = 1
 CI_FAILURE_EXIT_CODE = 2
 SEVERITY_RANKS = {
     "none": 0,
@@ -32,8 +34,9 @@ def build_ci_summary(
     evaluated_findings = new_findings if new_findings is not None else findings
     max_severity = max_finding_severity(evaluated_findings)
     failed = threshold != "none" and SEVERITY_RANKS[max_severity] >= SEVERITY_RANKS[threshold]
-    return {
-        "schema_version": 1,
+    summary: dict[str, Any] = {
+        "$schema": CI_SUMMARY_SCHEMA_ID,
+        "schema_version": CI_SUMMARY_SCHEMA_VERSION,
         "run_id": run_id,
         "failed": failed,
         "exit_code": CI_FAILURE_EXIT_CODE if failed else 0,
@@ -52,6 +55,68 @@ def build_ci_summary(
             "new_findings": [finding.to_dict() for finding in evaluated_findings],
         },
     }
+    errors = validate_ci_summary(summary)
+    if errors:
+        raise ValueError("Invalid CI summary: " + "; ".join(errors))
+    return summary
+
+
+def validate_ci_summary(summary: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(summary, dict):
+        return ["ci summary must be an object"]
+
+    if summary.get("$schema") != CI_SUMMARY_SCHEMA_ID:
+        errors.append("$schema must reference the nullstate ci-summary schema")
+    if summary.get("schema_version") != CI_SUMMARY_SCHEMA_VERSION:
+        errors.append(f"schema_version must be {CI_SUMMARY_SCHEMA_VERSION}")
+
+    run_id = summary.get("run_id")
+    if not isinstance(run_id, str) or not run_id.strip():
+        errors.append("run_id is required")
+
+    if not isinstance(summary.get("failed"), bool):
+        errors.append("failed must be a boolean")
+    if not isinstance(summary.get("exit_code"), int):
+        errors.append("exit_code must be an integer")
+
+    fail_on_severity = summary.get("fail_on_severity")
+    if not isinstance(fail_on_severity, str) or fail_on_severity not in SEVERITY_RANKS:
+        errors.append("fail_on_severity must be a supported severity")
+
+    max_severity = summary.get("max_severity")
+    if not isinstance(max_severity, str) or max_severity not in SEVERITY_RANKS:
+        errors.append("max_severity must be a supported severity")
+
+    for field in ("finding_count", "remaining_finding_count"):
+        value = summary.get(field)
+        if not isinstance(value, int) or value < 0:
+            errors.append(f"{field} must be a nonnegative integer")
+
+    verdict = summary.get("verdict")
+    if not isinstance(verdict, str) or not verdict.strip():
+        errors.append("verdict is required")
+
+    for field in ("before_attack_status", "after_attack_status"):
+        value = summary.get(field)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{field} is required")
+
+    if not isinstance(summary.get("findings"), list):
+        errors.append("findings must be a list")
+
+    baseline = summary.get("baseline")
+    if not isinstance(baseline, dict):
+        errors.append("baseline must be an object")
+    else:
+        for field in ("known_finding_count", "new_finding_count"):
+            value = baseline.get(field)
+            if not isinstance(value, int) or value < 0:
+                errors.append(f"baseline.{field} must be a nonnegative integer")
+        if not isinstance(baseline.get("new_findings"), list):
+            errors.append("baseline.new_findings must be a list")
+
+    return errors
 
 
 def normalize_fail_on_severity(value: str) -> str:
