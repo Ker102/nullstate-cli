@@ -18,7 +18,7 @@ This checklist tracks the controls needed to move `nullstate` from a local hacka
 | Non-destructive artifact scrubber | implemented | `nullstate scrub` copies and redacts run artifacts |
 | Upload scrub preflight | implemented | `nullstate upload --dry-run` records scrub readiness and warns on raw runs |
 | Report evidence classification | implemented | reports distinguish runtime, inconclusive, and offline simulation |
-| Local dashboard and bundle | implemented | `nullstate dashboard` and `nullstate bundle` |
+| Local dashboard and bundle | implemented | `nullstate dashboard`, `nullstate bundle`, and `docs/schemas/run-bundle.schema.json` |
 | Red-tool policy scaffold | implemented | `nullstate policy init`, scenario presets, and `run --policy-file` enforce scenario, backend, stage, argument, target, command, timeout, and output fields |
 | Policy validation artifact | implemented | `nullstate policy validate` writes optional `policy-validation.json` |
 | Evidence integrity manifest | implemented | `nullstate evidence-manifest` writes SHA-256 artifact inventory with optional HMAC evidence signing |
@@ -87,6 +87,8 @@ Tagged package releases write `release-manifest.json` with SHA-256 digests and `
 The same release workflow can be run manually with `dry_run=true` before tagging. Manual dry runs exercise the release build, validation, attestation, signing, and signature-bundle checks while skipping GitHub release creation.
 
 Each run also writes `remediation.json` beside `remediation.patch`. The JSON artifact records the deterministic remediation ruleset version, scenario, changed flag, changed files, and rule IDs applied by the remediation engine. Reports and run bundles include the same metadata so support, CI, and future ingestion workflows can tie a remediation patch back to the exact rule contract.
+
+`run-bundle.json` is now schema-addressed and validated locally. The generated bundle includes a `$schema` field pointing at `docs/schemas/run-bundle.schema.json`, and `nullstate bundle` fails before writing if the required top-level contract is malformed.
 
 ### Artifact Scrubbing
 

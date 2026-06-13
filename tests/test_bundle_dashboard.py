@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from nullstate.bundle import BUNDLE_SCHEMA_ID, validate_run_bundle
+
 
 class BundleDashboardTests(unittest.TestCase):
     def test_bundle_command_writes_portable_run_bundle(self):
@@ -23,6 +25,7 @@ class BundleDashboardTests(unittest.TestCase):
             bundle_path = run_dir / "run-bundle.json"
             self.assertTrue(bundle_path.is_file())
             payload = json.loads(bundle_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["$schema"], BUNDLE_SCHEMA_ID)
             self.assertEqual(payload["schema_version"], 1)
             self.assertEqual(payload["run"]["id"], run_dir.name)
             self.assertEqual(payload["run"]["verdict"], "blocked")
@@ -32,6 +35,25 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertFalse(payload["scrub"]["workspace_included"])
             self.assertIn("report.md", {artifact["path"] for artifact in payload["artifacts"]})
             self.assertIn("Bundle:", completed.stdout)
+            self.assertIn("Bundle validation: passed", completed.stdout)
+
+    def test_bundle_validation_reports_missing_required_fields(self):
+        errors = validate_run_bundle({"schema_version": 1, "product": "nullstate"})
+
+        self.assertIn("run.id is required", errors)
+        self.assertIn("evidence.findings must be a list", errors)
+        self.assertIn("artifacts must be a list", errors)
+
+    def test_run_bundle_schema_document_matches_generated_bundle_contract(self):
+        schema_path = Path("docs/schemas/run-bundle.schema.json")
+
+        self.assertTrue(schema_path.is_file())
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        self.assertEqual(schema["$id"], BUNDLE_SCHEMA_ID)
+        self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertIn("run", schema["required"])
+        self.assertIn("evidence", schema["required"])
+        self.assertIn("artifacts", schema["required"])
 
     def test_dashboard_command_writes_local_html_dashboard(self):
         with TemporaryDirectory() as raw_tmp:

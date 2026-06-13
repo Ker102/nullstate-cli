@@ -181,7 +181,7 @@ The free local GUI should be a single-user viewer/operator surface. It can read 
 
 The paid cloud or self-hosted app should ingest run bundles and provide team dashboards, hosted model calls, centralized evidence history, support workflows, scheduled automation, alerting, integrations, RBAC, audit logs, and compliance exports.
 
-The initial bundle artifact is `run-bundle.json`. It is the contract between the open-source CLI, free local dashboard, CI uploads, support bundles, and the future paid platform.
+The initial bundle artifact is `run-bundle.json`. It is the contract between the open-source CLI, free local dashboard, CI uploads, support bundles, and the future paid platform. `docs/schemas/run-bundle.schema.json` documents the v1 bundle shape, and the CLI validates generated bundles before writing them.
 
 `nullstate upload --dry-run` now creates the first no-network upload plan for that future ingestion path. It records endpoint intent, bundle checksum, artifact count, token presence, and scrub preflight status without sending data or storing token values.
 

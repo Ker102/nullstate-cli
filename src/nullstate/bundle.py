@@ -10,6 +10,7 @@ from . import __version__
 
 
 BUNDLE_SCHEMA_VERSION = 1
+BUNDLE_SCHEMA_ID = "https://schemas.nullstate.dev/run-bundle.schema.json"
 BUNDLE_FILENAME = "run-bundle.json"
 
 
@@ -19,6 +20,10 @@ def write_run_bundle(run_dir: Path) -> dict[str, Any]:
         raise ValueError(f"Run directory does not contain report.md: {run_dir}")
 
     bundle = build_run_bundle(run_dir)
+    errors = validate_run_bundle(bundle)
+    if errors:
+        joined = "; ".join(errors)
+        raise ValueError(f"Invalid run bundle: {joined}")
     bundle_path = run_dir / BUNDLE_FILENAME
     bundle_path.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return bundle
@@ -34,6 +39,7 @@ def build_run_bundle(run_dir: Path) -> dict[str, Any]:
     remediation = _read_json(run_dir / "remediation.json", default={})
 
     bundle = {
+        "$schema": BUNDLE_SCHEMA_ID,
         "schema_version": BUNDLE_SCHEMA_VERSION,
         "product": "nullstate",
         "product_version": __version__,
@@ -68,6 +74,65 @@ def build_run_bundle(run_dir: Path) -> dict[str, Any]:
         },
     }
     return bundle
+
+
+def validate_run_bundle(bundle: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(bundle, dict):
+        return ["bundle must be an object"]
+
+    if bundle.get("$schema") != BUNDLE_SCHEMA_ID:
+        errors.append("$schema must reference the nullstate run-bundle schema")
+    if bundle.get("schema_version") != BUNDLE_SCHEMA_VERSION:
+        errors.append(f"schema_version must be {BUNDLE_SCHEMA_VERSION}")
+    if bundle.get("product") != "nullstate":
+        errors.append("product must be nullstate")
+
+    run = bundle.get("run")
+    if not isinstance(run, dict):
+        errors.append("run must be an object")
+        errors.append("run.id is required")
+    else:
+        if not run.get("id"):
+            errors.append("run.id is required")
+        if "finding_count" in run and not isinstance(run.get("finding_count"), int):
+            errors.append("run.finding_count must be an integer")
+        if "verdict" in run and run.get("verdict") not in {"blocked", "failed", "unknown"}:
+            errors.append("run.verdict must be blocked, failed, or unknown")
+
+    evidence = bundle.get("evidence")
+    if not isinstance(evidence, dict):
+        errors.append("evidence must be an object")
+        errors.append("evidence.findings must be a list")
+    else:
+        if not isinstance(evidence.get("findings"), list):
+            errors.append("evidence.findings must be a list")
+        if not isinstance(evidence.get("events"), list):
+            errors.append("evidence.events must be a list")
+        if not isinstance(evidence.get("metrics"), dict):
+            errors.append("evidence.metrics must be an object")
+
+    artifacts = bundle.get("artifacts")
+    if not isinstance(artifacts, list):
+        errors.append("artifacts must be a list")
+    else:
+        for index, artifact in enumerate(artifacts):
+            if not isinstance(artifact, dict):
+                errors.append(f"artifacts[{index}] must be an object")
+                continue
+            if not artifact.get("path"):
+                errors.append(f"artifacts[{index}].path is required")
+            if not artifact.get("sha256"):
+                errors.append(f"artifacts[{index}].sha256 is required")
+            if not isinstance(artifact.get("size_bytes"), int):
+                errors.append(f"artifacts[{index}].size_bytes must be an integer")
+
+    if not isinstance(bundle.get("scrub"), dict):
+        errors.append("scrub must be an object")
+    if not isinstance(bundle.get("cloud"), dict):
+        errors.append("cloud must be an object")
+
+    return errors
 
 
 def _artifact_inventory(run_dir: Path) -> list[dict[str, Any]]:

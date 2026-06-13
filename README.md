@@ -315,6 +315,8 @@ nullstate scrub 20260608-224625 --runs-dir runs --output-dir scrubbed-runs
 
 `events.jsonl` includes `red-tool` entries for the allowlisted attack command before and after remediation. `remediation.json` records the deterministic remediation ruleset version, scenario, changed files, and rule IDs applied during the run.
 
+`run-bundle.json` includes a `$schema` pointer to `docs/schemas/run-bundle.schema.json`, and the CLI validates the bundle shape when it is written. Treat this schema as the local contract for dashboards, CI uploads, support bundles, and future cloud ingestion.
+
 Export findings for CI or code-scanning upload:
 
 ```powershell

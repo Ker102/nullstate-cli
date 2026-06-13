@@ -141,6 +141,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `remediation.json` with remediation ruleset version, scenario, changed files, and applied deterministic rule IDs.
   - Included remediation metadata in reports, run bundles, and blue-team remediation events.
   - Updated roadmap and readiness docs so versioned remediation is no longer listed as future-only work.
+- `feat: validate run bundle schema` (this checkpoint)
+  - Added `docs/schemas/run-bundle.schema.json` as the v1 portable evidence contract.
+  - Generated bundles now include a `$schema` pointer.
+  - `nullstate bundle` validates the top-level bundle shape before writing and prints validation status.
 
 ## In Progress
 

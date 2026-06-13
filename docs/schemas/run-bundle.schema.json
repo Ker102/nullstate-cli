@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/run-bundle.schema.json",
+  "title": "nullstate run bundle",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "product",
+    "product_version",
+    "generated_at",
+    "run",
+    "evidence",
+    "artifacts",
+    "scrub",
+    "cloud"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/run-bundle.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "product": {
+      "const": "nullstate"
+    },
+    "product_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "id",
+        "path",
+        "scenario",
+        "target",
+        "finding_count",
+        "verdict"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string"
+        },
+        "scenario": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offline": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "finding_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "verdict": {
+          "enum": [
+            "blocked",
+            "failed",
+            "unknown"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "findings",
+        "events",
+        "metrics",
+        "attack_manifest",
+        "remediation",
+        "report_excerpt"
+      ],
+      "properties": {
+        "findings": {
+          "type": "array"
+        },
+        "events": {
+          "type": "array"
+        },
+        "metrics": {
+          "type": "object"
+        },
+        "attack_manifest": {
+          "type": "object"
+        },
+        "remediation": {
+          "type": "object"
+        },
+        "report_excerpt": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "sha256",
+          "size_bytes"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "scrub": {
+      "type": "object"
+    },
+    "cloud": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

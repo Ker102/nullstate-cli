@@ -219,7 +219,7 @@ Each run creates:
 - `remediation.json`: deterministic remediation ruleset version, changed files, and applied rule IDs.
 - `metrics.json`: model call token counts, latency, throughput, and endpoint metrics.
 - `report.md`: human-readable case-study report.
-- `run-bundle.json`: portable evidence contract for local dashboards, support bundles, CI upload, and future cloud ingestion.
+- `run-bundle.json`: schema-addressed portable evidence contract for local dashboards, support bundles, CI upload, and future cloud ingestion.
 - `dashboard.html`: free local single-run dashboard for non-terminal review.
 - `workspace/`: copied Terraform workspace for reproducibility.
 

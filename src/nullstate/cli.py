@@ -763,6 +763,7 @@ def bundle(
         f"Run {payload['run']['id']} · scenario={payload['run'].get('scenario')} · "
         f"verdict={payload['run'].get('verdict')} · findings={payload['run'].get('finding_count')}"
     )
+    console.print("Bundle validation: passed")
     _print_next_steps(
         [
             f"nullstate dashboard {payload['run']['id']} --runs-dir {runs_dir}",

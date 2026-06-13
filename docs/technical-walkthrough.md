@@ -390,7 +390,7 @@ Each run writes:
 
 `nullstate report` opens the latest report by default, including reports nested under named run directories.
 
-`nullstate bundle` writes `run-bundle.json`, the portable evidence contract for local dashboards, CI upload, support bundles, and future Nullstate Cloud ingestion. The bundle includes `remediation.json` metadata when available so downstream tools can display the remediation ruleset version and rule IDs.
+`nullstate bundle` writes `run-bundle.json`, the portable evidence contract for local dashboards, CI upload, support bundles, and future Nullstate Cloud ingestion. The bundle includes a `$schema` pointer to `docs/schemas/run-bundle.schema.json`, and the CLI validates the bundle shape before writing it. The bundle also includes `remediation.json` metadata when available so downstream tools can display the remediation ruleset version and rule IDs.
 
 `nullstate dashboard` writes `dashboard.html`, a free single-run local dashboard that can be opened without cloud login.
 
