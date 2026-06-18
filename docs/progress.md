@@ -4,9 +4,9 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Current Branch
 
-- Branch: `feature/red-agent-runner`
-- Rule: hackathon freeze lifted by the project owner on 2026-06-18; PR #24 may be merged to `main` after review blockers are resolved and verification passes.
-- Remote policy: feature-branch pushes remain preferred for checkpointing until the PR is ready to merge.
+- Branch: `main`
+- Rule: hackathon freeze lifted by the project owner on 2026-06-18.
+- Remote policy: use feature branches and PRs for substantive follow-up slices.
 
 ## Checkpoints
 
@@ -187,10 +187,13 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Tightened managed endpoint classification to exact provider domains and subdomains.
   - Made malformed policy JSON report a clear validation error without a traceback.
   - Updated event-log documentation, stale freeze wording, markdown heading hierarchy, and focused regression tests.
+- `feat: add constrained red attack runner` (merged PR #24)
+  - Squash-merged the productization branch into `main` after all review threads and remote checks were green.
+  - Merge commit: `1e7b1c6`.
 
 ## In Progress
 
-- Merge PR #24 into `main` after resolving addressed review threads.
+- No active implementation slice at this checkpoint.
 
 ## Blocked
 

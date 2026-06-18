@@ -6,25 +6,18 @@ Last updated: 2026-06-18
 
 This file is written for a fresh agent with no conversation history and no MCP tools. Everything needed to continue should be discoverable from local repo files and normal terminal commands.
 
-The hackathon freeze rule was lifted on 2026-06-18 by the project owner. `feature/red-agent-runner` may be merged to `main` once PR review blockers are resolved and verification passes.
+The hackathon freeze rule was lifted on 2026-06-18 by the project owner. PR #24 was squash-merged into `main` after review blockers and remote checks were cleared.
 
-- Current active branch: `feature/red-agent-runner`.
-- Current local state at handoff: active work continues on this feature branch; run `git status --short --branch` and `git log --oneline -8` for exact local ahead/uncommitted state.
+- Current active branch: `main`.
+- Current local state at handoff: `main` is aligned with `origin/main`; run `git status --short --branch` and `git log --oneline -8` for exact local state.
 
-Recent local-only commits:
+Recent merged checkpoint:
 
 ```text
-cad9f3c fix: fail sandbox up when container exits
-504533e feat: add artifact scrubber command
-10a4699 feat: record attack output truncation metadata
-2a90716 feat: enforce local attack targets
-ee6d883 docs: add enterprise readiness guardrails
-2ab50f8 feat: add Azure blob runtime probe foundation
-d1e419f docs: harden handoff for fresh agents
-ccc613e fix: block AWS evidence read after remediation
+1e7b1c6 feat: add constrained red attack runner
 ```
 
-These commits have not been pushed at the time of this handoff. Confirm with:
+Confirm the current state with:
 
 ```powershell
 git status --short --branch
