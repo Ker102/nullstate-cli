@@ -119,6 +119,51 @@ class OfflineScenarioRunTests(unittest.TestCase):
             findings = json.loads((run_dir / "findings.json").read_text(encoding="utf-8"))
             self.assertEqual(findings[0]["rule_id"], "AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED")
 
+    def test_run_records_live_cloud_gate_decision_in_events(self):
+        with TemporaryDirectory() as raw_tmp:
+            root = Path(raw_tmp)
+            demo_dir = root / "aws-public-s3"
+            runs_dir = root / "runs"
+
+            init_completed = subprocess.run(
+                [sys.executable, "-m", "nullstate", "init-demo", "aws-public-s3", "--output", str(demo_dir)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(init_completed.returncode, 0, init_completed.stderr)
+
+            run_completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "nullstate",
+                    "run",
+                    str(demo_dir),
+                    "--offline",
+                    "--allow-live-cloud",
+                    "--runs-dir",
+                    str(runs_dir),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(run_completed.returncode, 0, run_completed.stderr)
+            run_dir = next(runs_dir.iterdir())
+            events = [
+                json.loads(line)
+                for line in (run_dir / "events.jsonl").read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+            start_event = next(event for event in events if event["phase"] == "start")
+            self.assertTrue(start_event["data"]["allow_live_cloud"])
+            red_tool_events = [event for event in events if event["phase"] == "red-tool"]
+            self.assertEqual(len(red_tool_events), 2)
+            self.assertTrue(all(event["data"]["live_cloud_allowed"] for event in red_tool_events))
+            self.assertTrue(all(event["data"]["target_classification"] == "offline" for event in red_tool_events))
+
 
 if __name__ == "__main__":
     unittest.main()

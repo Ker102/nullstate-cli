@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 import unittest
@@ -61,16 +62,38 @@ class CliTests(unittest.TestCase):
             )
 
             self.assertEqual(run_completed.returncode, 0, run_completed.stderr)
+            self.assertIn("Attack manifest validation: passed", run_completed.stdout)
             reports = list(runs_dir.glob("*/report.md"))
             findings = list(runs_dir.glob("*/findings.json"))
             metrics = list(runs_dir.glob("*/metrics.json"))
+            manifests = list(runs_dir.glob("*/attack-manifest.json"))
+            remediation_metadata = list(runs_dir.glob("*/remediation.json"))
             self.assertEqual(len(reports), 1)
             self.assertEqual(len(findings), 1)
             self.assertEqual(len(metrics), 1)
+            self.assertEqual(len(manifests), 1)
+            self.assertEqual(len(remediation_metadata), 1)
             self.assertIn("Exploit blocked after remediation", reports[0].read_text(encoding="utf-8"))
+            self.assertIn("## Remediation Metadata", reports[0].read_text(encoding="utf-8"))
+            remediation_payload = json.loads(remediation_metadata[0].read_text(encoding="utf-8"))
+            self.assertEqual(remediation_payload["schema_version"], 1)
+            self.assertEqual(remediation_payload["scenario"], "azure-public-blob")
+            self.assertRegex(remediation_payload["ruleset_version"], r"^\d{4}\.\d{2}\.\d+$")
+            self.assertIn("AZURE_STORAGE_PUBLIC_BLOB_PRIVATE_ACCESS", remediation_payload["rules_applied"])
             self.assertIn('container_access_type = "container"', (demo_dir / "main.tf").read_text(encoding="utf-8"))
             self.assertIn("Next", run_completed.stdout)
             self.assertIn("nullstate report", run_completed.stdout)
+            events = [
+                json.loads(line)
+                for line in (reports[0].parent / "events.jsonl").read_text(encoding="utf-8").splitlines()
+            ]
+            red_tool_events = [event for event in events if event["phase"] == "red-tool"]
+            self.assertEqual(len(red_tool_events), 2)
+            self.assertEqual(red_tool_events[0]["data"]["stage"], "before")
+            self.assertEqual(red_tool_events[1]["data"]["stage"], "after")
+            self.assertIn("command", red_tool_events[0]["data"])
+            self.assertIn("target_url", red_tool_events[0]["data"])
+            self.assertIn("attack-manifest.json", " ".join(red_tool_events[0]["data"]["command"]))
 
     def test_report_without_run_id_opens_latest_nested_report(self):
         with TemporaryDirectory() as raw_tmp:

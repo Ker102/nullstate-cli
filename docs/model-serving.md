@@ -1,6 +1,8 @@
 # Model Serving Runbook
 
-This project uses OpenAI-compatible local endpoints so the CLI does not care whether the model is served by vLLM, SGLang, or a managed fallback.
+This project uses OpenAI-compatible endpoints so the CLI can run against local vLLM/SGLang, managed provider presets, or a custom proxy.
+
+Use `NULLSTATE_LLM_PROVIDER=custom` for self-hosted AMD GPU endpoints. Use `NULLSTATE_LLM_PROVIDER=google` with a Google AI Studio key when a managed Gemini fallback is needed and no base URL should be required from the user. Use `NULLSTATE_LLM_PROVIDER=claude` only as an experimental Anthropic OpenAI-compatibility path; add a native Claude adapter before relying on Claude-specific production features.
 
 ## Recommended MI300X Split
 
@@ -93,12 +95,21 @@ ssh -i "$env:USERPROFILE\Documents\AMDhackkey" -N `
 Then configure nullstate locally:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
 $env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
 python -m nullstate run examples/aws-public-s3 --target localstack-aws --scenario aws-public-s3 --red-model nullstate-qwen3-4b --blue-model nullstate-gemma4-e4b
 ```
 
 Use `--offline` only when you want static IaC parsing without Terraform apply. Use `--mock-agents` only when you want no model calls.
+
+Managed fallback example:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "google"
+$env:NULLSTATE_LLM_API_KEY = "<google-ai-studio-key>"
+python -m nullstate run examples/aws-public-s3 --offline --red-model gemini-3.5-flash --blue-model gemini-3.5-flash
+```
 
 ## Evidence Collection
 

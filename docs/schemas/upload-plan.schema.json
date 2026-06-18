@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/upload-plan.schema.json",
+  "title": "nullstate upload plan",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "product",
+    "product_version",
+    "generated_at",
+    "dry_run",
+    "endpoint",
+    "method",
+    "run",
+    "bundle",
+    "auth",
+    "preflight"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/upload-plan.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "product": {
+      "const": "nullstate"
+    },
+    "product_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dry_run": {
+      "const": true
+    },
+    "endpoint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "method": {
+      "const": "POST"
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "id",
+        "scenario",
+        "target",
+        "verdict"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenario": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verdict": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "bundle": {
+      "type": "object",
+      "required": [
+        "path",
+        "schema_version",
+        "sha256",
+        "artifact_count"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "artifact_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "auth": {
+      "type": "object",
+      "required": [
+        "token_env",
+        "token_present",
+        "token_value_included"
+      ],
+      "properties": {
+        "token_env": {
+          "type": "string",
+          "minLength": 1
+        },
+        "token_present": {
+          "type": "boolean"
+        },
+        "token_value_included": {
+          "const": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "preflight": {
+      "type": "object",
+      "required": [
+        "scrub"
+      ],
+      "properties": {
+        "scrub": {
+          "type": "object",
+          "required": [
+            "status",
+            "scrub_report_present",
+            "upload_recommended",
+            "warnings"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "scrubbed",
+                "not_performed"
+              ]
+            },
+            "scrub_report_present": {
+              "type": "boolean"
+            },
+            "scrub_report_path": {
+              "type": "string"
+            },
+            "upload_recommended": {
+              "type": "boolean"
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

@@ -5,6 +5,35 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Callable
+
+
+REMEDIATION_METADATA_SCHEMA_VERSION = 1
+REMEDIATION_METADATA_SCHEMA_ID = "https://schemas.nullstate.dev/remediation-metadata.schema.json"
+REMEDIATION_METADATA_FILENAME = "remediation.json"
+REMEDIATION_RULESET_VERSION = "2026.06.1"
+
+REMEDIATION_RULES: dict[str, tuple[str, ...]] = {
+    "azure-public-blob": (
+        "AZURE_STORAGE_PUBLIC_BLOB_PRIVATE_ACCESS",
+        "AZURE_STORAGE_ACCOUNT_DISABLE_NESTED_PUBLIC_ITEMS",
+    ),
+    "aws-public-s3": (
+        "AWS_S3_BLOCK_PUBLIC_ACCESS",
+        "AWS_S3_REMOVE_PUBLIC_READ_POLICY",
+        "AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT",
+    ),
+    "k8s-privileged-pod": (
+        "K8S_DISABLE_PRIVILEGED_CONTAINER",
+        "K8S_REPLACE_HOST_ROOT_VOLUME",
+    ),
+    "compose-exposed-admin": ("COMPOSE_BIND_ADMIN_PORTS_TO_LOOPBACK",),
+    "onprem-ssh-password": (
+        "ONPREM_DISABLE_PASSWORD_AUTHENTICATION",
+        "ONPREM_DISABLE_ROOT_LOGIN",
+    ),
+    "generic-plan-review": ("GENERIC_REPLACE_PUBLIC_CIDR",),
+}
 
 
 @dataclass(frozen=True)
@@ -12,6 +41,8 @@ class PatchResult:
     changed: bool
     diff: str
     changed_files: list[str]
+    ruleset_version: str = REMEDIATION_RULESET_VERSION
+    rules_applied: tuple[str, ...] = ()
 
 
 def remediate_terraform_files(terraform_dir: Path) -> PatchResult:
@@ -19,26 +50,85 @@ def remediate_terraform_files(terraform_dir: Path) -> PatchResult:
 
 
 def remediate_scenario_files(scenario_name: str, terraform_dir: Path) -> PatchResult:
+    rules = REMEDIATION_RULES.get(scenario_name, ())
     if scenario_name == "azure-public-blob":
-        return _remediate_files(terraform_dir, ("*.tf",), _remediate_azure_text)
+        return _remediate_files(terraform_dir, ("*.tf",), _remediate_azure_text, rules)
     if scenario_name == "aws-public-s3":
-        return _remediate_files(terraform_dir, ("*.tf",), _remediate_aws_text)
+        return _remediate_files(terraform_dir, ("*.tf",), _remediate_aws_text, rules)
     if scenario_name == "k8s-privileged-pod":
-        return _remediate_files(terraform_dir, ("*.yaml", "*.yml"), _remediate_k8s_text)
+        return _remediate_files(terraform_dir, ("*.yaml", "*.yml"), _remediate_k8s_text, rules)
     if scenario_name == "compose-exposed-admin":
         return _remediate_files(
             terraform_dir,
             ("compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"),
             _remediate_compose_text,
+            rules,
         )
     if scenario_name == "onprem-ssh-password":
-        return _remediate_files(terraform_dir, ("*.yaml", "*.yml", "*.cfg", "*.conf"), _remediate_onprem_text)
+        return _remediate_files(terraform_dir, ("*.yaml", "*.yml", "*.cfg", "*.conf"), _remediate_onprem_text, rules)
     if scenario_name == "generic-plan-review":
-        return _remediate_files(terraform_dir, ("*.json",), _remediate_generic_plan_text)
+        return _remediate_files(terraform_dir, ("*.json",), _remediate_generic_plan_text, rules)
     return PatchResult(changed=False, diff="", changed_files=[])
 
 
-def _remediate_files(terraform_dir: Path, patterns: tuple[str, ...], updater) -> PatchResult:
+def build_remediation_metadata(scenario_name: str, patch_result: PatchResult) -> dict[str, object]:
+    metadata: dict[str, object] = {
+        "$schema": REMEDIATION_METADATA_SCHEMA_ID,
+        "schema_version": REMEDIATION_METADATA_SCHEMA_VERSION,
+        "scenario": scenario_name,
+        "changed": patch_result.changed,
+        "changed_files": patch_result.changed_files,
+        "ruleset_version": patch_result.ruleset_version,
+        "rules_applied": list(patch_result.rules_applied),
+    }
+    errors = validate_remediation_metadata(metadata)
+    if errors:
+        raise ValueError("Invalid remediation metadata: " + "; ".join(errors))
+    return metadata
+
+
+def validate_remediation_metadata(metadata: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(metadata, dict):
+        return ["remediation metadata must be an object"]
+
+    if metadata.get("$schema") != REMEDIATION_METADATA_SCHEMA_ID:
+        errors.append("$schema must reference the nullstate remediation metadata schema")
+    if metadata.get("schema_version") != REMEDIATION_METADATA_SCHEMA_VERSION:
+        errors.append("schema_version must be 1")
+
+    scenario = metadata.get("scenario")
+    if not isinstance(scenario, str) or not scenario.strip():
+        errors.append("scenario is required")
+
+    if not isinstance(metadata.get("changed"), bool):
+        errors.append("changed must be a boolean")
+
+    changed_files = metadata.get("changed_files")
+    if not isinstance(changed_files, list):
+        errors.append("changed_files must be a list")
+    elif any(not isinstance(item, str) or not item.strip() for item in changed_files):
+        errors.append("changed_files must contain nonempty strings")
+
+    ruleset_version = metadata.get("ruleset_version")
+    if not isinstance(ruleset_version, str) or not ruleset_version.strip():
+        errors.append("ruleset_version is required")
+
+    rules_applied = metadata.get("rules_applied")
+    if not isinstance(rules_applied, list):
+        errors.append("rules_applied must be a list")
+    elif any(not isinstance(item, str) or not item.strip() for item in rules_applied):
+        errors.append("rules_applied must contain nonempty strings")
+
+    return errors
+
+
+def _remediate_files(
+    terraform_dir: Path,
+    patterns: tuple[str, ...],
+    updater: Callable[[str], str],
+    rules: tuple[str, ...],
+) -> PatchResult:
     changed_files: list[str] = []
     diff_parts: list[str] = []
 
@@ -52,7 +142,7 @@ def _remediate_files(terraform_dir: Path, patterns: tuple[str, ...], updater) ->
         if before == after:
             continue
         tf_file.write_text(after, encoding="utf-8")
-        changed_files.append(str(tf_file))
+        changed_files.append(tf_file.relative_to(terraform_dir).as_posix())
         diff_parts.append(
             "".join(
                 difflib.unified_diff(
@@ -64,7 +154,12 @@ def _remediate_files(terraform_dir: Path, patterns: tuple[str, ...], updater) ->
             )
         )
 
-    return PatchResult(changed=bool(changed_files), diff="\n".join(diff_parts), changed_files=changed_files)
+    return PatchResult(
+        changed=bool(changed_files),
+        diff="\n".join(diff_parts),
+        changed_files=changed_files,
+        rules_applied=rules if changed_files else (),
+    )
 
 
 def _remediate_azure_text(text: str) -> str:
@@ -76,6 +171,8 @@ def _remediate_azure_text(text: str) -> str:
 def _remediate_aws_text(text: str) -> str:
     for key in ("block_public_acls", "block_public_policy", "ignore_public_acls", "restrict_public_buckets"):
         text = re.sub(rf"({key}\s*=\s*)false", r"\1true", text)
+    text = _remove_resource_blocks(text, "aws_s3_bucket_policy")
+    text = _remove_resource_blocks(text, "aws_s3_object", resource_name="evidence")
     return text
 
 
@@ -129,6 +226,24 @@ def _update_resource_blocks(text: str, resource_type: str, updater) -> str:
         output.append(updater(body))
         output.append("}")
         cursor = closing_index + 1
+    output.append(text[cursor:])
+    return "".join(output)
+
+
+def _remove_resource_blocks(text: str, resource_type: str, *, resource_name: str | None = None) -> str:
+    name_pattern = re.escape(resource_name) if resource_name else r'[^"]+'
+    pattern = re.compile(rf'resource\s+"{re.escape(resource_type)}"\s+"{name_pattern}"\s*\{{', re.MULTILINE)
+    output: list[str] = []
+    cursor = 0
+    for match in pattern.finditer(text):
+        opening_index = match.end() - 1
+        closing_index = _find_matching_brace(text, opening_index)
+        if closing_index == -1:
+            continue
+        output.append(text[cursor:match.start()])
+        cursor = closing_index + 1
+        if cursor < len(text) and text[cursor] == "\n":
+            cursor += 1
     output.append(text[cursor:])
     return "".join(output)
 

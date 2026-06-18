@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/ci-summary.schema.json",
+  "title": "Nullstate CI summary",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "$schema",
+    "schema_version",
+    "run_id",
+    "failed",
+    "exit_code",
+    "fail_on_severity",
+    "max_severity",
+    "finding_count",
+    "remaining_finding_count",
+    "verdict",
+    "before_attack_status",
+    "after_attack_status",
+    "findings",
+    "baseline"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/ci-summary.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "failed": {
+      "type": "boolean"
+    },
+    "exit_code": {
+      "type": "integer"
+    },
+    "fail_on_severity": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "max_severity": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "finding_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "remaining_finding_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "verdict": {
+      "type": "string",
+      "minLength": 1
+    },
+    "before_attack_status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "after_attack_status": {
+      "type": "string",
+      "minLength": 1
+    },
+    "findings": {
+      "type": "array"
+    },
+    "baseline": {
+      "type": "object",
+      "required": [
+        "path",
+        "known_finding_count",
+        "new_finding_count",
+        "new_findings"
+      ],
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "known_finding_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_finding_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_findings": {
+          "type": "array"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

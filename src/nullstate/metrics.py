@@ -81,7 +81,14 @@ def classify_endpoint(*, base_url: str | None, offline: bool) -> str:
     if offline or not base_url:
         return "offline"
     host = urlparse(base_url).hostname or ""
-    if any(provider in host for provider in ("fireworks.ai", "together.ai", "openai.com", "anthropic.com")):
+    managed_domains = (
+        "fireworks.ai",
+        "together.ai",
+        "openai.com",
+        "anthropic.com",
+        "generativelanguage.googleapis.com",
+    )
+    if any(host == domain or host.endswith(f".{domain}") for domain in managed_domains):
         return "managed"
     if host in {"localhost", "127.0.0.1", "::1"}:
         return "self-hosted"

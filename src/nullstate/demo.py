@@ -50,6 +50,15 @@ resource "azurerm_storage_container" "secrets" {
   storage_account_id    = azurerm_storage_account.demo.id
   container_access_type = "container"
 }
+
+resource "azurerm_storage_blob" "evidence" {
+  name                   = "evidence.txt"
+  storage_account_name   = azurerm_storage_account.demo.name
+  storage_container_name = azurerm_storage_container.secrets.name
+  type                   = "Block"
+  source_content         = "nullstate public Azure Blob evidence"
+  content_type           = "text/plain"
+}
 """
 
 
@@ -100,6 +109,32 @@ resource "aws_s3_bucket_public_access_block" "public_logs" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+}
+
+resource "aws_s3_object" "evidence" {
+  bucket       = aws_s3_bucket.public_logs.id
+  key          = "evidence.txt"
+  content      = "nullstate public S3 evidence"
+  content_type = "text/plain"
+}
+
+resource "aws_s3_bucket_policy" "public_read" {
+  bucket = aws_s3_bucket.public_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "NullstatePublicReadEvidence"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.public_logs.arn}/evidence.txt"
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.public_logs]
 }
 """
 

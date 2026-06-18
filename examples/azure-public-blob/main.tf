@@ -42,3 +42,12 @@ resource "azurerm_storage_container" "secrets" {
   storage_account_id    = azurerm_storage_account.demo.id
   container_access_type = "container"
 }
+
+resource "azurerm_storage_blob" "evidence" {
+  name                   = "evidence.txt"
+  storage_account_name   = azurerm_storage_account.demo.name
+  storage_container_name = azurerm_storage_container.secrets.name
+  type                   = "Block"
+  source_content         = "nullstate public Azure Blob evidence"
+  content_type           = "text/plain"
+}

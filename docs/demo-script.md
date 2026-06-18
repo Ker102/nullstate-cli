@@ -3,7 +3,7 @@
 ## 60-Second Version
 
 1. "This is `nullstate`, a local-first purple-team CLI for Terraform security validation."
-2. "It reads IaC, runs a local sandbox scenario, uses a model for red/blue reasoning, applies a deterministic Terraform patch, and validates that the attack path is blocked."
+2. "It reads IaC, runs a local sandbox scenario, uses a model for red/blue reasoning, executes an allowlisted attack script, applies a deterministic Terraform patch, and validates that the attack path is blocked."
 3. Run:
 
 ```powershell
@@ -18,7 +18,8 @@ python -m nullstate report --runs-dir runs/final-aws-gemma26b
    - Red before: success
    - Red after: blocked
    - Artifact path
-5. Show the report output and the run directory path. The same report can be reopened with `python -m nullstate report` or `python -m nullstate report <run-id> --runs-dir runs`.
+5. Show `events.jsonl` and point out the `red-tool` entries. They include command, stdout, stderr, return code, target URL, and timestamps.
+6. Show the report output and the run directory path. The same report can be reopened with `python -m nullstate report` or `python -m nullstate report <run-id> --runs-dir runs`.
 
 ## MI300X Talking Points
 
@@ -27,6 +28,7 @@ python -m nullstate report --runs-dir runs/final-aws-gemma26b
 - The deterministic core keeps the security verdict reproducible; the model adds reasoning, explanation, and remediation context.
 - Users do not manually prompt the model; nullstate sends role-specific agent instructions and evidence.
 - Token metrics come from model API usage fields and vLLM Prometheus metrics when available.
+- The red command runner is intentionally constrained to generated `attack.py` scripts inside the run directory.
 
 ## Fallback Path
 
@@ -54,4 +56,4 @@ Keep `LOCALSTACK_AUTH_TOKEN` in `.env.local`, `.env`, or the shell. Do not show 
 
 ## Accuracy Note
 
-Do not say the red model currently runs arbitrary shell commands. In V1, the model produces red-team attack reasoning and the deterministic scenario runner records the attack status. The next version should add an allowlisted exploit runner that executes approved commands against local sandbox endpoints and logs command, stdout, stderr, return code, and target URL.
+Do not say the red model has unrestricted shell access. In V1, the model produces red-team attack reasoning, and nullstate executes only generated `attack.py` scripts inside the run directory against configured local targets.

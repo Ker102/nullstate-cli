@@ -1,0 +1,82 @@
+name: Nullstate Enforcing CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  NULLSTATE_SCENARIO: aws-public-s3
+  NULLSTATE_IAC_PATH: examples/aws-public-s3
+  NULLSTATE_POLICY_FILE: nullstate-policy.json
+  NULLSTATE_BASELINE_FILE: nullstate-baseline.json
+  NULLSTATE_FAIL_ON_SEVERITY: high
+  NULLSTATE_CLOUD_TOKEN: ${{ secrets.NULLSTATE_CLOUD_TOKEN }}
+
+jobs:
+  nullstate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install nullstate
+        run: python -m pip install -e .
+
+      - name: Prepare artifact directory
+        run: mkdir -p artifacts
+
+      - name: Validate red-tool policy
+        run: python -m nullstate policy validate "$NULLSTATE_POLICY_FILE" --output artifacts/policy-validation.json
+
+      - name: Run nullstate enforcing gate
+        id: nullstate_run
+        continue-on-error: true
+        run: |
+          BASELINE_ARGS=""
+          if [ -f "$NULLSTATE_BASELINE_FILE" ]; then
+            BASELINE_ARGS="--baseline-file $NULLSTATE_BASELINE_FILE"
+          fi
+          python -m nullstate run "$NULLSTATE_IAC_PATH" \
+            --scenario "$NULLSTATE_SCENARIO" \
+            --offline \
+            --mock-agents \
+            --policy-file "$NULLSTATE_POLICY_FILE" \
+            --ci --fail-on-severity "$NULLSTATE_FAIL_ON_SEVERITY" \
+            $BASELINE_ARGS \
+            --runs-dir runs/ci
+
+      - name: Export machine-readable evidence
+        if: always()
+        run: |
+          python -m nullstate policy-result --runs-dir runs/ci --fail-on-severity "$NULLSTATE_FAIL_ON_SEVERITY"
+          python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
+          python -m nullstate evidence-manifest --runs-dir runs/ci --output artifacts/evidence-manifest.json
+          python -m nullstate evidence-verify --runs-dir runs/ci --manifest artifacts/evidence-manifest.json --output artifacts/evidence-verification.json
+          python -m nullstate bundle --runs-dir runs/ci
+          python -m nullstate upload --runs-dir runs/ci --dry-run
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: artifacts/nullstate.sarif
+
+      - name: Upload nullstate evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: nullstate-enforcing-evidence
+          path: |
+            runs/ci/**
+            artifacts/**
+
+      - name: Fail on nullstate gate
+        if: steps.nullstate_run.outcome == 'failure'
+        run: exit 1

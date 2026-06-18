@@ -18,6 +18,12 @@ Impact: real red/blue model calls cannot run.
 
 Fallback: offline mock agents preserve the full demo flow.
 
+## Unknown model provider
+
+Impact: the CLI cannot infer the OpenAI-compatible URL for model calls.
+
+Fallback: set `NULLSTATE_LLM_PROVIDER` to `custom`, `google`, or `claude`. For custom/self-hosted models, also set `NULLSTATE_LLM_BASE_URL` or role-specific red/blue base URLs.
+
 ## Terraform provider mismatch
 
 Impact: live `terraform init` or `plan` can fail.
@@ -34,4 +40,4 @@ Control: deterministic detector and deterministic remediation are the source of 
 
 Impact: public case study leaks private information.
 
-Control: review artifacts before publishing; future `scrub` command should automate this.
+Control: review artifacts before publishing; run `nullstate scrub` first and review `scrub-report.json`.

@@ -4,9 +4,18 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run release build, validation, attestation, and signing without creating a GitHub release."
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -20,7 +29,255 @@ jobs:
         run: |
           python -m pip install build
           python -m build
+      - name: Generate release SBOM
+        run: |
+          python -m venv .sbom-venv
+          .sbom-venv/bin/python -m pip install --upgrade pip
+          .sbom-venv/bin/python -m pip install dist/*.whl
+          .sbom-venv/bin/python - <<'PY'
+          import importlib.metadata
+          import json
+          import os
+          import re
+          import tomllib
+          from datetime import UTC, datetime
+          from pathlib import Path
+
+          pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+          project = pyproject["project"]
+          package_name = project["name"]
+          tag = os.environ["GITHUB_REF_NAME"]
+          excluded_tools = {"pip", "setuptools", "wheel"}
+
+          def normalized_name(value):
+              return re.sub(r"[-_.]+", "-", value).lower()
+
+          def spdx_id(value):
+              normalized = re.sub(r"[^A-Za-z0-9.-]", "-", value)
+              return f"SPDXRef-Package-{normalized}"
+
+          installed_distributions = {}
+          for distribution in importlib.metadata.distributions():
+              name = distribution.metadata.get("Name")
+              if not name:
+                  continue
+              normalized = normalized_name(name)
+              if normalized in excluded_tools:
+                  continue
+              installed_distributions[normalized] = distribution
+
+          root_distribution = installed_distributions.get(normalized_name(package_name))
+          if root_distribution is None:
+              raise SystemExit(f"Package {package_name!r} was not installed into the SBOM environment.")
+
+          root_id = spdx_id(package_name)
+          packages = []
+          for _, distribution in sorted(installed_distributions.items()):
+              name = distribution.metadata["Name"]
+              packages.append(
+                  {
+                      "SPDXID": spdx_id(name),
+                      "copyrightText": "NOASSERTION",
+                      "downloadLocation": "NOASSERTION",
+                      "filesAnalyzed": False,
+                      "licenseConcluded": "NOASSERTION",
+                      "licenseDeclared": "NOASSERTION",
+                      "name": name,
+                      "versionInfo": distribution.version,
+                  }
+              )
+
+          relationships = [
+              {
+                  "relatedSpdxElement": root_id,
+                  "relationshipType": "DESCRIBES",
+                  "spdxElementId": "SPDXRef-DOCUMENT",
+              }
+          ]
+          relationship_keys = {("SPDXRef-DOCUMENT", root_id, "DESCRIBES")}
+          for _, distribution in sorted(installed_distributions.items()):
+              source_name = distribution.metadata["Name"]
+              source_id = spdx_id(source_name)
+              for requirement in distribution.requires or []:
+                  dependency_name = re.split(r"[<>=!~;\[\], ]", requirement, maxsplit=1)[0]
+                  dependency = installed_distributions.get(normalized_name(dependency_name))
+                  if dependency is None:
+                      continue
+                  dependency_id = spdx_id(dependency.metadata["Name"])
+                  key = (source_id, dependency_id, "DEPENDS_ON")
+                  if key in relationship_keys or source_id == dependency_id:
+                      continue
+                  relationship_keys.add(key)
+                  relationships.append(
+                      {
+                          "relatedSpdxElement": dependency_id,
+                          "relationshipType": "DEPENDS_ON",
+                          "spdxElementId": source_id,
+                      }
+                  )
+
+          sbom = {
+              "SPDXID": "SPDXRef-DOCUMENT",
+              "creationInfo": {
+                  "created": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                  "creators": ["Tool: nullstate-release-workflow"],
+              },
+              "dataLicense": "CC0-1.0",
+              "documentNamespace": f"https://github.com/Ker102/nullstate-cli/releases/tag/{tag}/sbom.spdx.json",
+              "name": f"{package_name}-{root_distribution.version}",
+              "packages": packages,
+              "relationships": relationships,
+              "spdxVersion": "SPDX-2.3",
+          }
+          Path("dist/sbom.spdx.json").write_text(
+              json.dumps(sbom, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      - name: Validate release SBOM
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          sbom_path = Path("dist/sbom.spdx.json")
+          sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
+          if sbom.get("spdxVersion") != "SPDX-2.3":
+              raise SystemExit("SBOM must use SPDX-2.3.")
+
+          packages = sbom.get("packages")
+          if not isinstance(packages, list) or not packages:
+              raise SystemExit("SBOM must contain at least one package.")
+
+          required_package_fields = {"SPDXID", "name", "versionInfo"}
+          forbidden_packages = {"pip", "setuptools", "wheel"}
+          package_ids = set()
+          root_package_id = None
+          for package in packages:
+              missing = required_package_fields - set(package)
+              if missing:
+                  raise SystemExit(f"SBOM package is missing required fields: {sorted(missing)}")
+              package_name = str(package["name"])
+              normalized_name = package_name.lower().replace("_", "-")
+              if normalized_name in forbidden_packages:
+                  raise SystemExit(f"SBOM must not include packaging tool: {package_name}")
+              package_ids.add(package["SPDXID"])
+              if normalized_name == "nullstate":
+                  root_package_id = package["SPDXID"]
+
+          if root_package_id is None:
+              raise SystemExit("SBOM must include the nullstate root package.")
+
+          relationships = sbom.get("relationships")
+          if not isinstance(relationships, list) or not any(
+              relationship.get("spdxElementId") == "SPDXRef-DOCUMENT"
+              and relationship.get("relationshipType") == "DESCRIBES"
+              and relationship.get("relatedSpdxElement") == root_package_id
+              for relationship in relationships
+          ):
+              raise SystemExit("SBOM must describe the nullstate root package.")
+
+          missing_relationship_targets = [
+              relationship.get("relatedSpdxElement")
+              for relationship in relationships
+              if relationship.get("relatedSpdxElement") not in package_ids
+              and relationship.get("relatedSpdxElement") != "SPDXRef-DOCUMENT"
+          ]
+          if missing_relationship_targets:
+              raise SystemExit(f"SBOM relationships reference unknown packages: {missing_relationship_targets}")
+          PY
+      - name: Validate SBOM with SPDX tools
+        run: |
+          .sbom-venv/bin/python -m pip install spdx-tools==0.8.5
+          .sbom-venv/bin/pyspdxtools -i dist/sbom.spdx.json
+      - name: Generate release manifest
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import UTC, datetime
+          from pathlib import Path
+
+          dist = Path("dist")
+          artifacts = []
+          for path in sorted(dist.iterdir()):
+              if not path.is_file() or path.name == "release-manifest.json":
+                  continue
+              artifacts.append(
+                  {
+                      "name": path.name,
+                      "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                      "size_bytes": path.stat().st_size,
+                  }
+              )
+
+          manifest = {
+              "schema_version": 1,
+              "tag": os.environ["GITHUB_REF_NAME"],
+              "generated_at": datetime.now(UTC).isoformat(),
+              "artifacts": artifacts,
+          }
+          (dist / "release-manifest.json").write_text(
+              json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+      - name: Attest release artifacts
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/*
+      - name: Attest release SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/*
+          sbom-path: dist/sbom.spdx.json
+      - name: Sign release artifacts
+        uses: sigstore/gh-action-sigstore-python@v3.4.0
+        with:
+          inputs: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/sbom.spdx.json
+            dist/release-manifest.json
+          release-signing-artifacts: false
+      - name: Validate release signatures
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          artifacts = [
+              *Path("dist").glob("*.whl"),
+              *Path("dist").glob("*.tar.gz"),
+              Path("dist/sbom.spdx.json"),
+              Path("dist/release-manifest.json"),
+          ]
+          missing = []
+          for path in artifacts:
+              if not path.is_file():
+                  missing.append(str(path))
+                  continue
+              signature_path = path.with_name(path.name + ".sigstore.json")
+              if not signature_path.is_file():
+                  missing.append(str(signature_path))
+          if missing:
+              raise SystemExit(f"Missing Sigstore signing artifacts: {missing}")
+          PY
+      - name: Release dry-run summary
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          print("Release dry-run completed.")
+          print("No GitHub release was created.")
+          print("Artifacts prepared for rehearsal:")
+          for path in sorted(Path("dist").iterdir()):
+              if path.is_file():
+                  print(f"- {path}")
+          PY
       - name: Create GitHub release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes

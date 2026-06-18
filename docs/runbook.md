@@ -48,6 +48,14 @@ python -m nullstate sandbox up localstack-azure
 python -m nullstate sandbox status localstack-azure
 ```
 
+If `sandbox up localstack-azure` reports that the container did not stay running, inspect:
+
+```powershell
+docker logs localstack-azure
+```
+
+If the logs say the Azure Emulator is not enabled for the account, stop and resolve the LocalStack account entitlement before retrying. Repeated retries can consume significant disk because the Azure image is large.
+
 If the token is stored in a local env file, keep the file untracked. The CLI auto-discovers `.env.local` first and `.env` second:
 
 ```powershell
@@ -102,20 +110,94 @@ Open a known run ID even when it is nested under a named evidence folder:
 python -m nullstate report 20260509-200601 --runs-dir runs
 ```
 
-## Model endpoint setup
-
-For one model endpoint serving both red and blue roles, set:
+Create a scrubbed copy before publishing, attaching to support tickets, or using run artifacts in a public case study:
 
 ```powershell
+python -m nullstate scrub --runs-dir runs
+python -m nullstate scrub 20260509-200601 --runs-dir runs --output-dir scrubbed-runs
+```
+
+`scrub` writes a copied run directory under `scrubbed-runs/` and leaves the original run untouched. It refuses to overwrite an existing scrubbed copy. Review `scrub-report.json` before sharing.
+
+## First Tagged Release Checklist
+
+Use this checklist before the first product tag. Do not tag, publish a release, merge to `main`, or push to `main` until the freeze is explicitly lifted.
+
+Confirm the release candidate PR checks are green:
+
+```powershell
+gh pr checks 24
+```
+
+Rehearse the release workflow without creating a GitHub release:
+
+```powershell
+gh workflow run Release --field dry_run=true
+gh run list --workflow Release --limit 1
+```
+
+After the approved merge and tag process, inspect the published release:
+
+```powershell
+gh release view v0.1.0
+gh release download v0.1.0 --dir dist
+```
+
+Verify the package provenance and SBOM attestations:
+
+```powershell
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3
+```
+
+Verify the Sigstore bundle for the downloaded wheel:
+
+```powershell
+$wheel = Get-ChildItem dist\nullstate-*.whl | Select-Object -First 1
+cosign verify-blob $wheel.FullName --bundle "$($wheel.FullName).sigstore.json" --certificate-identity "https://github.com/Ker102/nullstate-cli/.github/workflows/release.yml@refs/tags/v0.1.0" --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
+
+Confirm the release assets include:
+
+- wheel and source distribution
+- `release-manifest.json`
+- `sbom.spdx.json`
+- adjacent `.sigstore.json` bundles for the primary release artifacts
+
+## Model endpoint setup
+
+For self-hosted vLLM, SGLang, or a private OpenAI-compatible proxy serving both red and blue roles, set:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_LLM_BASE_URL = "http://localhost:8000"
 $env:NULLSTATE_LLM_API_KEY = "<optional>"
 ```
 
 Then run normally.
 
+For Google AI Studio / Gemini, set the provider preset and API key. The CLI fills in the Gemini OpenAI-compatible base URL:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "google"
+$env:NULLSTATE_LLM_API_KEY = "<google-ai-studio-key>"
+python -m nullstate run examples/azure-public-blob --red-model gemini-3.5-flash --blue-model gemini-3.5-flash
+```
+
+For Claude, the `claude` preset uses Anthropic's OpenAI SDK compatibility layer:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "claude"
+$env:NULLSTATE_LLM_API_KEY = "<anthropic-api-key>"
+python -m nullstate run examples/azure-public-blob --red-model claude-sonnet-4-6 --blue-model claude-sonnet-4-6
+```
+
+Treat Claude compatibility as experimental for this CLI. If a future product path needs Claude-specific features, add a native Anthropic adapter instead of stretching the OpenAI-compatible wrapper.
+
 For two containers or two SSH tunnels, set role-specific endpoints:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
 $env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
 $env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
@@ -123,7 +205,7 @@ $env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
 python -m nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
 ```
 
-You can also pass `--red-base-url` and `--blue-base-url` for a single run. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+You can also pass `--llm-provider`, `--red-provider`, `--blue-provider`, `--red-base-url`, and `--blue-base-url` for a single run. Role-specific settings fall back to `NULLSTATE_LLM_PROVIDER`, `NULLSTATE_LLM_BASE_URL`, and `NULLSTATE_LLM_API_KEY` when they are not set. Explicit base URLs override provider presets for custom gateways and test fixtures.
 
 If no model endpoint is configured for a role, nullstate falls back to a deterministic mock agent response for that role. That means live LocalStack work can be developed before AMD GPU access; the model endpoint is needed for the MI300X case-study evidence and token/throughput metrics, not for the deterministic exploit/remediation loop.
 
@@ -189,6 +271,7 @@ Check:
 - `runs/<id>/report.md`
 - `runs/<id>/findings.json`
 - `runs/<id>/events.jsonl`
+- `runs/<id>/remediation.json`
 - `runs/<id>/metrics.json`
 - `runs/<id>/vllm-metrics-before.prom`
 - `runs/<id>/vllm-metrics-after.prom`

@@ -12,6 +12,7 @@ htmlcov/
 build/
 dist/
 runs/
+scrubbed-runs/
 .terraform/
 tfplan
 terraform.tfstate*

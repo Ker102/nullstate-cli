@@ -11,9 +11,11 @@ from tempfile import TemporaryDirectory
 
 class _OpenAiCompatHandler(BaseHTTPRequestHandler):
     request_count = 0
+    request_paths: list[str] = []
 
     def do_POST(self):  # noqa: N802
-        if self.path != "/v1/chat/completions":
+        _OpenAiCompatHandler.request_paths.append(self.path)
+        if self.path not in {"/v1/chat/completions", "/v1beta/openai/chat/completions"}:
             self.send_response(404)
             self.end_headers()
             return
@@ -112,6 +114,7 @@ class _RoleEndpointHandler(BaseHTTPRequestHandler):
 class CliModelEndpointTests(unittest.TestCase):
     def test_offline_iac_mode_still_uses_configured_model_endpoint(self):
         _OpenAiCompatHandler.request_count = 0
+        _OpenAiCompatHandler.request_paths = []
         server = HTTPServer(("127.0.0.1", 0), _OpenAiCompatHandler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -153,6 +156,58 @@ class CliModelEndpointTests(unittest.TestCase):
                 self.assertEqual(metrics["model_calls"][0]["total_tokens"], 18)
                 self.assertEqual(metrics["endpoint"]["before"]["endpoint_type"], "self-hosted")
                 self.assertTrue((run_dir / "vllm-metrics-before.prom").exists())
+        finally:
+            server.shutdown()
+            server.server_close()
+
+    def test_google_provider_uses_openai_compatible_path_without_extra_v1(self):
+        _OpenAiCompatHandler.request_count = 0
+        _OpenAiCompatHandler.request_paths = []
+        server = HTTPServer(("127.0.0.1", 0), _OpenAiCompatHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        base_url = f"http://127.0.0.1:{server.server_port}/v1beta/openai"
+
+        try:
+            with TemporaryDirectory() as raw_tmp:
+                root = Path(raw_tmp)
+                runs_dir = root / "runs"
+                env = os.environ.copy()
+                env["NULLSTATE_LLM_PROVIDER"] = "google"
+                env["NULLSTATE_RED_LLM_BASE_URL"] = base_url
+                env["NULLSTATE_BLUE_LLM_BASE_URL"] = base_url
+                env["NULLSTATE_LLM_API_KEY"] = "test-key"
+
+                completed = subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "nullstate",
+                        "run",
+                        "examples/azure-public-blob",
+                        "--offline",
+                        "--blue-model",
+                        "gemini-test",
+                        "--red-model",
+                        "gemini-test",
+                        "--runs-dir",
+                        str(runs_dir),
+                    ],
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    env=env,
+                )
+
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                self.assertEqual(_OpenAiCompatHandler.request_count, 2)
+                self.assertEqual(
+                    _OpenAiCompatHandler.request_paths,
+                    ["/v1beta/openai/chat/completions", "/v1beta/openai/chat/completions"],
+                )
+                run_dir = next(runs_dir.iterdir())
+                metrics = json.loads((run_dir / "metrics.json").read_text(encoding="utf-8"))
+                self.assertEqual(metrics["providers"], {"red": "google", "blue": "google"})
         finally:
             server.shutdown()
             server.server_close()

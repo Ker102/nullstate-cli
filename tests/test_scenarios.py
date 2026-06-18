@@ -25,6 +25,10 @@ class ScenarioTests(unittest.TestCase):
         self.assertEqual(scenario.mode, "digital-twin")
         self.assertIn("Ansible", scenario.iac_targets)
 
+    def test_storage_scenarios_report_live_localstack_status(self):
+        self.assertEqual(get_scenario("aws-public-s3").status, "live LocalStack demo available")
+        self.assertEqual(get_scenario("azure-public-blob").status, "live LocalStack demo available")
+
     def test_scenarios_list_cli_prints_exact_names(self):
         completed = subprocess.run(
             [sys.executable, "-m", "nullstate", "scenarios", "list"],
@@ -52,6 +56,9 @@ class ScenarioTests(unittest.TestCase):
             self.assertTrue((output / "main.tf").exists())
             text = (output / "main.tf").read_text(encoding="utf-8")
             self.assertIn("aws_s3_bucket_public_access_block", text)
+            self.assertIn("aws_s3_object", text)
+            self.assertIn("aws_s3_bucket_policy", text)
+            self.assertIn('key          = "evidence.txt"', text)
             self.assertIn('bucket_prefix = "nullstate-public-logs-"', text)
             self.assertIn("s3_use_path_style           = true", text)
             self.assertIn('s3 = "http://s3.localhost.localstack.cloud:4566"', text)

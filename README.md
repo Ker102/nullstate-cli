@@ -14,10 +14,11 @@ The V1 demo proves public cloud-storage exposure in local sandboxes, applies Ter
 2. Detect supported exploitable misconfigurations.
 3. Infer the scenario and route it to a sandbox backend.
 4. Ask a red-team model to reason about the attack path.
-5. Ask a blue-team model to explain remediation.
-6. Apply a deterministic Terraform patch.
-7. Validate the attack path is blocked.
-8. Write case-study-ready evidence and metrics.
+5. Execute a constrained generated attack script against the local target.
+6. Ask a blue-team model to explain remediation.
+7. Apply a deterministic Terraform patch.
+8. Validate the attack path is blocked.
+9. Write case-study-ready evidence and metrics.
 
 Hackathon V1 includes live LocalStack runs for AWS S3 and Azure Blob scenarios, plus offline deterministic demos for Kubernetes, Docker Compose, on-prem baselines, and generic plan review.
 
@@ -65,13 +66,15 @@ flowchart TB
     Sandbox --> Red
 ```
 
-See [Architecture](docs/architecture.md).
+See [Architecture](docs/architecture.md) and [Technical Walkthrough](docs/technical-walkthrough.md).
 
 ## Security model
 
-V1 does not target real cloud environments by default. Sandboxes are explicit, run artifacts are local, and remediation happens in a copied run workspace rather than mutating the original Terraform directory. See [Security Model](docs/security-model.md) and [Threat Model](docs/threat-model.md).
+V1 does not target real cloud environments by default. Sandboxes are explicit, run artifacts are local, and remediation happens in a copied run workspace rather than mutating the original Terraform directory.
 
-Current V1 red-team behavior is intentionally constrained: the model generates attack reasoning from the finding evidence, while deterministic scenario logic records the attack status. `attack.py` is generated as a run artifact, but arbitrary red-agent shell execution is not enabled yet.
+The red tool runner is constrained to generated `attack.py` scripts inside the run directory. It records command, stdout, stderr, return code, target URL, stage, start time, end time, and duration in `events.jsonl`.
+
+See [Security Model](docs/security-model.md) and [Threat Model](docs/threat-model.md).
 
 ## Installation
 
@@ -112,6 +115,7 @@ nullstate status
 nullstate init-demo azure-public-blob --output examples/azure-public-blob
 nullstate run examples/azure-public-blob --offline
 nullstate report
+nullstate scrub
 ```
 
 Run another offline scenario:
@@ -119,6 +123,10 @@ Run another offline scenario:
 ```powershell
 nullstate run examples/aws-public-s3 --offline
 nullstate run examples/k8s-privileged-pod --offline
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity high
+nullstate baseline --output nullstate-baseline.json
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --baseline-file nullstate-baseline.json
+nullstate policy-result --baseline-file nullstate-baseline.json
 ```
 
 Sandbox discovery:
@@ -128,9 +136,13 @@ nullstate sandbox list
 nullstate sandbox status localstack-azure
 nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
+nullstate policy init --output nullstate-policy.json
+nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 ```
 
 `status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
+
+Runtime attack probes stay local by default. Future non-local HTTP(S) probe targets require `--allow-live-cloud`, and the approval is recorded in `events.jsonl`; when a policy file includes `allowed_target_hosts`, the target hostname must also match that allowlist. Current built-in scenarios still resolve to local/offline sandbox targets.
 
 Open the latest report:
 
@@ -144,6 +156,17 @@ If you keep runs under a named folder, point report lookup at the parent:
 nullstate report --runs-dir runs/live-aws-model
 nullstate report 20260509-200601 --runs-dir runs
 ```
+
+Create a portable run bundle or a free local HTML dashboard:
+
+```powershell
+nullstate bundle
+nullstate dashboard --open
+nullstate sarif
+nullstate upload --dry-run
+```
+
+The dashboard summarizes findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt from the selected run.
 
 ## Live LocalStack demo path
 
@@ -202,17 +225,35 @@ LOCALSTACK_AUTH_TOKEN=your-token-here
 
 ## Model endpoint
 
-`nullstate` talks to OpenAI-compatible model servers. The simplest setup is one endpoint serving both roles:
+`nullstate` talks to OpenAI-compatible model servers. For self-hosted vLLM, SGLang, or a private proxy, use the custom provider and one endpoint serving both roles:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_LLM_BASE_URL = "http://<mi300x-host>:8000"
 $env:NULLSTATE_LLM_API_KEY = "<optional-token>"
 nullstate run examples/azure-public-blob --blue-model gemma-4-31b-it --red-model qwen3-coder-next
 ```
 
+For Google AI Studio / Gemini, users only need the provider preset and API key; `nullstate` supplies the OpenAI-compatible Gemini base URL:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "google"
+$env:NULLSTATE_LLM_API_KEY = "<google-ai-studio-key>"
+nullstate run examples/azure-public-blob --blue-model gemini-3.5-flash --red-model gemini-3.5-flash
+```
+
+For Claude through Anthropic's OpenAI SDK compatibility layer, use the Claude preset. Treat this as an experimental compatibility path; a native Claude adapter is still the better future production path if Claude-specific features are needed:
+
+```powershell
+$env:NULLSTATE_LLM_PROVIDER = "claude"
+$env:NULLSTATE_LLM_API_KEY = "<anthropic-api-key>"
+nullstate run examples/azure-public-blob --blue-model claude-sonnet-4-6 --red-model claude-sonnet-4-6
+```
+
 For two vLLM/SGLang containers or two SSH tunnels, set role-specific endpoints:
 
 ```powershell
+$env:NULLSTATE_LLM_PROVIDER = "custom"
 $env:NULLSTATE_RED_LLM_BASE_URL = "http://127.0.0.1:8001"
 $env:NULLSTATE_BLUE_LLM_BASE_URL = "http://127.0.0.1:8002"
 $env:NULLSTATE_RED_LLM_API_KEY = "<optional-red-token>"
@@ -220,7 +261,7 @@ $env:NULLSTATE_BLUE_LLM_API_KEY = "<optional-blue-token>"
 nullstate run examples/azure-public-blob --red-model nullstate-red --blue-model nullstate-blue
 ```
 
-The CLI also accepts `--red-base-url` and `--blue-base-url` for one-off runs. Role-specific settings fall back to `NULLSTATE_LLM_BASE_URL` and `NULLSTATE_LLM_API_KEY` when they are not set.
+The CLI also accepts `--llm-provider`, `--red-provider`, `--blue-provider`, `--red-base-url`, and `--blue-base-url` for one-off runs. Presets currently include `google`, `claude`, `custom`, and `openai-compatible`. Role-specific settings fall back to `NULLSTATE_LLM_PROVIDER`, `NULLSTATE_LLM_BASE_URL`, and `NULLSTATE_LLM_API_KEY` when they are not set. Explicit base URLs always win, so custom gateways, self-hosted models, and provider proxies stay supported.
 
 Users do not need to write prompts. `nullstate` sends internal red-team and blue-team agent instructions plus scenario evidence. If an endpoint is missing for a role, that role falls back to a deterministic mock response, so local and LocalStack demos can still run without a model. Use `--offline` to skip Terraform/cloud runtime calls and use static IaC parsing. If a shared or role-specific model endpoint is configured, `--offline` still uses that model endpoint; add `--mock-agents` only when you want deterministic no-model agent responses.
 
@@ -253,22 +294,106 @@ Each run writes:
 - `runs/<run-id>/events.jsonl`
 - `runs/<run-id>/findings.json`
 - `runs/<run-id>/metrics.json`
+- `runs/<run-id>/ci-summary.json` when `nullstate run --ci` is used
+- `runs/<run-id>/policy-result.json` when `nullstate policy-result` is used
 - `runs/<run-id>/vllm-metrics-before.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-after.prom` when `/metrics` is reachable
 - `runs/<run-id>/vllm-metrics-red-before.prom` and role-specific variants when red/blue endpoints differ
 - `runs/<run-id>/attack.py`
+- `runs/<run-id>/attack-manifest.json`
+- `runs/<run-id>/remediation.json`
+- `runs/<run-id>/run-bundle.json` when `nullstate bundle` or `nullstate dashboard` is run
+- `runs/<run-id>/dashboard.html` when `nullstate dashboard` is run
+- `runs/<run-id>/nullstate.sarif` when `nullstate sarif` is run
+- `runs/<run-id>/evidence-manifest.json` when `nullstate evidence-manifest` is run
+- `runs/<run-id>/evidence-verification.json` when `nullstate evidence-verify` is run
+- `runs/<run-id>/upload-plan.json` when `nullstate upload --dry-run` is run
 - `runs/<run-id>/remediation.patch`
 - `runs/<run-id>/report.md`
+- `scrubbed-runs/<run-id>/scrub-report.json` when `nullstate scrub` is used
+
+Create a scrubbed copy before sharing evidence:
+
+```powershell
+nullstate scrub
+nullstate scrub 20260608-224625 --runs-dir runs --output-dir scrubbed-runs
+```
+
+`attack-manifest.json` includes a `$schema` pointer to `docs/schemas/attack-manifest.schema.json`, and the CLI validates the generated manifest before constrained probe execution. `events.jsonl` includes `red-tool` entries for the allowlisted attack command before and after remediation. `remediation.json` records the deterministic remediation ruleset version, scenario, changed files, and rule IDs applied during the run. Generated remediation metadata includes a `$schema` pointer to `docs/schemas/remediation-metadata.schema.json`, and the CLI validates the metadata before reports, bundles, and run artifacts consume it.
+
+`ci-summary.json` includes a `$schema` pointer to `docs/schemas/ci-summary.schema.json`, and `nullstate run --ci` validates the CI decision artifact before writing it.
+
+`run-bundle.json` includes a `$schema` pointer to `docs/schemas/run-bundle.schema.json`, and the CLI validates the bundle shape when it is written. Treat this schema as the local contract for dashboards, CI uploads, support bundles, and future cloud ingestion.
+
+Export findings for CI or code-scanning upload:
+
+```powershell
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none
+nullstate sarif
+nullstate sarif 20260608-224625 --runs-dir runs --output artifacts/nullstate.sarif
+```
+
+Use `--fail-on-severity high` or `--fail-on-severity critical` when the CI job should fail on matching findings.
+
+Create and use a red-tool policy file:
+
+```powershell
+nullstate policy init --output nullstate-policy.json
+nullstate policy init --scenario aws-public-s3 --output aws-policy.json
+nullstate policy validate nullstate-policy.json --output policy-validation.json
+nullstate run examples/aws-public-s3 --offline --mock-agents --policy-file nullstate-policy.json
+```
+
+The generated policy file includes a `$schema` pointer to `docs/schemas/nullstate-policy.schema.json` and is validated before being written. It allowlists scenario names, backend names, stages, generated `attack.py` flags, target classifications such as `offline`, `local`, `local-http`, and future `external-http`, target hostnames such as `localhost.localstack.cloud` or `*.blob.core.windows.net`, command policy IDs such as `generated-attack-script-v1`, and ceilings for timeout/output capture. `policy init --scenario` creates a narrower preset for one known scenario/backend pair while keeping the same runner constraints. `nullstate policy validate` checks the policy without running a scenario and exits with code `2` when the file is malformed or invalid.
+
+Create an evidence integrity manifest before attaching a run to a ticket, case study, or support workflow:
+
+```powershell
+nullstate evidence-manifest
+nullstate evidence-verify
+nullstate evidence-manifest 20260608-224625 --runs-dir runs --output artifacts/evidence-manifest.json
+nullstate evidence-verify 20260608-224625 --runs-dir runs --manifest artifacts/evidence-manifest.json
+$env:NULLSTATE_EVIDENCE_SIGNING_KEY = "<secret>"
+nullstate evidence-manifest --signing-key-env NULLSTATE_EVIDENCE_SIGNING_KEY
+nullstate evidence-verify --signing-key-env NULLSTATE_EVIDENCE_SIGNING_KEY
+```
+
+The manifest includes a `$schema` pointer to `docs/schemas/evidence-manifest.schema.json` and is validated before being written. It inventories shareable run artifacts with SHA-256 hashes, excludes copied workspaces and Terraform internals, and can optionally add a shared-key HMAC-SHA256 evidence signature. `nullstate evidence-verify` recomputes hashes, checks signed manifests when `--signing-key-env` is supplied, and writes `evidence-verification.json`; it exits with code `2` when a recorded artifact is missing, changed, copied from another run, or has an invalid signature. Signing keys are read from environment variables and are never written to the manifest.
+
+Create a baseline from a known run so CI can ignore known findings and fail on new ones:
+
+```powershell
+nullstate baseline --output nullstate-baseline.json
+nullstate run examples/aws-public-s3 --offline --mock-agents --ci --baseline-file nullstate-baseline.json
+nullstate policy-result --baseline-file nullstate-baseline.json
+```
+
+`policy-result.json` evaluates an existing run without re-running the scan. It is useful for downstream automation that wants the same threshold and baseline decision as CI in a standalone JSON artifact.
+
+Prepare a future cloud-ingestion upload plan without sending data:
+
+```powershell
+nullstate upload --dry-run
+nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstate.dev/v1/runs --dry-run
+```
+
+`upload-plan.json` includes a `$schema` pointer to `docs/schemas/upload-plan.schema.json` and is validated before being written. It records the target endpoint, bundle checksum, artifact count, token presence, and scrub preflight status. It never stores token values. Raw runs are allowed in dry-run mode but marked `upload_recommended: false`; run `nullstate scrub` first and upload from `scrubbed-runs/` before sharing or future cloud ingestion.
 
 ## Documentation
 
 - [Case study](docs/case-study.md)
+- [Technical walkthrough](docs/technical-walkthrough.md)
 - [Architecture](docs/architecture.md)
 - [Security model](docs/security-model.md)
 - [Threat model](docs/threat-model.md)
 - [CI/CD](docs/ci-cd.md)
 - [Runbook](docs/runbook.md)
 - [Model serving runbook](docs/model-serving.md)
+- [Enterprise roadmap](docs/enterprise-roadmap.md)
+- [Enterprise readiness](docs/enterprise-readiness.md)
+- [Productization progress](docs/progress.md)
+- [Real sandbox red-team command plan](docs/plans/2026-06-01-real-sandbox-red-team-commands.md)
+- [Project handoff](docs/handoff.md)
 - [AMD compute strategy](docs/compute-strategy.md)
 - [Failure modes](docs/failure-modes.md)
 - [Cost report](docs/cost-report.md)
@@ -285,8 +410,26 @@ The `Media` prerelease is only used to host README assets. Product releases shou
 
 The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.1`.
 
+Tagged releases build wheel/sdist artifacts, upload `release-manifest.json` with SHA-256 digests, generate and validate `sbom.spdx.json` from the built wheel installed into a clean environment, validate the SBOM again with SPDX Python tools, create GitHub artifact attestations for package provenance and the SBOM, and publish keyless Sigstore `.sigstore.json` signing bundles beside release assets. Verify a downloaded wheel with:
+
+```powershell
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
+gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-type https://spdx.dev/Document/v2.3
+```
+
+Sigstore signing bundles are uploaded as adjacent release assets such as `nullstate-...whl.sigstore.json`.
+
+Before tagging, run the `Release` workflow manually with `dry_run=true` to rehearse the build, SBOM validation, attestations, signing, and signature-bundle checks without creating a GitHub release.
+
+Verify a wheel signature with Cosign by matching the artifact to its adjacent bundle and the release workflow identity:
+
+```powershell
+$wheel = Get-ChildItem dist\nullstate-*.whl | Select-Object -First 1
+cosign verify-blob $wheel.FullName --bundle "$($wheel.FullName).sigstore.json" --certificate-identity "https://github.com/Ker102/nullstate-cli/.github/workflows/release.yml@refs/tags/v0.1.0" --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+```
+
 ## Status
 
-Working now: live LocalStack AWS/Azure storage scenarios, offline deterministic demos for all listed scenarios, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
+Working now: live LocalStack AWS/Azure storage scenarios, offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
 
-Experimental: arbitrary red-agent command execution, live Kubernetes/Compose/on-prem adapters, SBOM/signing, and automatic artifact scrubbing.
+Experimental: richer scenario-specific attack scripts, live Kubernetes/Compose/on-prem adapters, richer resolved-dependency SBOMs, and broader artifact redaction coverage.
