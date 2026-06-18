@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Evidence Manifest Command
+## Task 1: Evidence Manifest Command
 
 **Files:**
 - Create: `tests/test_evidence_manifest.py`

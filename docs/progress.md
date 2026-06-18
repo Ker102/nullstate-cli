@@ -5,8 +5,8 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 ## Current Branch
 
 - Branch: `feature/red-agent-runner`
-- Rule: do not merge or push changes to `main`
-- Remote policy: feature-branch pushes are allowed for checkpointing
+- Rule: hackathon freeze lifted by the project owner on 2026-06-18; PR #24 may be merged to `main` after review blockers are resolved and verification passes.
+- Remote policy: feature-branch pushes remain preferred for checkpointing until the PR is ready to merge.
 
 ## Checkpoints
 
@@ -181,10 +181,16 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/schemas/ci-summary.schema.json` as the v1 CI decision artifact contract.
   - Generated `ci-summary.json` now includes a `$schema` pointer.
   - `nullstate run --ci` validates the summary before writing and prints validation status.
+- `fix: clear PR review merge blockers` (this checkpoint)
+  - Accepted the verified PR #24 review findings needed for merge readiness.
+  - Extended artifact scrubbing to quoted JSON/YAML secrets and Terraform state artifacts.
+  - Tightened managed endpoint classification to exact provider domains and subdomains.
+  - Made malformed policy JSON report a clear validation error without a traceback.
+  - Updated event-log documentation, stale freeze wording, markdown heading hierarchy, and focused regression tests.
 
 ## In Progress
 
-- No active implementation slice at this checkpoint.
+- Merge PR #24 into `main` after resolving addressed review threads.
 
 ## Blocked
 

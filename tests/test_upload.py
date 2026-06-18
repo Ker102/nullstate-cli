@@ -87,6 +87,7 @@ class UploadCommandTests(unittest.TestCase):
             self.assertTrue(plan["auth"]["token_present"])
             self.assertNotIn("super-secret-token", plan_text)
             self.assertNotIn("super-secret-token", completed.stdout)
+            self.assertNotIn("super-secret-token", completed.stderr)
 
     def test_upload_dry_run_detects_scrubbed_run_copy(self):
         with TemporaryDirectory() as raw_tmp:

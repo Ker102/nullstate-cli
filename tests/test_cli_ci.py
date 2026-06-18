@@ -29,6 +29,7 @@ class CliCiModeTests(unittest.TestCase):
                 text=True,
                 capture_output=True,
                 check=False,
+                timeout=120,
             )
 
             self.assertEqual(completed.returncode, 2, completed.stderr)
@@ -68,6 +69,7 @@ class CliCiModeTests(unittest.TestCase):
                 text=True,
                 capture_output=True,
                 check=False,
+                timeout=120,
             )
 
             self.assertEqual(completed.returncode, 0, completed.stderr)

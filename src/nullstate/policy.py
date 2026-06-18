@@ -295,9 +295,16 @@ def _target_host_allowed(hostname: str, allowed_target_hosts: set[str]) -> bool:
 
 
 def _read_policy_payload(path: Path) -> dict[str, Any]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            f"Invalid policy JSON in {path}: {error.msg} at line {error.lineno}, column {error.colno}."
+        ) from error
+    except OSError as error:
+        raise ValueError(f"Unable to read policy file {path}: {error}") from error
     if not isinstance(payload, dict):
-        raise ValueError("Policy file must contain a JSON object.")
+        raise ValueError(f"Policy file must contain a JSON object: {path}")
     return payload
 
 

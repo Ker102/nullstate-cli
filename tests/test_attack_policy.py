@@ -111,6 +111,22 @@ class AttackPolicyTests(unittest.TestCase):
         self.assertIn("allowed_command_policy_ids must be a list", errors)
         self.assertIn("max_timeout_seconds must be a positive integer", errors)
 
+    def test_policy_validate_reports_malformed_json_without_traceback(self):
+        with TemporaryDirectory() as raw_tmp:
+            policy_path = Path(raw_tmp) / "nullstate-policy.json"
+            policy_path.write_text("{", encoding="utf-8")
+
+            completed = subprocess.run(
+                [sys.executable, "-m", "nullstate", "policy", "validate", str(policy_path)],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 2, completed.stderr)
+            self.assertIn("Invalid policy JSON", completed.stdout)
+            self.assertNotIn("Traceback", completed.stderr)
+
     def test_policy_schema_document_matches_generated_contract(self):
         schema_path = Path("docs/schemas/nullstate-policy.schema.json")
 

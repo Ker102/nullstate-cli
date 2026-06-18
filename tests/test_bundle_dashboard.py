@@ -92,12 +92,19 @@ class BundleDashboardTests(unittest.TestCase):
             run_dir = _minimal_run(runs_dir)
             scrub_fixture_text = (
                 "LOCALSTACK_AUTH_TOKEN=fixture-value\n"
+                "\"LOCALSTACK_AUTH_TOKEN\": \"json-fixture-value\"\n"
                 "NULLSTATE_LLM_API_KEY=fixture-value\n"
+                "\"NULLSTATE_LLM_API_KEY\": \"json-model-fixture-value\"\n"
                 "ARM_CLIENT_SECRET=fixture-value\n"
+                "'ARM_CLIENT_SECRET': 'yaml-fixture-value'\n"
                 "tenant=11111111-2222-3333-4444-555555555555\n"
                 "private=10.20.30.40 loopback=127.0.0.1\n"
             )
             (run_dir / "events.jsonl").write_text(scrub_fixture_text, encoding="utf-8")
+            (run_dir / "terraform.tfstate").write_text(
+                '{"outputs":{"LOCALSTACK_AUTH_TOKEN":{"value":"tfstate-token"}}}\n',
+                encoding="utf-8",
+            )
 
             completed = subprocess.run(
                 [
@@ -127,10 +134,16 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertIn("<redacted-uuid>", scrubbed_events)
             self.assertIn("<redacted-private-ipv4>", scrubbed_events)
             self.assertIn("127.0.0.1", scrubbed_events)
+            scrubbed_state = scrubbed_dir.joinpath("terraform.tfstate").read_text(encoding="utf-8")
+            self.assertIn("<redacted-localstack-auth-token>", scrubbed_state)
+            self.assertNotIn("tfstate-token", scrubbed_state)
             scrub_report = json.loads(scrubbed_dir.joinpath("scrub-report.json").read_text(encoding="utf-8"))
             self.assertEqual(scrub_report["schema_version"], 1)
             self.assertIn("events.jsonl", scrub_report["files_changed"])
-            self.assertEqual(scrub_report["redaction_counts"]["localstack_auth_token"], 1)
+            self.assertIn("terraform.tfstate", scrub_report["files_changed"])
+            self.assertEqual(scrub_report["redaction_counts"]["localstack_auth_token"], 3)
+            self.assertEqual(scrub_report["redaction_counts"]["model_api_key"], 2)
+            self.assertEqual(scrub_report["redaction_counts"]["azure_client_secret"], 2)
             self.assertEqual(scrub_report["redaction_counts"]["private_ipv4"], 1)
             self.assertIn("Scrubbed run:", completed.stdout)
 

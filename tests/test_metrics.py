@@ -51,6 +51,11 @@ class MetricsTests(unittest.TestCase):
     def test_classifies_offline_managed_and_amd_endpoints(self):
         self.assertEqual(classify_endpoint(base_url=None, offline=True), "offline")
         self.assertEqual(classify_endpoint(base_url="https://api.fireworks.ai/inference/v1", offline=False), "managed")
+        self.assertEqual(classify_endpoint(base_url="https://api.openai.com/v1", offline=False), "managed")
+        self.assertEqual(
+            classify_endpoint(base_url="https://openai.com.evil.example/v1", offline=False),
+            "amd-gpu-hosted",
+        )
         self.assertEqual(classify_endpoint(base_url="http://localhost:8000", offline=False), "self-hosted")
         self.assertEqual(classify_endpoint(base_url="http://10.10.0.5:8000", offline=False), "amd-gpu-hosted")
 

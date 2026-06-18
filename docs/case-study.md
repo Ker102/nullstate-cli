@@ -37,7 +37,7 @@ IaC scanners are useful, but they often stop at "this configuration looks risky.
 - Detect high-risk public cloud storage exposure.
 - Generate red-team attack reasoning with a self-hosted model endpoint.
 - Execute a constrained generated attack script before and after remediation.
-- Log attack command, stdout, stderr, return code, target URL, and timestamps into `events.jsonl`.
+- Log attack command, stdout, stderr, return code, target URL, stage, start time, end time, and duration into `events.jsonl`.
 - Generate blue-team remediation explanation with a self-hosted model endpoint.
 - Apply deterministic Terraform remediation.
 - Re-run validation after remediation.
@@ -84,7 +84,7 @@ This is important to describe accurately.
 
 The red model itself does not receive shell access. It receives an internal system prompt and scenario findings, then returns attack reasoning such as anonymous S3 reads or Azure Blob `curl` requests.
 
-After the reasoning step, `nullstate` executes only the generated `attack.py` script inside the run directory through a constrained runner. The runner invokes the current Python interpreter directly, passes only `--target-url` and `--stage`, and records command, stdout, stderr, return code, target URL, start time, end time, and duration into `events.jsonl`.
+After the reasoning step, `nullstate` executes only the generated `attack.py` script inside the run directory through a constrained runner. The runner invokes the current Python interpreter directly, passes only `--target-url` and `--stage`, and records command, stdout, stderr, return code, target URL, stage, start time, end time, and duration into `events.jsonl`.
 
 This is intentionally narrower than a free-form agent shell. It gives the demo real command evidence against local sandbox endpoints while preserving a reliable and auditable boundary.
 

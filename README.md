@@ -70,7 +70,11 @@ See [Architecture](docs/architecture.md) and [Technical Walkthrough](docs/techni
 
 ## Security model
 
-V1 does not target real cloud environments by default. Sandboxes are explicit, run artifacts are local, and remediation happens in a copied run workspace rather than mutating the original Terraform directory. The red tool runner is constrained to generated `attack.py` scripts inside the run directory and records command, stdout, stderr, return code, target URL, and timestamps in `events.jsonl`. See [Security Model](docs/security-model.md) and [Threat Model](docs/threat-model.md).
+V1 does not target real cloud environments by default. Sandboxes are explicit, run artifacts are local, and remediation happens in a copied run workspace rather than mutating the original Terraform directory.
+
+The red tool runner is constrained to generated `attack.py` scripts inside the run directory. It records command, stdout, stderr, return code, target URL, stage, start time, end time, and duration in `events.jsonl`.
+
+See [Security Model](docs/security-model.md) and [Threat Model](docs/threat-model.md).
 
 ## Installation
 

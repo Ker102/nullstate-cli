@@ -12,17 +12,32 @@ from .artifacts import write_json
 REDACTION_RULES: tuple[tuple[str, str, str], ...] = (
     (
         "localstack_auth_token",
-        r"(?i)(LOCALSTACK_AUTH_TOKEN\s*[=:]\s*)[^\s\"']+",
+        r"(?i)([\"']?LOCALSTACK_AUTH_TOKEN[\"']?\s*[=:]\s*[\"']?)[^\s\"'{]+",
+        r"\1<redacted-localstack-auth-token>",
+    ),
+    (
+        "localstack_auth_token",
+        r"(?is)([\"']?LOCALSTACK_AUTH_TOKEN[\"']?\s*:\s*\{[^{}]*?[\"']value[\"']\s*:\s*[\"']?)[^\s\"'}]+",
         r"\1<redacted-localstack-auth-token>",
     ),
     (
         "model_api_key",
-        r"(?i)((?:NULLSTATE_)?(?:RED_|BLUE_)?LLM_API_KEY\s*[=:]\s*)[^\s\"']+",
+        r"(?i)([\"']?(?:NULLSTATE_)?(?:RED_|BLUE_)?LLM_API_KEY[\"']?\s*[=:]\s*[\"']?)[^\s\"'{]+",
+        r"\1<redacted-model-api-key>",
+    ),
+    (
+        "model_api_key",
+        r"(?is)([\"']?(?:NULLSTATE_)?(?:RED_|BLUE_)?LLM_API_KEY[\"']?\s*:\s*\{[^{}]*?[\"']value[\"']\s*:\s*[\"']?)[^\s\"'}]+",
         r"\1<redacted-model-api-key>",
     ),
     (
         "azure_client_secret",
-        r"(?i)(ARM_CLIENT_SECRET\s*[=:]\s*)[^\s\"']+",
+        r"(?i)([\"']?ARM_CLIENT_SECRET[\"']?\s*[=:]\s*[\"']?)[^\s\"'{]+",
+        r"\1<redacted-azure-client-secret>",
+    ),
+    (
+        "azure_client_secret",
+        r"(?is)([\"']?ARM_CLIENT_SECRET[\"']?\s*:\s*\{[^{}]*?[\"']value[\"']\s*:\s*[\"']?)[^\s\"'}]+",
         r"\1<redacted-azure-client-secret>",
     ),
     (
@@ -56,9 +71,14 @@ TEXT_SUFFIXES = {
     ".prom",
     ".py",
     ".tf",
+    ".tfstate",
     ".txt",
     ".yaml",
     ".yml",
+}
+
+TEXT_FILENAMES = {
+    "terraform.tfstate.backup",
 }
 
 
@@ -107,7 +127,7 @@ def scrub_run_artifacts(run_dir: Path, output_dir: Path) -> dict[str, Any]:
 
 
 def _is_text_artifact(path: Path) -> bool:
-    return path.suffix.lower() in TEXT_SUFFIXES
+    return path.suffix.lower() in TEXT_SUFFIXES or path.name.lower() in TEXT_FILENAMES
 
 
 def _redact_text(value: str) -> tuple[str, dict[str, int]]:

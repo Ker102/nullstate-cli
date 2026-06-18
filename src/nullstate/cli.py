@@ -612,6 +612,8 @@ def policy_validate(
         f"warnings={len(payload['warnings'])}"
     )
     if payload["status"] != "valid":
+        if payload.get("error"):
+            console.print(str(payload["error"]))
         raise typer.Exit(code=2)
 
 

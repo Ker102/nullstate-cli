@@ -9,11 +9,15 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertTrue(workflow.is_file(), "Expected the Nullstate SARIF workflow to exist.")
         text = workflow.read_text(encoding="utf-8")
 
-        self.assertIn(
-            "python -m nullstate run examples/aws-public-s3 --offline --mock-agents --ci --fail-on-severity none --runs-dir runs/ci",
-            text,
-        )
-        self.assertIn("python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif", text)
+        self.assertIn("python -m nullstate run", text)
+        self.assertIn("examples/aws-public-s3", text)
+        self.assertIn("--offline", text)
+        self.assertIn("--mock-agents", text)
+        self.assertIn("--ci", text)
+        self.assertIn("--fail-on-severity none", text)
+        self.assertIn("--runs-dir runs/ci", text)
+        self.assertIn("python -m nullstate sarif", text)
+        self.assertIn("--output artifacts/nullstate.sarif", text)
         self.assertIn("github/codeql-action/upload-sarif", text)
         self.assertIn("security-events: write", text)
 

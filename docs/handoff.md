@@ -1,16 +1,13 @@
 # Nullstate Project Handoff
 
-Last updated: 2026-06-12
+Last updated: 2026-06-18
 
 ## Read this first
 
 This file is written for a fresh agent with no conversation history and no MCP tools. Everything needed to continue should be discoverable from local repo files and normal terminal commands.
 
-The repository is currently under a hackathon freeze rule:
+The hackathon freeze rule was lifted on 2026-06-18 by the project owner. `feature/red-agent-runner` may be merged to `main` once PR review blockers are resolved and verification passes.
 
-- Do not merge anything into `main`.
-- Do not push or merge updates to `main`.
-- It is safe to keep working on feature branches, make checkpoint commits, and push those feature branches.
 - Current active branch: `feature/red-agent-runner`.
 - Current local state at handoff: active work continues on this feature branch; run `git status --short --branch` and `git log --oneline -8` for exact local ahead/uncommitted state.
 
