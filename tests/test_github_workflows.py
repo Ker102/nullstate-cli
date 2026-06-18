@@ -1,3 +1,4 @@
+import re
 import unittest
 from pathlib import Path
 
@@ -20,6 +21,9 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("--output artifacts/nullstate.sarif", text)
         self.assertIn("github/codeql-action/upload-sarif", text)
         self.assertIn("security-events: write", text)
+        unpinned_action = re.compile(r"^\s*-\s*uses:\s*[^@\s]+@(?![0-9a-fA-F]{40}\b)", re.MULTILINE)
+        self.assertNotRegex(text, unpinned_action)
+        self.assertIn("persist-credentials: false", text)
 
     def test_enforcing_github_actions_template_preserves_evidence(self):
         template = Path("docs/templates/github-actions/nullstate-enforcing.yml")

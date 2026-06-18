@@ -12,8 +12,10 @@ jobs:
   export-sarif:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.13"
       - name: Install
@@ -26,11 +28,11 @@ jobs:
           python -m nullstate sarif --runs-dir runs/ci --output artifacts/nullstate.sarif
           python -m nullstate bundle --runs-dir runs/ci
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@411bbbe57033eedfc1a82d68c01345aa96c737d7
         with:
           sarif_file: artifacts/nullstate.sarif
       - name: Upload nullstate artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: nullstate-ci-run
           path: |
