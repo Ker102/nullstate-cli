@@ -66,17 +66,17 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `nullstate policy validate`.
   - Writes optional `policy-validation.json` for CI evidence.
   - Exits with code `2` when the policy file is malformed or invalid.
-- `fix: harden policy and evidence verification` (local checkpoint)
+- `fix: harden policy and evidence verification` (merged in PR #24)
   - Reviewed the latest CodeRabbit findings and accepted the verified fail-closed issues.
   - `nullstate policy-result` now fails closed when `findings.json` is missing, malformed, or not a list.
   - `nullstate evidence-verify` now fails copied/wrong manifests whose declared run identity does not match the target run.
   - Malformed evidence manifests now surface as CLI parameter errors instead of Python tracebacks.
-  - This checkpoint is intentionally local until the next substantive batch push, to avoid triggering a CodeRabbit review loop over review-response fixes.
-- `fix: make SARIF upload and CodeQL fixtures CI-clean` (local checkpoint)
+  - Batched with the next productization push to avoid a CodeRabbit review loop over review-response fixes.
+- `fix: make SARIF upload and CodeQL fixtures CI-clean` (merged in PR #24)
   - Investigated PR #24 failing checks with `gh`.
   - Fixed GitHub SARIF upload validation by moving finding logical locations under SARIF result locations.
   - Reworked scrubber test fixture values/naming so CodeQL does not treat the test artifact as clear-text secret storage.
-  - GitHub has not re-run these checks yet because the fixes remain local on this branch.
+  - GitHub checks later passed on PR #24 before merge.
 - `feat: add scenario policy presets` (this checkpoint)
   - Added `nullstate policy init --scenario <name>`.
   - Scenario presets narrow generated `allowed_scenarios` and `allowed_backends` to one known scenario/backend pair.
@@ -136,7 +136,7 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 - `docs: add first release verification checklist` (this checkpoint)
   - Added a runbook checklist for the first tagged release.
   - Captures PR check review, manual release dry-run rehearsal, release inspection, GitHub attestation verification, and Sigstore bundle verification.
-  - Keeps the freeze rule explicit: no tagging, release publishing, or `main` updates until approved.
+  - Keeps release approval explicit: no tagging or release publishing until approved.
 - `feat: add versioned remediation metadata` (this checkpoint)
   - Added `remediation.json` with remediation ruleset version, scenario, changed files, and applied deterministic rule IDs.
   - Included remediation metadata in reports, run bundles, and blue-team remediation events.
@@ -190,6 +190,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 - `feat: add constrained red attack runner` (merged PR #24)
   - Squash-merged the productization branch into `main` after all review threads and remote checks were green.
   - Merge commit: `1e7b1c6`.
+- `docs: prepare main-device handoff` (this checkpoint)
+  - Refreshed handoff, runbook, README, progress, and active plan docs for the post-freeze `main` state.
+  - Corrected Azure runtime wording so it does not overclaim live LocalStack Azure validation before emulator entitlement is available.
+  - Reinstalled local dev extras and reran Ruff, mypy, 146 unit tests, and an offline AWS handback smoke run.
 
 ## In Progress
 

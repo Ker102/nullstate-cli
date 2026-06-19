@@ -2,6 +2,8 @@
 
 > **For Agent:** Use executing-plans skill to implement this plan task-by-task.
 
+> **Status as of 2026-06-19:** This plan is mostly implemented and was merged into `main` through PR #24. Do not replay Tasks 1-6 from scratch. Use this file as historical context and continue only with the remaining live LocalStack Azure validation work after the account has Azure Emulator entitlement.
+
 **Goal:** Replace shallow LocalStack health probes with scenario-specific red-team probes that attempt real sandbox reads before and after remediation while preserving strict command boundaries.
 
 **Architecture:** Keep the existing constrained `attack.py` runner. Move exploit logic into scenario templates that receive a target URL, stage, and a generated evidence manifest. The deterministic detector remains the source of truth, but the report distinguishes between configuration validation and real runtime exploit evidence.
@@ -12,18 +14,19 @@
 
 ## Current State
 
-The current red-team execution feature is safe but shallow:
+The current red-team execution feature is safe and partly runtime-backed:
 
 - `src/nullstate/attack_runner.py` executes only generated `attack.py` inside the run directory.
 - `events.jsonl` records command, stdout, stderr, return code, target URL, stage, timestamps, and duration.
-- AWS/Azure `attack.py` scripts currently call `/_localstack/health` when online.
-- The before/after `success` and `blocked` verdict still comes from `simulate_attack()`.
+- AWS has a live-validated LocalStack object-read probe path.
+- Azure has a manifest-backed blob-read probe path, but live LocalStack Azure validation is still blocked by Azure Emulator entitlement.
+- The before/after final verdict still relies on deterministic IaC validation for reliability; reports distinguish observed, inconclusive, and simulated runtime evidence.
 
 This is a strong security boundary, but not yet a full enterprise exploit validation engine.
 
 ## Progress Status
 
-Updated 2026-06-09:
+Updated 2026-06-19:
 
 - Completed locally: Task 1 attack evidence manifest.
 - Completed locally: Task 2 safe runner manifest argument.
@@ -58,9 +61,8 @@ Updated 2026-06-09:
   - Google AI Studio / Gemini users can provide only `NULLSTATE_LLM_PROVIDER=google` and `NULLSTATE_LLM_API_KEY`
   - Claude is routed through Anthropic's OpenAI SDK compatibility endpoint and documented as experimental
   - self-hosted AMD/vLLM/SGLang users can still provide explicit shared or role-specific base URLs
-- Verified locally with Ruff, mypy, full unittest discovery, and an offline Azure smoke run.
-- Not pushed: local feature-branch work should remain local unless the user explicitly asks to push.
-- Freeze rule: do not merge to `main`, do not push unless the user explicitly asks.
+- Merged into `main` through PR #24 after review blockers and required checks passed.
+- Verified locally on 2026-06-19 with Ruff, mypy, full unittest discovery, and an offline AWS handback smoke run.
 
 Next task to execute:
 

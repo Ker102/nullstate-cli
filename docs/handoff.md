@@ -1,6 +1,6 @@
 # Nullstate Project Handoff
 
-Last updated: 2026-06-18
+Last updated: 2026-06-19
 
 ## Read this first
 
@@ -14,6 +14,7 @@ The hackathon freeze rule was lifted on 2026-06-18 by the project owner. PR #24 
 Recent merged checkpoint:
 
 ```text
+f621b1b docs: record PR 24 merge
 1e7b1c6 feat: add constrained red attack runner
 ```
 
@@ -25,6 +26,39 @@ git log --oneline -8
 ```
 
 Do not rely on MCP state, chat memory, or remote PR metadata. Use local files and Git only unless the user explicitly provides other tooling.
+
+## Fresh agent checklist
+
+When this project is opened on the main device:
+
+1. Confirm branch and cleanliness:
+
+   ```powershell
+   git status --short --branch
+   git log --oneline -8
+   ```
+
+2. Confirm local secret files are present only locally and ignored by Git:
+
+   ```powershell
+   git check-ignore .env .env.local
+   ```
+
+3. Recreate the local Python environment if needed:
+
+   ```powershell
+   python -m pip install -e .
+   ```
+
+4. Run the verification gate before taking new work:
+
+   ```powershell
+   python -m ruff check src tests
+   python -m mypy src
+   python -m unittest discover -s tests -v
+   ```
+
+5. Start a new feature branch for follow-up product work. Keep `main` protected and use PR checks.
 
 ## Project goal
 
@@ -154,7 +188,11 @@ docs/plans/2026-06-01-real-sandbox-red-team-commands.md
 
 ## Last verification run
 
-The last full verification passed:
+The last full verification passed on 2026-06-19 after reinstalling the project with dev extras:
+
+```powershell
+python -m pip install -e .[dev]
+```
 
 ```powershell
 python -m ruff check src tests
@@ -167,15 +205,15 @@ Result:
 ```text
 Ruff passed
 mypy passed
-69 tests OK
+146 tests OK
 ```
 
-Smoke run also passed:
+Smoke run also passed on 2026-06-19:
 
 ```powershell
-python -m nullstate run examples/aws-public-s3 --offline --mock-agents --runs-dir runs/platform-smoke
-python -m nullstate bundle --runs-dir runs/platform-smoke
-python -m nullstate dashboard --runs-dir runs/platform-smoke
+python -m nullstate run examples/aws-public-s3 --offline --mock-agents --runs-dir runs/handback-smoke-20260619-195333
+python -m nullstate bundle --runs-dir runs/handback-smoke-20260619-195333
+python -m nullstate dashboard --runs-dir runs/handback-smoke-20260619-195333
 ```
 
 Generated:
@@ -238,7 +276,7 @@ Recommended next tests:
 - Live LocalStack Azure run where available.
 - Offline run still passes.
 - Report classifies runtime evidence as observed/inconclusive/simulated.
-- Remaining enterprise hardening: future live-cloud approval gate and live Azure emulator validation after LocalStack Azure entitlement is available.
+- Remaining enterprise hardening: live Azure emulator validation after LocalStack Azure entitlement is available.
 
 If Azure LocalStack support is unavailable or unreliable, do not overclaim Azure runtime exploitation. Prefer clear report language such as `runtime probe inconclusive; deterministic IaC validation still blocked the configured exposure`.
 
@@ -259,7 +297,7 @@ Run bundle is the key contract between:
 - support tickets
 - future enterprise dashboards
 
-Current productization checkpoints on `feature/red-agent-runner` also include:
+Current productization checkpoints merged into `main` include:
 
 - provider presets for Google, Claude, custom, and generic OpenAI-compatible endpoints
 - SARIF export and GitHub Actions code-scanning workflow
@@ -300,11 +338,10 @@ Do not jump straight to full SaaS before stabilizing:
 
 ## Branch and release guidance
 
-Until the user says the freeze is over:
+The hackathon freeze is over, but `main` remains protected:
 
-- Do not merge PR #24.
-- Do not push or merge to `main`.
-- Feature branch checkpoint pushes are allowed.
+- Start substantive work on a feature branch.
+- Open PRs into `main` and wait for required checks.
+- Direct pushes to `main` are blocked by branch protection.
 - After applying CodeRabbit review feedback, do not push solely to trigger another CodeRabbit review loop; fold those fixes into the next substantive batch unless the user explicitly approves a review-response push.
-- Do not tag releases.
-- Do not update `main`.
+- Do not tag releases or publish product releases without explicit owner approval.
