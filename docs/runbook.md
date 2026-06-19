@@ -121,7 +121,7 @@ python -m nullstate scrub 20260509-200601 --runs-dir runs --output-dir scrubbed-
 
 ## First Tagged Release Checklist
 
-Use this checklist before the first product tag. Do not tag, publish a release, merge to `main`, or push to `main` until the freeze is explicitly lifted.
+Use this checklist before the first product tag. The hackathon merge freeze was lifted on 2026-06-18, but product tags and release publishing still need explicit owner approval. Keep normal changes on feature branches and merge through protected PR checks.
 
 Confirm the release candidate PR checks are green:
 

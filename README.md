@@ -20,7 +20,7 @@ The V1 demo proves public cloud-storage exposure in local sandboxes, applies Ter
 8. Validate the attack path is blocked.
 9. Write case-study-ready evidence and metrics.
 
-Hackathon V1 includes live LocalStack runs for AWS S3 and Azure Blob scenarios, plus offline deterministic demos for Kubernetes, Docker Compose, on-prem baselines, and generic plan review.
+Hackathon V1 includes a live-validated LocalStack AWS S3 path, a manifest-backed Azure Blob probe path that still needs live LocalStack Azure entitlement to validate, plus offline deterministic demos for Kubernetes, Docker Compose, on-prem baselines, and generic plan review.
 
 ## Why this exists
 
@@ -280,7 +280,7 @@ Users do not need to write prompts. `nullstate` sends internal red-team and blue
 
 | Scenario | Backend | Status |
 |---|---|---|
-| `azure-public-blob` | `localstack-azure` | live LocalStack demo available |
+| `azure-public-blob` | `localstack-azure` | manifest-backed/offline demo available; live LocalStack Azure validation pending emulator entitlement |
 | `aws-public-s3` | `localstack-aws` | live LocalStack demo available |
 | `k8s-privileged-pod` | `kind-kubernetes` | offline demo available; live kind pending |
 | `compose-exposed-admin` | `docker-compose` | offline demo available; live Docker probe pending |
@@ -430,6 +430,6 @@ cosign verify-blob $wheel.FullName --bundle "$($wheel.FullName).sigstore.json" -
 
 ## Status
 
-Working now: live LocalStack AWS/Azure storage scenarios, offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
+Working now: live LocalStack AWS storage validation, manifest-backed Azure Blob probe generation pending live LocalStack Azure entitlement, offline deterministic demos for all listed scenarios, constrained red attack command execution, deterministic remediation, sandbox registry, report artifacts, model metrics artifacts, branded CLI output, and DevSecOps repo structure.
 
 Experimental: richer scenario-specific attack scripts, live Kubernetes/Compose/on-prem adapters, richer resolved-dependency SBOMs, and broader artifact redaction coverage.
