@@ -197,7 +197,10 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## In Progress
 
-- No active implementation slice at this checkpoint.
+- `docs/open-source-readiness`
+  - Refresh public install and release wording for `v0.1.0-alpha.2`.
+  - Tighten contributor setup, security boundaries, and safe artifact-sharing expectations.
+  - Improve issue templates so outside bug reports include run/artifact context without exposing secrets.
 
 ## Blocked
 

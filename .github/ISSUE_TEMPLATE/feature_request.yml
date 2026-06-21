@@ -20,6 +20,29 @@ body:
         - [ ]
     validations:
       required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Open-source or paid-platform scope
+      description: Where does this feature belong?
+      options:
+        - Open-source CLI
+        - Free local dashboard/viewer
+        - Paid cloud or self-hosted platform
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: User workflow
+      description: Describe the command, CI step, dashboard action, or operator flow this would improve.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
   - type: textarea
     id: notes
     attributes:

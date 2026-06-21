@@ -119,6 +119,23 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("gh workflow run Release --field dry_run=true", docs_text)
         self.assertIn("gh release view v0.1.0", docs_text)
 
+    def test_public_docs_point_to_current_prerelease(self):
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertIn("v0.1.0-alpha.2", readme_text)
+        self.assertIn("git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-alpha.2", readme_text)
+        self.assertIn("Open-source readiness prerelease", readme_text)
+
+    def test_issue_templates_collect_safe_repro_context(self):
+        bug_template = Path(".github/ISSUE_TEMPLATE/bug_report.yml").read_text(encoding="utf-8")
+        feature_template = Path(".github/ISSUE_TEMPLATE/feature_request.yml").read_text(encoding="utf-8")
+
+        self.assertIn("Run ID or artifact context", bug_template)
+        self.assertIn("Do not paste secrets", bug_template)
+        self.assertIn("Security boundary", bug_template)
+        self.assertIn("Open-source or paid-platform scope", feature_template)
+        self.assertIn("User workflow", feature_template)
+
 
 if __name__ == "__main__":
     unittest.main()

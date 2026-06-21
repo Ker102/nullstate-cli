@@ -6,7 +6,7 @@ Local-first purple-teaming CLI for infrastructure-as-code sandboxes.
 
 `nullstate` turns Terraform security review into a repeatable attack, patch, and validation loop. It combines a deterministic IaC security core with model-assisted red-team and blue-team reasoning from OpenAI-compatible endpoints such as vLLM on AMD MI300X.
 
-The V1 demo proves public cloud-storage exposure in local sandboxes, applies Terraform remediation, reruns validation, and writes evidence artifacts that can be reviewed by security, cloud, and DevSecOps teams.
+The V1 demo proves public cloud-storage exposure in local sandboxes, applies Terraform remediation, reruns validation, and writes evidence artifacts that can be reviewed by security, cloud, and DevSecOps teams. The current public release is an alpha intended for local evaluation, demos, and contribution.
 
 ## What it does
 
@@ -32,8 +32,8 @@ Final AMD MI300X/vLLM demo runs used `nullstate-gemma4-26b-a4b` for both red and
 
 | Scenario | Target | Finding | Result |
 |---|---|---|---|
-| `aws-public-s3` | LocalStack AWS | S3 public access block disabled | `Red before: success`, `Red after: blocked` |
-| `azure-public-blob` | LocalStack Azure | Anonymous Blob container access | `Red before: success`, `Red after: blocked` |
+| `aws-public-s3` | LocalStack AWS | S3 public access block disabled | Live runtime probe observed access before remediation and blocked access after remediation |
+| `azure-public-blob` | LocalStack Azure/offline path | Anonymous Blob container access | Manifest-backed probe generated; live LocalStack Azure validation is pending emulator entitlement |
 
 Representative model metrics:
 
@@ -100,10 +100,19 @@ To see where Python installed console scripts:
 python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
 ```
 
-After the first prerelease tag exists, install directly from GitHub:
+Install the current prerelease directly from GitHub:
 
 ```powershell
-python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-alpha.1"
+python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-alpha.2"
+```
+
+For contributor work, install development tools too:
+
+```powershell
+python -m pip install -e ".[dev]"
+python -m ruff check src tests
+python -m mypy src
+python -m unittest discover -s tests -v
 ```
 
 ## Quickstart
@@ -405,10 +414,11 @@ The `Media` prerelease is only used to host README assets. Product releases shou
 | Tag | Purpose |
 |---|---|
 | `v0.1.0-alpha.1` | First hackathon prerelease with offline demos and polished docs |
+| `v0.1.0-alpha.2` | Open-source readiness prerelease with constrained red runner, CI artifacts, evidence bundles, local dashboard, policy scaffolds, SBOM/provenance workflow, and release documentation |
 | `v0.1.0-beta.1` | Live LocalStack Azure validation path working |
 | `v0.1.0` | Final hackathon release candidate with demo video, case study, and metrics evidence |
 
-The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.1`.
+The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.2`.
 
 Tagged releases build wheel/sdist artifacts, upload `release-manifest.json` with SHA-256 digests, generate and validate `sbom.spdx.json` from the built wheel installed into a clean environment, validate the SBOM again with SPDX Python tools, create GitHub artifact attestations for package provenance and the SBOM, and publish keyless Sigstore `.sigstore.json` signing bundles beside release assets. Verify a downloaded wheel with:
 
