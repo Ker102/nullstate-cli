@@ -202,6 +202,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Tighten contributor setup, security boundaries, and safe artifact-sharing expectations.
   - Improve issue templates so outside bug reports include run/artifact context without exposing secrets.
   - Reproduced the LocalStack Azure entitlement failure on the main device and hardened `sandbox up` so soon-exiting containers are reported as failed starts.
+  - Added `docs/open-source-readiness.md` to track alpha, stable sandbox, and stable open-source CLI milestones.
+  - Updated the case study to distinguish live AWS evidence from Azure live-validation blockers.
+  - Added `docs/quickstart-10-minutes.md` as the first-time open-source user path with no Docker, LocalStack, cloud credentials, or model endpoint required.
+  - Created GitHub milestones for alpha publication readiness, stable local sandbox validation, and open-source stable CLI.
+  - Created issue #29 for sanitized sample run artifacts and issue #30 for an Azurite fallback.
 
 ## Blocked
 

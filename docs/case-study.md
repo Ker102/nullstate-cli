@@ -2,7 +2,7 @@
 
 ## 1. Executive summary
 
-I built `nullstate` during the AMD x lablab.ai hackathon to test whether infrastructure security validation could move beyond static IaC findings into a repeatable red-team/blue-team loop. The CLI reads Terraform projects, starts a local sandbox target, detects dangerous cloud storage exposure, asks a red-team model to reason about the attack path, executes a constrained generated attack script against the local target, asks a blue-team model to explain remediation, applies a deterministic Terraform patch, reruns validation, and writes judge-ready evidence artifacts. The final demo used LocalStack sandboxes, Terraform automation commands, a Python Typer/Rich CLI, OpenAI-compatible vLLM endpoints, ROCm, and an AMD Instinct MI300X GPU droplet. The key engineering decision was to make the security verdict deterministic while using the model for adversarial reasoning, explanation, and report quality. The result was a working hackathon prototype with final AWS and Azure runs showing vulnerable infrastructure, exploit evidence, patched Terraform, and blocked attack paths.
+I built `nullstate` during the AMD x lablab.ai hackathon to test whether infrastructure security validation could move beyond static IaC findings into a repeatable red-team/blue-team loop. The CLI reads Terraform projects, starts a local sandbox target, detects dangerous cloud storage exposure, asks a red-team model to reason about the attack path, executes a constrained generated attack script against the local target, asks a blue-team model to explain remediation, applies a deterministic Terraform patch, reruns validation, and writes judge-ready evidence artifacts. The final demo used Terraform automation commands, LocalStack-style local sandboxes, a Python Typer/Rich CLI, OpenAI-compatible vLLM endpoints, ROCm, and an AMD Instinct MI300X GPU droplet. The key engineering decision was to make the security verdict deterministic while using the model for adversarial reasoning, explanation, and report quality. The result is an open-source alpha with a live-validated LocalStack AWS path, a manifest-backed Azure Blob path awaiting live emulator validation, and a documented roadmap for stable open-source release readiness.
 
 ## 2. Problem
 
@@ -22,7 +22,7 @@ IaC scanners are useful, but they often stop at "this configuration looks risky.
 - Final submission pressure: working evidence needed before the deadline, not a broad but unfinished platform.
 - Cloud target: local sandboxes first, no real Azure or AWS credentials by default.
 - Model target: self-hosted endpoint on AMD MI300X through vLLM/ROCm.
-- Runtime target: LocalStack for AWS and Azure-style scenarios.
+- Runtime target: LocalStack for AWS and Azure-style scenarios, with Azure live validation dependent on LocalStack Azure Emulator entitlement.
 - UX target: CLI-first instead of a full web application.
 - Security constraint: do not expose vLLM, LocalStack, cloud tokens, Terraform state, or `.env` values publicly.
 - Reliability constraint: model output must not be the source of truth for the pass/fail verdict.
@@ -123,6 +123,24 @@ Repository practices added during the build:
 
 ## 9. Final demo results
 
+## Open-source readiness status
+
+`nullstate` is currently ready for open-source alpha users, not for stable production claims.
+
+What is proven today:
+
+- The AWS LocalStack path is live-validated. The generated `attack.py` performs an anonymous S3 object-read probe before remediation, records command evidence, and verifies the path is blocked after deterministic remediation.
+- The red runner executes real commands, but only through generated run-directory `attack.py` scripts. It does not give the model arbitrary shell access.
+- Offline deterministic scenarios, CI summaries, SARIF export, policy files, scrubbed artifacts, evidence manifests, bundles, and the local dashboard are covered by tests.
+
+What is not yet proven:
+
+- The Azure Blob path is not yet live-validated against LocalStack Azure. The current local attempt fails because the LocalStack account/workspace does not have LocalStack Azure Emulator entitlement.
+- Kubernetes, Docker Compose, on-prem, and generic plan-review targets remain offline/scaffolded unless explicitly documented otherwise.
+- The project still needs a stable release artifact flow and a first-time-user walkthrough before it should be marketed as a stable open-source CLI.
+
+The readiness milestones are tracked in `docs/open-source-readiness.md`.
+
 ### AWS public S3 scenario
 
 Run artifact:
@@ -152,7 +170,7 @@ Remediation patch:
 +  restrict_public_buckets = true
 ```
 
-Result:
+Live runtime result:
 
 ```text
 Red before: success
@@ -193,12 +211,13 @@ Remediation patch:
 +  container_access_type = "private"
 ```
 
-Result:
+Current validation status:
 
 ```text
-Red before: success
-Red after: blocked
-Verdict: Exploit blocked after remediation
+Deterministic finding: present before remediation
+Deterministic remediation: patch generated and validated
+Runtime probe: generated from attack-manifest.json
+Live LocalStack Azure validation: blocked by LocalStack Azure Emulator entitlement
 ```
 
 Model metrics from `metrics.json`:
@@ -259,6 +278,7 @@ Final portfolio version should include:
 
 - DigitalOcean account access blocked early setup, so GPU work started later than planned.
 - LocalStack containers can leave port `4566` reserved; the CLI now gives a specific recovery hint.
+- LocalStack Azure can start and then exit when the workspace/user lacks LocalStack Azure Emulator entitlement; the CLI now treats soon-exiting sandbox containers as failed starts and prints a specific entitlement hint.
 - Editable Python installs break when the repo path changes; production installs should use the package entrypoint.
 - Running two model containers on one MI300X caused VRAM pressure and cache allocation failures.
 - ROCm AITER fused-MoE paths failed for one Gemma startup attempt, so the final path used a single larger model endpoint.
@@ -275,6 +295,7 @@ Final portfolio version should include:
 - Expand release SBOM quality, package signing, and provenance verification.
 - Add more Azure, AWS, Kubernetes, Docker Compose, and on-prem digital-twin scenarios.
 - Build a portfolio demo page with embedded screenshots, architecture diagram, and video.
+- Resolve LocalStack Azure Emulator entitlement, implement an Azurite fallback, or explicitly keep Azure as deterministic/offline until a supported emulator path is available.
 
 ## 15. Enterprise next iteration
 
@@ -292,15 +313,15 @@ The business-grade principle is simple: if a report says “exploited,” the ru
 - Suggested portfolio slug: `/case-studies/nullstate-autonomous-purple-team-iac-sandbox`
 - Demo video: pending
 - Final AWS report: `runs/final-aws-gemma26b/20260510-170931/report.md`
-- Final Azure report: `runs/final-azure-gemma26b/20260510-174858/report.md`
+- Final Azure report: `runs/final-azure-gemma26b/20260510-174858/report.md` (historical hackathon artifact; current public docs should label Azure live validation as pending)
 
 ## 17. Interview explanation
 
-I built `nullstate` because IaC security tools often identify misconfigurations without proving exploitability or remediation effectiveness. The architecture uses Terraform plan analysis, LocalStack sandboxes, deterministic detection, constrained attack script execution, and self-hosted model agents to create a repeatable purple-team loop. The most important security decision was to keep the pass/fail verdict deterministic and limit red command execution to generated `attack.py` scripts instead of arbitrary shell access. The hardest tradeoff was choosing reliability over full autonomy under hackathon time pressure. If I rebuilt it, I would expand the constrained runner into richer per-scenario allowlists with deeper network probes against the local sandbox.
+I built `nullstate` because IaC security tools often identify misconfigurations without proving exploitability or remediation effectiveness. The architecture uses Terraform plan analysis, local sandboxes, deterministic detection, constrained attack script execution, and self-hosted model agents to create a repeatable purple-team loop. The most important security decision was to keep the pass/fail verdict deterministic and limit red command execution to generated `attack.py` scripts instead of arbitrary shell access. The hardest tradeoff was choosing reliable, scoped evidence over broad unsupported automation. If I rebuilt it, I would expand the constrained runner into richer per-scenario allowlists and add a stable Azure emulator path before presenting Azure as live-validated.
 
 ## 18. Resume bullets
 
 - Built `nullstate`, a Python DevSecOps CLI that validates Terraform IaC through a local red-team/blue-team loop with deterministic remediation and evidence artifacts.
 - Served a large model on AMD MI300X with vLLM/ROCm and captured token, latency, throughput, and endpoint metrics for final AWS and Azure sandbox runs.
 - Implemented Terraform analysis, LocalStack sandbox workflows, structured run artifacts, report generation, CI checks, threat model, runbook, and release-oriented PR workflow.
-- Produced final demo evidence showing public S3 and Azure Blob exposures remediated and revalidated as blocked attack paths.
+- Produced live AWS S3 evidence showing public access remediated and revalidated as blocked, and documented the Azure Blob path as deterministic/offline pending live emulator entitlement.

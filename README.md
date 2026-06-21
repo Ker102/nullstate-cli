@@ -391,6 +391,7 @@ nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstat
 ## Documentation
 
 - [Case study](docs/case-study.md)
+- [First 10 minutes](docs/quickstart-10-minutes.md)
 - [Technical walkthrough](docs/technical-walkthrough.md)
 - [Architecture](docs/architecture.md)
 - [Security model](docs/security-model.md)
@@ -400,6 +401,7 @@ nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstat
 - [Model serving runbook](docs/model-serving.md)
 - [Enterprise roadmap](docs/enterprise-roadmap.md)
 - [Enterprise readiness](docs/enterprise-readiness.md)
+- [Open-source readiness milestones](docs/open-source-readiness.md)
 - [Productization progress](docs/progress.md)
 - [Real sandbox red-team command plan](docs/plans/2026-06-01-real-sandbox-red-team-commands.md)
 - [Project handoff](docs/handoff.md)

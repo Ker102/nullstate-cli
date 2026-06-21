@@ -136,6 +136,40 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("Open-source or paid-platform scope", feature_template)
         self.assertIn("User workflow", feature_template)
 
+    def test_open_source_readiness_milestones_are_documented(self):
+        readiness = Path("docs/open-source-readiness.md")
+
+        self.assertTrue(readiness.is_file(), "Expected an open-source readiness milestone document.")
+        text = readiness.read_text(encoding="utf-8")
+
+        self.assertIn("Milestone 1: Alpha publication readiness", text)
+        self.assertIn("Milestone 2: Stable local sandbox validation", text)
+        self.assertIn("Milestone 3: Open-source stable CLI", text)
+        self.assertIn("LocalStack Azure entitlement", text)
+        self.assertIn("Azurite fallback", text)
+
+    def test_first_ten_minutes_quickstart_is_documented(self):
+        quickstart = Path("docs/quickstart-10-minutes.md")
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertTrue(quickstart.is_file(), "Expected a first-10-minutes quickstart.")
+        text = quickstart.read_text(encoding="utf-8")
+
+        self.assertIn("No Docker required", text)
+        self.assertIn("python -m pip install -e", text)
+        self.assertIn("nullstate doctor --offline", text)
+        self.assertIn("nullstate run examples/aws-public-s3 --offline --mock-agents", text)
+        self.assertIn("nullstate dashboard --open", text)
+        self.assertIn("docs/quickstart-10-minutes.md", readme_text)
+
+    def test_case_study_records_alpha_status_without_overclaiming_azure(self):
+        case_study = Path("docs/case-study.md").read_text(encoding="utf-8")
+
+        self.assertIn("Open-source readiness status", case_study)
+        self.assertIn("AWS LocalStack path is live-validated", case_study)
+        self.assertIn("Azure Blob path is not yet live-validated", case_study)
+        self.assertIn("LocalStack Azure Emulator entitlement", case_study)
+
 
 if __name__ == "__main__":
     unittest.main()

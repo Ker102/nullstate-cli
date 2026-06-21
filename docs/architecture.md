@@ -64,7 +64,7 @@ allow_nested_items_to_be_public = false
 
 | Scenario | Target | Sandbox | Execution status |
 |---|---|---|---|
-| `azure-public-blob` | Terraform AzureRM | LocalStack Azure | live demo available |
+| `azure-public-blob` | Terraform AzureRM | LocalStack Azure or future Azurite fallback | manifest-backed/offline demo available; live LocalStack Azure validation pending emulator entitlement |
 | `aws-public-s3` | Terraform AWS | LocalStack AWS | live demo available |
 | `k8s-privileged-pod` | Kubernetes YAML/Helm/Kustomize | kind | offline demo available; live execution pending |
 | `compose-exposed-admin` | Docker Compose | isolated Docker network | offline demo available; live probe pending |
