@@ -201,11 +201,13 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Refresh public install and release wording for `v0.1.0-alpha.2`.
   - Tighten contributor setup, security boundaries, and safe artifact-sharing expectations.
   - Improve issue templates so outside bug reports include run/artifact context without exposing secrets.
+  - Reproduced the LocalStack Azure entitlement failure on the main device and hardened `sandbox up` so soon-exiting containers are reported as failed starts.
 
 ## Blocked
 
 - Live LocalStack Azure validation:
   - Blocker: LocalStack account/license does not currently have Azure Emulator entitlement.
+  - Reconfirmed on 2026-06-21: `localstack/localstack-azure-alpha` exits with code `55` and logs that the Azure Emulator is not enabled for the account.
   - Do not keep retrying because the Azure image is large and disk space is limited.
 
 ## Next Candidates

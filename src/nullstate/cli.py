@@ -1188,33 +1188,38 @@ def _verify_sandbox_container_started(
     *,
     runner=None,
     sleep_seconds: float = 2.0,
+    stability_interval_seconds: float = 3.0,
 ) -> tuple[bool, str]:
     if not container_name:
         return True, "No container runtime to verify."
-    if sleep_seconds > 0:
-        time.sleep(sleep_seconds)
     run = runner or subprocess.run
-    result = run(
-        [
-            "docker",
-            "inspect",
-            "--format",
-            "{{.State.Running}} {{.State.Status}} {{.State.ExitCode}}",
-            container_name,
-        ],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return False, (result.stderr or result.stdout or f"Could not inspect container {container_name}.").strip()
-    raw = result.stdout.strip()
-    parts = raw.split()
-    if parts and parts[0].lower() == "true":
-        return True, f"{container_name} is running."
-    status = parts[1] if len(parts) > 1 else "unknown"
-    exit_code = parts[2] if len(parts) > 2 else "unknown"
-    return False, f"{container_name} status={status} exit_code={exit_code}"
+    for attempt in range(3):
+        delay = sleep_seconds if attempt == 0 else stability_interval_seconds
+        if sleep_seconds == 0:
+            delay = 0
+        if delay > 0:
+            time.sleep(delay)
+        result = run(
+            [
+                "docker",
+                "inspect",
+                "--format",
+                "{{.State.Running}} {{.State.Status}} {{.State.ExitCode}}",
+                container_name,
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return False, (result.stderr or result.stdout or f"Could not inspect container {container_name}.").strip()
+        raw = result.stdout.strip()
+        parts = raw.split()
+        if not parts or parts[0].lower() != "true":
+            status = parts[1] if len(parts) > 1 else "unknown"
+            exit_code = parts[2] if len(parts) > 2 else "unknown"
+            return False, f"{container_name} status={status} exit_code={exit_code}"
+    return True, f"{container_name} is running and stable."
 
 
 def _resolve_sandbox_down_commands(backend, *, container_lister=None) -> tuple[list[list[str]], str]:
@@ -1257,6 +1262,22 @@ def _list_sandbox_containers(backend) -> list[str]:
 def _print_sandbox_start_failure_hints(backend) -> None:
     if backend.name not in {"localstack-aws", "localstack-azure"}:
         return
+    if backend.name == "localstack-azure":
+        console.print(
+            Panel(
+                "\n".join(
+                    [
+                        "If the container exits with code 55, LocalStack usually rejected Azure Emulator startup.",
+                        "Check `docker logs localstack-azure` for a message such as:",
+                        "`The Localstack for Azure Emulator is not enabled for your account.`",
+                        "",
+                        "Resolve the LocalStack account entitlement before retrying live Azure validation.",
+                    ]
+                ),
+                title="LocalStack Azure License Hint",
+                border_style="yellow",
+            )
+        )
     console.print(
         Panel(
             "\n".join(
