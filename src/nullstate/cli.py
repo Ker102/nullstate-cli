@@ -14,6 +14,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from .agent_trust import build_blast_radius_report, build_posture_report, load_agent_manifest
 from .agents import LlmAgent
 from .artifacts import EventLog, new_run_id, write_json
 from .artifact_scrubber import scrub_run_artifacts
@@ -61,9 +62,13 @@ app = typer.Typer(
 sandbox_app = typer.Typer(no_args_is_help=True, help="Manage local sandbox backends.")
 scenarios_app = typer.Typer(no_args_is_help=True, help="Inspect supported attack scenarios.")
 policy_app = typer.Typer(no_args_is_help=True, help="Manage red-tool execution policies.")
+agent_app = typer.Typer(no_args_is_help=True, help="Assess external AI-agent cloud trust and blast radius.")
+agent_posture_app = typer.Typer(no_args_is_help=True, help="Verify external AI-agent runtime posture evidence.")
 app.add_typer(sandbox_app, name="sandbox")
 app.add_typer(scenarios_app, name="scenarios")
 app.add_typer(policy_app, name="policy")
+app.add_typer(agent_app, name="agent")
+agent_app.add_typer(agent_posture_app, name="posture")
 console = Console()
 
 BANNER = r"""
@@ -102,6 +107,7 @@ def main(ctx: typer.Context) -> None:
             "nullstate sandbox list",
             "nullstate sandbox up localstack-aws",
             "nullstate run examples/aws-public-s3 --target localstack-aws",
+            "nullstate agent posture verify examples/agent-trust/external-agent-manifest.json",
             "nullstate report",
         ]
     )
@@ -615,6 +621,70 @@ def policy_validate(
         if payload.get("error"):
             console.print(str(payload["error"]))
         raise typer.Exit(code=2)
+
+
+@agent_posture_app.command("verify")
+def agent_posture_verify(
+    manifest: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="External agent manifest JSON."),
+) -> None:
+    """Verify external AI-agent runtime posture evidence."""
+    try:
+        payload = load_agent_manifest(manifest)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    report = build_posture_report(payload)
+
+    table = Table(title="External agent posture")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Agent", str(report["agent_id"]))
+    table.add_row("Runtime", str(report["runtime_environment"]))
+    table.add_row("Status", str(report["status"]))
+    table.add_row("Evidence", str(report["evidence_count"]))
+    table.add_row("Unknown claims", ", ".join(report["unknown_claims"]) or "none")
+    table.add_row("Stale claims", ", ".join(report["stale_claims"]) or "none")
+    table.add_row("Failed claims", ", ".join(report["failed_claims"]) or "none")
+    console.print(table)
+    for finding in report["findings"]:
+        console.print(f"[yellow]Finding:[/] {finding['claim']} ({finding['severity']}) - {finding['detail']}")
+    _print_next_steps(
+        [
+            f"nullstate agent blast-radius {manifest}",
+            "nullstate agent posture verify <manifest>",
+        ]
+    )
+    if not report["passed"]:
+        raise typer.Exit(code=1)
+
+
+@agent_app.command("blast-radius")
+def agent_blast_radius(
+    manifest: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="External agent manifest JSON."),
+) -> None:
+    """Summarize blast radius if an external AI-agent runtime or identity is compromised."""
+    try:
+        payload = load_agent_manifest(manifest)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    report = build_blast_radius_report(payload)
+
+    table = Table(title="External agent blast radius")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Agent", str(report["agent_id"]))
+    table.add_row("Identity types", ", ".join(report["identity_types"]) or "none")
+    table.add_row("Permissions", ", ".join(report["permissions"]) or "none")
+    table.add_row("Reachable resources", str(report["reachable_resource_count"]))
+    table.add_row("Sensitive resources", ", ".join(report["sensitive_resources"]) or "none")
+    table.add_row("High-risk actions", ", ".join(report["high_risk_actions"]) or "none")
+    table.add_row("Attack paths", ", ".join(report["attack_paths"]) or "none")
+    console.print(table)
+    _print_next_steps(
+        [
+            f"nullstate agent posture verify {manifest}",
+            "nullstate run examples/aws-public-s3 --offline",
+        ]
+    )
 
 
 @sandbox_app.command("status")

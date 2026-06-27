@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schemas.nullstate.dev/external-agent-manifest.schema.json",
+  "schema_version": 1,
+  "agent": {
+    "id": "vendor-agent://ticket-triage",
+    "name": "Ticket triage agent",
+    "owner": "support-platform"
+  },
+  "runtime": {
+    "environment": "external-saas",
+    "provider": "example-vendor",
+    "region": "eu-west-1"
+  },
+  "identities": [
+    {
+      "id": "arn:aws:iam::111122223333:role/nullstate-agent",
+      "type": "agent",
+      "provider": "aws",
+      "permissions": [
+        "s3:GetObject",
+        "iam:PassRole"
+      ]
+    },
+    {
+      "id": "entra://user/support-admin@example.com",
+      "type": "delegated-user",
+      "provider": "azure",
+      "permissions": [
+        "Microsoft.Storage/storageAccounts/blobServices/containers/read"
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "id": "tool://support-case-reader",
+      "type": "api",
+      "target": "s3://customer-prod-support-cases"
+    }
+  ],
+  "posture_evidence": [
+    {
+      "claim": "artifact_integrity",
+      "status": "pass",
+      "evidence_class": "cryptographically-verified",
+      "observed_at": "2026-06-27T10:00:00+00:00",
+      "expires_at": "2026-12-31T10:00:00+00:00",
+      "source": "slsa-provenance"
+    },
+    {
+      "claim": "runtime_network_boundary",
+      "status": "pass",
+      "evidence_class": "provider-observed",
+      "observed_at": "2026-06-27T10:00:00+00:00",
+      "expires_at": "2026-12-31T10:00:00+00:00",
+      "source": "vendor-runtime-export"
+    }
+  ],
+  "reachable_resources": [
+    {
+      "id": "s3://customer-prod-support-cases",
+      "provider": "aws",
+      "data_classification": "confidential",
+      "actions": [
+        "s3:GetObject"
+      ]
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/deploy-admin",
+      "provider": "aws",
+      "data_classification": "privileged-control-plane",
+      "actions": [
+        "iam:PassRole"
+      ]
+    }
+  ]
+}

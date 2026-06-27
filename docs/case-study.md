@@ -16,6 +16,23 @@ IaC scanners are useful, but they often stop at "this configuration looks risky.
 
 `nullstate` targets that gap. The user should be able to point the CLI at an IaC project and get a reproducible evidence trail: finding, attack reasoning, remediation, validation, and a report that a security, cloud, or DevSecOps reviewer can inspect.
 
+The broader product direction does not assume that IaC contains the whole cloud environment. IaC represents intended and managed state; read-only AWS and Azure discovery represents deployed reality, identity relationships, network paths, runtime evidence, and drift. Nullstate should correlate both into an environment graph, determine which attacker identities can reach which data or capabilities, and reconstruct only the minimum relevant attack path for controlled validation.
+
+### Why not attack production directly?
+
+- Exploits can modify, delete, corrupt, or expose real customer data.
+- Network and authentication probes can cause outages, throttling, lockouts, quarantine, or incident-response activation.
+- IAM testing can create persistent credentials, trust relationships, or privilege changes.
+- Exfiltration tests can violate privacy, contractual, regulatory, and data-residency requirements.
+- Production dependencies can affect customers and third parties outside the approved scope.
+- Cleanup cannot always restore the exact previous state.
+
+The intended workflow is read-only production discovery, explicitly approved non-destructive checks, controlled exploit validation using synthetic data, deterministic remediation, and replay of the same attack. This also lets Nullstate evaluate more than an anonymous external attacker: developer identities, CI workloads, compromised compute identities, AWS IAM roles, Azure service principals, and managed identities can each be represented as an attack-path starting point.
+
+AI agents add another underexamined identity class. An enterprise agent may have its own provider-native agent identity, reuse a conventional service principal or IAM role, invoke tools through a separate runtime identity, or act with authority delegated by a human user. If its prompt context, memory, connector, MCP server, plugin, or downstream credential is compromised, the attacker may inherit access that is difficult to see in a normal resource-only cloud graph. The product direction therefore models agent-native permissions, delegated-user permissions, and tool-chain permissions separately and reports the data or privileged operations reachable through each path.
+
+Externally hosted agents make this harder because the customer may control the tenant permissions but not the machine executing the agent. A valid token does not prove that the external runtime is patched, isolated, running the approved artifact, using trusted tools, or free from stolen credentials. The next product design adds runtime posture evidence and compromise blast-radius analysis. It deliberately separates cryptographically verified evidence from provider observations, operator assertions, inference, and unknowns so that a dashboard cannot convert missing visibility into false assurance.
+
 ## 3. Context and constraints
 
 - Hackathon build window: roughly 48 hours.
@@ -132,11 +149,13 @@ What is proven today:
 - The AWS LocalStack path is live-validated. The generated `attack.py` performs an anonymous S3 object-read probe before remediation, records command evidence, and verifies the path is blocked after deterministic remediation.
 - The red runner executes real commands, but only through generated run-directory `attack.py` scripts. It does not give the model arbitrary shell access.
 - Offline deterministic scenarios, CI summaries, SARIF export, policy files, scrubbed artifacts, evidence manifests, bundles, and the local dashboard are covered by tests.
+- External AI-agent trust now has an initial manifest-driven CLI preview. `nullstate agent posture verify` and `nullstate agent blast-radius` validate local runtime posture evidence, keep stale or unknown evidence visible, and separate agent identity, delegated-user authority, sensitive resources, high-risk actions, and attack-path classes.
 
 What is not yet proven:
 
 - The Azure Blob path is not yet live-validated against LocalStack Azure. The current local attempt fails because the LocalStack account/workspace does not have LocalStack Azure Emulator entitlement.
 - Kubernetes, Docker Compose, on-prem, and generic plan-review targets remain offline/scaffolded unless explicitly documented otherwise.
+- External AI-agent trust does not yet collect live provider inventory, verify third-party runtime attestation, or enforce a tenant authorization gateway.
 - The project still needs a stable release artifact flow and a first-time-user walkthrough before it should be marketed as a stable open-source CLI.
 
 The readiness milestones are tracked in `docs/open-source-readiness.md`.

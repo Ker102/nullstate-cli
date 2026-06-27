@@ -1,6 +1,6 @@
 # Nullstate Project Handoff
 
-Last updated: 2026-06-19
+Last updated: 2026-06-27
 
 ## Read this first
 
@@ -8,8 +8,8 @@ This file is written for a fresh agent with no conversation history and no MCP t
 
 The hackathon freeze rule was lifted on 2026-06-18 by the project owner. PR #24 was squash-merged into `main` after review blockers and remote checks were cleared.
 
-- Current active branch: `main`.
-- Current local state at handoff: `main` is aligned with `origin/main`; run `git status --short --branch` and `git log --oneline -8` for exact local state.
+- Current active branch: `docs/open-source-readiness`.
+- Current local state at handoff: this branch contains unmerged open-source readiness and external-agent trust work. Run `git status --short --branch` and `git log --oneline -8` for exact local state.
 
 Recent merged checkpoint:
 
@@ -71,8 +71,24 @@ When this project is opened on the main device:
 Core positioning:
 
 ```text
-Prove, patch, and validate IaC risk.
+Prove, patch, and validate cloud attack paths.
 ```
+
+Expanded product direction:
+
+- IaC remains a first-class source of intended AWS and Azure state, but it is not assumed to describe the complete environment.
+- Future read-only provider discovery supplies deployed resources, identity relationships, network paths, logs, and drift.
+- A normalized environment graph connects attacker identities to reachable services, exposed data, and privileged capabilities.
+- AI agents are first-class principals. Preserve their own identity, delegated user, runtime/tool identity, downstream credentials, and target operation as separate graph nodes.
+- Future AWS and Azure discovery should inventory provider-native agent identities as well as conventional service principals, managed identities, IAM roles, and workload identities used by agents.
+- Agent security scenarios should cover compromised instructions, prompt injection, memory/tool compromise, excessive agency, confused-deputy behavior, shared runtime identities, and agent-to-agent trust.
+- External agent runtime posture is designed in `docs/plans/2026-06-22-external-agent-trust-design.md`.
+- Posture evidence must preserve source, issuer, verification method, freshness, confidence, and unknown assumptions.
+- Do not reduce posture to a single opaque score or claim that signed artifacts/hardware attestation prove complete application safety.
+- Production is observed with read-only access and only explicitly approved non-destructive checks.
+- Exploit validation reconstructs the minimum relevant path in a controlled environment using synthetic evidence data.
+- CI has three modes: pull-request IaC validation, post-deployment observed-state validation, and scheduled drift/assurance runs.
+- `docs/product-validation-model.md` is the primary reference for this architecture and its production-safety rationale.
 
 ## Current technical state
 
@@ -168,6 +184,7 @@ Important limitation:
 - The constrained red runner is real. AWS now has a live-validated object-read probe path. Azure now has a manifest-backed blob-read probe, but live LocalStack Azure validation is still pending.
 - The before/after success verdict is still mostly deterministic via `simulate_attack()`.
 - Enterprise-grade exploit validation still requires live Azure emulator confirmation and possible URL/API tuning if LocalStack Azure semantics differ.
+- External-agent trust posture is currently manifest-driven and deterministic. It validates a local manifest and reports posture/blast-radius risk, but it does not yet collect live provider inventory, verify third-party runtime attestation, or enforce a tenant authorization gateway.
 
 ## Important docs
 
@@ -178,12 +195,20 @@ Start here:
 - `docs/case-study.md`
 - `docs/enterprise-roadmap.md`
 - `docs/enterprise-readiness.md`
+- `docs/product-validation-model.md`
+- `docs/plans/2026-06-22-external-agent-trust-design.md`
 - `docs/plans/2026-06-01-real-sandbox-red-team-commands.md`
 
 The implementation plan for the next core security feature is:
 
 ```text
 docs/plans/2026-06-01-real-sandbox-red-team-commands.md
+```
+
+The implementation plan for the current external-agent CLI preview is:
+
+```text
+docs/superpowers/plans/2026-06-27-external-agent-trust-cli.md
 ```
 
 ## Last verification run
@@ -247,6 +272,21 @@ Run artifacts are under `runs/` and may be ignored by Git. If this repository is
 Live LocalStack Azure validation attempt on 2026-06-11 did not reach Terraform execution. The container started and exited with LocalStack reporting that the Azure Emulator is not enabled for the account/license. Do not keep retrying until the LocalStack account has Azure Emulator entitlement; each retry pulls a large image and can exhaust disk.
 
 ## Where to continue
+
+Current branch feature now includes:
+
+```powershell
+nullstate agent posture verify examples/agent-trust/external-agent-manifest.json
+nullstate agent blast-radius examples/agent-trust/external-agent-manifest.json
+```
+
+Related files:
+
+- `src/nullstate/agent_trust.py`
+- `tests/test_agent_trust.py`
+- `docs/schemas/external-agent-manifest.schema.json`
+- `examples/agent-trust/external-agent-manifest.json`
+- `examples/agent-trust/README.md`
 
 Next highest-value feature:
 

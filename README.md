@@ -1,12 +1,12 @@
 # nullstate
 
-Local-first purple-teaming CLI for infrastructure-as-code sandboxes.
+Evidence-backed cloud attack-path validation for infrastructure-as-code and deployed environments.
 
 ![Nullstate terminal showcase](https://github.com/Ker102/nullstate-cli/releases/download/Media/Showcaseimage)
 
-`nullstate` turns Terraform security review into a repeatable attack, patch, and validation loop. It combines a deterministic IaC security core with model-assisted red-team and blue-team reasoning from OpenAI-compatible endpoints such as vLLM on AMD MI300X.
+`nullstate` turns cloud and infrastructure security review into a repeatable discover, attack, patch, and validation loop. It combines deterministic IaC analysis with model-assisted red-team and blue-team reasoning from OpenAI-compatible endpoints such as vLLM on AMD MI300X.
 
-The V1 demo proves public cloud-storage exposure in local sandboxes, applies Terraform remediation, reruns validation, and writes evidence artifacts that can be reviewed by security, cloud, and DevSecOps teams. The current public release is an alpha intended for local evaluation, demos, and contribution.
+The V1 demo proves public cloud-storage exposure in local sandboxes, applies Terraform remediation, reruns validation, and writes evidence artifacts that can be reviewed by security, cloud, and DevSecOps teams. The product direction extends this loop by correlating IaC with read-only AWS and Azure inventory, identity relationships, network paths, runtime findings, and data classifications. The current public release is an alpha intended for local evaluation, demos, and contribution.
 
 ## What it does
 
@@ -24,7 +24,48 @@ Hackathon V1 includes a live-validated LocalStack AWS S3 path, a manifest-backed
 
 ## Why this exists
 
-Static IaC scanners can identify risky configuration, but they do not always prove whether an attacker can use it or whether a remediation blocks the path. `nullstate` turns IaC security review into a repeatable purple-team loop with local-first sandboxes and sanitized evidence artifacts.
+Static IaC scanners and cloud posture tools can identify risky configuration, but they do not always answer the operational questions that determine actual risk:
+
+- Can an external attacker, compromised workload, developer, CI identity, AI agent, or over-privileged cloud role use the path?
+- What data, metadata, credentials, services, or privileges become reachable?
+- Does an apparently harmless opening expose filenames, tenant details, internal topology, logs, backups, source artifacts, or other information that enables a later attack?
+- Can the path be reproduced without putting production data and workloads at risk?
+- Does the proposed remediation actually block the same attack?
+
+`nullstate` is intended to correlate declared infrastructure with observed cloud state, construct attack paths across network, identity, service, and data relationships, validate relevant paths in a controlled environment, and replay them after remediation.
+
+### Why not attack production directly?
+
+Read-only discovery and carefully bounded validation can run against production, but autonomous exploitation should not be the default:
+
+- Exploits can modify, delete, corrupt, or expose real customer data.
+- Network and authentication probes can trigger outages, throttling, quarantine, or automated incident response.
+- IAM and privilege-escalation tests can create persistent access that survives the test.
+- Exfiltration tests can violate privacy, contractual, regulatory, or data-residency requirements.
+- Production dependencies can affect customers and third parties outside the approved test scope.
+- Cleanup cannot always restore the exact original state.
+
+Nullstate therefore separates observation from exploitation. It can discover and model production with read-only access, perform explicitly allowlisted non-destructive checks where approved, and reconstruct the relevant attack path with synthetic data inside a disposable AWS, Azure, emulator, Kubernetes, container, or VM environment. The goal is not to clone an entire subscription or account. It is to reproduce the smallest security-relevant graph needed to prove or reject an attack hypothesis.
+
+### What makes it different?
+
+The intended value is not another list of cloud misconfigurations. Nullstate should produce evidence connecting:
+
+```text
+attacker identity
+-> reachable entry point
+-> identity or privilege transition
+-> accessible service
+-> exposed data or capability
+-> remediation
+-> blocked replay
+```
+
+Attack analysis is identity-aware. A run may evaluate an anonymous internet user, authenticated tenant user, developer, CI workload, compromised compute identity, managed identity, IAM role, AI agent identity, or another explicitly authorized principal. For AI agents, Nullstate should distinguish the agent's own identity from a tool/runtime identity and authority delegated by a human user. Reports should state which identity and delegation mode were tested and distinguish configuration exposure from observed access to sensitive data.
+
+Externally hosted agents create an additional trust boundary. A valid cloud identity does not prove that the machine, container, agent framework, memory store, connector, or hosting provider using it is secure. Nullstate's product direction therefore includes runtime posture verification: short-lived workload identity, artifact signatures and provenance, immutable deployment digests, host/runtime attestation where available, network restrictions, tool authorization, auditability, evidence freshness, and revocation readiness. Missing evidence remains unknown rather than being treated as secure.
+
+See [Product and validation model](docs/product-validation-model.md).
 
 ## Demo result
 
@@ -152,6 +193,15 @@ nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 `status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
 
 Runtime attack probes stay local by default. Future non-local HTTP(S) probe targets require `--allow-live-cloud`, and the approval is recorded in `events.jsonl`; when a policy file includes `allowed_target_hosts`, the target hostname must also match that allowlist. Current built-in scenarios still resolve to local/offline sandbox targets.
+
+External AI-agent trust preview:
+
+```powershell
+nullstate agent posture verify examples/agent-trust/external-agent-manifest.json
+nullstate agent blast-radius examples/agent-trust/external-agent-manifest.json
+```
+
+These commands validate a local external-agent manifest and summarize runtime posture evidence, evidence freshness, identity types, delegated-user authority, sensitive resources, high-risk actions, and likely attack-path classes. This is deterministic preview functionality for the external-agent trust model; it does not yet collect provider inventory or attest a live third-party runtime.
 
 Open the latest report:
 
@@ -394,6 +444,9 @@ nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstat
 - [First 10 minutes](docs/quickstart-10-minutes.md)
 - [Technical walkthrough](docs/technical-walkthrough.md)
 - [Architecture](docs/architecture.md)
+- [Product and validation model](docs/product-validation-model.md)
+- [External agent trust and runtime posture design](docs/plans/2026-06-22-external-agent-trust-design.md)
+- [External agent manifest schema](docs/schemas/external-agent-manifest.schema.json)
 - [Security model](docs/security-model.md)
 - [Threat model](docs/threat-model.md)
 - [CI/CD](docs/ci-cd.md)

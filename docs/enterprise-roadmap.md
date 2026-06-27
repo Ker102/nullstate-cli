@@ -4,11 +4,17 @@ This document frames `nullstate` as a future enterprise DevSecOps product, not o
 
 ## Product Positioning
 
-`nullstate` is a local-first purple-team validation platform for infrastructure-as-code. It helps cloud, platform, and security teams prove whether IaC misconfigurations are exploitable, apply deterministic remediation, and preserve evidence for review.
+`nullstate` is an evidence-backed cloud attack-path validation platform. It correlates infrastructure-as-code with observed AWS and Azure state, helps cloud, platform, and security teams determine which identities can reach which data or capabilities, proves selected paths in controlled environments, applies deterministic remediation, and preserves evidence for review.
 
 The core message:
 
 > Static scanners tell you what might be wrong. Nullstate proves the attack path, applies the fix, and validates that the path is blocked.
+
+The product should not require a complete IaC representation of an account or subscription. IaC supplies intended state; read-only cloud discovery supplies deployed resources, identity relationships, network reachability, logs, and drift. Nullstate combines them into a normalized environment graph and reconstructs only the minimum security-relevant path for exploit validation.
+
+AI agents must be first-class principals in that graph. Enterprises increasingly grant agents access through dedicated agent identities, IAM roles, service principals, managed identities, workload identities, tool gateways, and delegated user context. Nullstate should calculate the effective blast radius if the agent, its prompt context, memory, connector, MCP server, plugin, or downstream credential is compromised.
+
+External agent runtime posture is a distinct paid-platform opportunity. Nullstate can continuously collect and verify workload identity binding, artifact provenance, deployment digests, runtime attestation, patch and vulnerability posture, network policy, tool authorization, evidence freshness, logging, and revocation readiness. The platform should combine those dimensions with reachable data and privileges rather than hide them behind a single unexplained score.
 
 ## Target Customers
 
@@ -194,6 +200,14 @@ CI should support two model modes:
 
 The managed model mode belongs in the paid platform because usage can be metered by organization, project, run, model, tokens, latency, and estimated cost.
 
+CI and continuous assurance should support three trigger classes:
+
+1. Pull-request CI when IaC, policy, or infrastructure manifests change. This analyzes proposed state, compares against a baseline, optionally validates high-risk changes in a disposable environment, and blocks the merge according to policy.
+2. Post-deployment validation after Terraform, CloudFormation, Bicep, or another deployment succeeds. This refreshes live inventory, checks drift, and validates the affected attack paths.
+3. Scheduled assurance for console changes, unmanaged resources, permission drift, newly exposed endpoints, stale risk, and cloud changes that did not originate in Git.
+
+Production discovery should use read-only identities. Non-destructive production checks require explicit policy approval. Exploit validation should be routed to an emulator, digital twin, disposable cluster, dedicated AWS account, or dedicated Azure subscription according to the required fidelity.
+
 ## Support, automation, and alerts
 
 Paid users should have an in-app support and feedback panel. A support ticket should be able to attach a sanitized run bundle, product version, run ID, scenario, and dashboard link.
@@ -216,7 +230,7 @@ Automation should support scheduled scans against connected repos or uploaded Ia
 
 Recommended primary tagline:
 
-> Prove, patch, and validate IaC risk.
+> Prove, patch, and validate cloud attack paths.
 
 ### Brand Personality
 
@@ -283,6 +297,13 @@ Before businesses can rely on it, the product needs:
 - keyless release signing through Sigstore
 - first tagged release verification checklist in the runbook
 - versioned remediation metadata through schema-validated `remediation.json`
+- AWS and Azure AI-agent identity inventory
+- separate agent-native, delegated-user, runtime, tool, and downstream credential paths
+- agent prompt-injection and excessive-agency validation scenarios using synthetic data and controlled tools
+- agent-to-agent trust and shared-runtime identity findings
+- external agent runtime posture evidence and freshness policies
+- signed artifact, deployment digest, SLSA provenance, SPIFFE/SPIRE, and hardware-attestation integrations
+- tenant authorization gateway policies that reduce privilege when runtime evidence is missing or stale
 
 ### P3: Growth and brand
 

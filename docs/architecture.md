@@ -2,7 +2,7 @@
 
 ## Goal
 
-Ship a repeatable hackathon demo that shows autonomous purple-teaming of infrastructure-as-code without depending on real cloud credentials.
+Ship a repeatable purple-team workflow that begins with infrastructure-as-code and evolves toward correlation with observed AWS and Azure environments, without making real-cloud exploitation the default.
 
 ## Pipeline
 
@@ -23,12 +23,18 @@ flowchart LR
 ## Design Choices
 
 - The deterministic detector is the source of truth for demo reliability.
+- IaC describes intended configuration; future read-only AWS and Azure discovery supplies deployed state and drift.
+- The long-term analysis substrate is a normalized environment graph spanning resources, network reachability, identities, privileges, services, and data impact.
+- Attack paths are evaluated from explicit identities such as anonymous users, developers, CI workloads, compromised compute identities, AWS roles, and Azure managed identities.
+- Disposable validation environments should reconstruct the smallest relevant attack path rather than clone an entire account or subscription.
 - The red/blue agents receive internal role instructions and scenario evidence; users do not need to prompt the model manually.
 - `run` defaults to `--scenario auto` and `--target auto`; explicit values remain available for demos and tests.
 - Offline mode uses a static Terraform parser so demos still work without LocalStack, Terraform, or GPUs.
 - Online mode follows Terraform automation commands: `init`, `plan -out=tfplan`, and `show -json tfplan`.
 - Sandbox backends are explicit adapters: executable, digital twin, or plan-only.
 - The red tool runner executes only generated run-directory `attack.py` scripts and logs command evidence into `events.jsonl`.
+
+See [Product and validation model](product-validation-model.md) for production discovery, identity-aware attack analysis, exposed-data impact, fidelity levels, and CI trigger design.
 
 ## Sandbox adapters
 

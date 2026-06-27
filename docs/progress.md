@@ -4,7 +4,7 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Current Branch
 
-- Branch: `main`
+- Branch: `docs/open-source-readiness`
 - Rule: hackathon freeze lifted by the project owner on 2026-06-18.
 - Remote policy: use feature branches and PRs for substantive follow-up slices.
 
@@ -207,6 +207,27 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   - Added `docs/quickstart-10-minutes.md` as the first-time open-source user path with no Docker, LocalStack, cloud credentials, or model endpoint required.
   - Created GitHub milestones for alpha publication readiness, stable local sandbox validation, and open-source stable CLI.
   - Created issue #29 for sanitized sample run artifacts and issue #30 for an Azurite fallback.
+  - Clarified the product model beyond IaC-only scanning:
+    - correlate intended IaC with observed AWS and Azure state
+    - evaluate attack paths from external, human, workload, CI, IAM-role, and managed-identity perspectives
+    - classify what data or privileged capability is actually reachable
+    - use read-only production discovery and controlled exploit validation instead of autonomous production attacks
+    - support pull-request CI, post-deployment validation, and scheduled assurance
+    - treat AI agents as first-class cloud principals with separate agent-native, delegated-user, runtime/tool, and downstream credential paths
+    - cover prompt injection, excessive agency, confused-deputy behavior, shared runtime identities, and agent-to-agent trust as future validation scenarios
+  - Added `docs/product-validation-model.md` as the durable product rationale and validation architecture reference.
+  - Added `docs/plans/2026-06-22-external-agent-trust-design.md`:
+    - defines runtime posture dimensions and evidence confidence classifications
+    - models external agent compromise across identity, delegation, tools, data, and recovery controls
+    - proposes a tenant-controlled authorization gateway and posture-aware privilege reduction
+    - keeps hardware attestation and artifact signatures scoped to the properties they can actually prove
+  - Added initial external-agent trust CLI preview:
+    - `docs/schemas/external-agent-manifest.schema.json`
+    - `examples/agent-trust/external-agent-manifest.json`
+    - `nullstate agent posture verify <manifest>`
+    - `nullstate agent blast-radius <manifest>`
+    - deterministic posture reports fail or need review when evidence is stale, failed, or unknown
+    - blast-radius reports separate agent identities, delegated users, sensitive resources, high-risk actions, and attack-path classes
 
 ## Blocked
 

@@ -1,5 +1,17 @@
 # CI/CD
 
+## When Nullstate runs
+
+Nullstate is intended to participate in three different security feedback loops:
+
+1. **Pull-request CI:** run when Terraform, CloudFormation, Bicep, Helm, policy, or related infrastructure files change. Analyze proposed state, compare against a baseline, optionally validate selected paths in a disposable environment, publish SARIF, and fail according to severity policy.
+2. **Post-deployment validation:** run after an infrastructure deployment succeeds or when a provider event reports a security-relevant resource or policy change. Refresh observed cloud state, detect drift, and validate affected paths. Destructive probes remain outside production.
+3. **Scheduled assurance:** run periodically to detect manual console changes, unmanaged resources, permission drift, newly exposed services, and attack paths created outside Git.
+
+Pull-request CI answers, "Is this proposed change safe to merge?" Post-deployment validation answers, "Did the deployed environment end up in the expected state?" Scheduled assurance answers, "Has the environment drifted since the last reviewed change?"
+
+Customer-managed CI can provide a read-only AWS/Azure identity and either a private model endpoint or managed model credentials. A future Nullstate Cloud integration can receive scrubbed run bundles, provide managed inference, retain history, and coordinate schedules and alerts.
+
 ## Branching model
 
 - `main` is protected.
