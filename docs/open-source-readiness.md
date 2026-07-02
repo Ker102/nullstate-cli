@@ -57,7 +57,7 @@ Acceptance criteria:
 - [ ] Publish release artifacts that install without cloning the repo.
 - [ ] Publish a release page with wheel, sdist, SBOM, release manifest, attestations, and signature verification instructions.
 - [x] Add a short "first 10 minutes" walkthrough tested from a clean checkout.
-- [ ] Include at least one sanitized demo run bundle and dashboard artifact.
+- [x] Include at least one sanitized demo run bundle and dashboard artifact.
 - [ ] Keep every non-live scenario clearly labeled as offline/scaffolded.
 - [ ] Run dependency audit and document any accepted risk.
 - [ ] Confirm GitHub Actions release dry-run passes before tagging the next release.

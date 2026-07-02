@@ -175,6 +175,8 @@ nullstate report --runs-dir examples/sample-runs
 nullstate summary --runs-dir examples/sample-runs --json
 ```
 
+The checked-in sample also includes `run-bundle.json` and `dashboard.html` for reviewing the portable bundle contract and local dashboard output without generating new artifacts.
+
 Run another offline scenario:
 
 ```powershell

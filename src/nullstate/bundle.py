@@ -46,7 +46,7 @@ def build_run_bundle(run_dir: Path) -> dict[str, Any]:
         "generated_at": datetime.now(UTC).isoformat(),
         "run": {
             "id": run_dir.name,
-            "path": str(run_dir),
+            "path": ".",
             "scenario": manifest.get("scenario") or _event_data(events, "start", "scenario"),
             "target": manifest.get("backend") or _event_data(events, "start", "target"),
             "offline": _event_data(events, "start", "offline"),
@@ -140,6 +140,8 @@ def _artifact_inventory(run_dir: Path) -> list[dict[str, Any]]:
     excluded_dirs = {"workspace", ".terraform", "__pycache__"}
     for path in sorted(run_dir.rglob("*")):
         if not path.is_file():
+            continue
+        if path.name == BUNDLE_FILENAME:
             continue
         if any(part in excluded_dirs for part in path.relative_to(run_dir).parts):
             continue

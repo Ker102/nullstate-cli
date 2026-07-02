@@ -1,0 +1,402 @@
+{
+  "$schema": "https://schemas.nullstate.dev/run-bundle.schema.json",
+  "artifacts": [
+    {
+      "path": "attack-manifest.json",
+      "sha256": "a98c6e4319ac8c6ee39afb3cb755439253166d3030a0ab2361f56cef57bfd3a2",
+      "size_bytes": 316
+    },
+    {
+      "path": "attack.py",
+      "sha256": "25b9eb536599340f6245a77376b75439165182bef02c0f58bb9ae72252df2bca",
+      "size_bytes": 3327
+    },
+    {
+      "path": "dashboard.html",
+      "sha256": "108dcad537a4eaef44bb022f4cbee6f5d15ef07b5c5b0fe6c6bb9aa6c958eafb",
+      "size_bytes": 9755
+    },
+    {
+      "path": "events.jsonl",
+      "sha256": "e65dbb735ef7bedc890cc8f02394df554c407f930bbbdd206131b3b8d07b30ac",
+      "size_bytes": 4837
+    },
+    {
+      "path": "findings.json",
+      "sha256": "e119d47669721a02e08c5366ea0cbb26b17ad80cd2476691542cabfccc55561e",
+      "size_bytes": 441
+    },
+    {
+      "path": "metrics.json",
+      "sha256": "7045a60f798ae107b1ca5b12f5743bdef7dff3c4b3c3b71ad6f26c36d219df0a",
+      "size_bytes": 2809
+    },
+    {
+      "path": "remediation.json",
+      "sha256": "bc08487ca897426c0733efd6a781a6e27cb7ea072bc16946f4a61416fe983b33",
+      "size_bytes": 387
+    },
+    {
+      "path": "remediation.patch",
+      "sha256": "a2bbc334fd5b5ca847cf3b207157bdd44f7df5ee042c712e63642358e4cd18df",
+      "size_bytes": 1170
+    },
+    {
+      "path": "report.md",
+      "sha256": "b9827564af0c64e8ae1e6abca3f670fd82b9ebd11a1ba4335d848798dc2a19b3",
+      "size_bytes": 3946
+    },
+    {
+      "path": "scrub-report.json",
+      "sha256": "f17d1b5065825d66ca31b0dbf1a40cbf89b9897904109fe7226d2a7aef6113d0",
+      "size_bytes": 341
+    }
+  ],
+  "cloud": {
+    "intended_endpoint": "Nullstate Cloud run ingestion API",
+    "requires_token": true,
+    "upload_ready": true
+  },
+  "evidence": {
+    "attack_manifest": {
+      "$schema": "https://schemas.nullstate.dev/attack-manifest.schema.json",
+      "backend": "localstack-aws",
+      "resources": {
+        "bucket_hint": "nullstate-public-logs-",
+        "object_key": "evidence.txt"
+      },
+      "scenario": "aws-public-s3",
+      "schema_version": 1,
+      "target_url": "offline://aws-public-s3"
+    },
+    "events": [
+      {
+        "data": {
+          "allow_live_cloud": false,
+          "blue_mock_agent": true,
+          "mock_agents": true,
+          "offline": true,
+          "red_mock_agent": true,
+          "role_specific_endpoints": false,
+          "scenario": "aws-public-s3",
+          "target": "localstack-aws",
+          "target_mode": "executable",
+          "terraform_dir": "examples\\aws-public-s3",
+          "workspace_dir": "<redacted-local-path>"
+        },
+        "message": "Run started",
+        "phase": "start",
+        "timestamp": "2026-07-02T18:20:15.380501+00:00"
+      },
+      {
+        "data": {
+          "finding_count": 1
+        },
+        "message": "IaC input analyzed",
+        "phase": "analysis",
+        "timestamp": "2026-07-02T18:20:15.383721+00:00"
+      },
+      {
+        "data": {
+          "attack_script_sha256": "25b9eb536599340f6245a77376b75439165182bef02c0f58bb9ae72252df2bca",
+          "backend_name": "localstack-aws",
+          "command": [
+            "<redacted-local-path>",
+            "<redacted-local-path>",
+            "--target-url",
+            "offline://aws-public-s3",
+            "--stage",
+            "before",
+            "--manifest",
+            "<redacted-local-path>"
+          ],
+          "command_policy_id": "generated-attack-script-v1",
+          "duration_seconds": 0.223,
+          "ended_at": "2026-07-02T18:20:15.664318+00:00",
+          "live_cloud_allowed": false,
+          "manifest_sha256": "a98c6e4319ac8c6ee39afb3cb755439253166d3030a0ab2361f56cef57bfd3a2",
+          "returncode": 0,
+          "scenario_name": "aws-public-s3",
+          "schema_version": 1,
+          "stage": "before",
+          "started_at": "2026-07-02T18:20:15.441504+00:00",
+          "stderr": "",
+          "stderr_truncated": false,
+          "stdout": "Attempting anonymous S3 object read against LocalStack AWS endpoint\nstage=before target=offline://aws-public-s3\noffline target selected; no network request performed\n",
+          "stdout_truncated": false,
+          "target_classification": "offline",
+          "target_url": "offline://aws-public-s3"
+        },
+        "message": "Allowlisted attack command completed",
+        "phase": "red-tool",
+        "timestamp": "2026-07-02T18:20:15.667037+00:00"
+      },
+      {
+        "data": {
+          "agent": {
+            "content": "Offline red team selected an anonymous S3 read hypothesis for the public access block exposure.",
+            "metrics": {
+              "completion_tokens": 0,
+              "latency_seconds": 0.0,
+              "model": "offline-mock",
+              "output_tokens_per_second": 0.0,
+              "prompt_tokens": 0,
+              "role": "red",
+              "total_tokens": 0
+            },
+            "model": "offline-mock",
+            "role": "red"
+          },
+          "result": {
+            "detail": "Anonymous S3 read hypothesis succeeded because public access block controls were disabled. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage before --manifest <redacted-local-path>` target=offline://aws-public-s3.",
+            "status": "success"
+          }
+        },
+        "message": "Attack attempted before remediation",
+        "phase": "red-team",
+        "timestamp": "2026-07-02T18:20:15.667744+00:00"
+      },
+      {
+        "data": {
+          "agent": {
+            "content": "Offline blue team recommended enabling all S3 public access block controls.",
+            "metrics": {
+              "completion_tokens": 0,
+              "latency_seconds": 0.0,
+              "model": "offline-mock",
+              "output_tokens_per_second": 0.0,
+              "prompt_tokens": 0,
+              "role": "blue",
+              "total_tokens": 0
+            },
+            "model": "offline-mock",
+            "role": "blue"
+          },
+          "changed": true,
+          "remediation": {
+            "$schema": "https://schemas.nullstate.dev/remediation-metadata.schema.json",
+            "changed": true,
+            "changed_files": [
+              "main.tf"
+            ],
+            "rules_applied": [
+              "AWS_S3_BLOCK_PUBLIC_ACCESS",
+              "AWS_S3_REMOVE_PUBLIC_READ_POLICY",
+              "AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT"
+            ],
+            "ruleset_version": "2026.06.1",
+            "scenario": "aws-public-s3",
+            "schema_version": 1
+          }
+        },
+        "message": "IaC remediation generated",
+        "phase": "blue-team",
+        "timestamp": "2026-07-02T18:20:15.739953+00:00"
+      },
+      {
+        "data": {
+          "attack_script_sha256": "25b9eb536599340f6245a77376b75439165182bef02c0f58bb9ae72252df2bca",
+          "backend_name": "localstack-aws",
+          "command": [
+            "<redacted-local-path>",
+            "<redacted-local-path>",
+            "--target-url",
+            "offline://aws-public-s3",
+            "--stage",
+            "after",
+            "--manifest",
+            "<redacted-local-path>"
+          ],
+          "command_policy_id": "generated-attack-script-v1",
+          "duration_seconds": 0.198,
+          "ended_at": "2026-07-02T18:20:15.940753+00:00",
+          "live_cloud_allowed": false,
+          "manifest_sha256": "a98c6e4319ac8c6ee39afb3cb755439253166d3030a0ab2361f56cef57bfd3a2",
+          "returncode": 0,
+          "scenario_name": "aws-public-s3",
+          "schema_version": 1,
+          "stage": "after",
+          "started_at": "2026-07-02T18:20:15.743201+00:00",
+          "stderr": "",
+          "stderr_truncated": false,
+          "stdout": "Attempting anonymous S3 object read against LocalStack AWS endpoint\nstage=after target=offline://aws-public-s3\noffline target selected; no network request performed\n",
+          "stdout_truncated": false,
+          "target_classification": "offline",
+          "target_url": "offline://aws-public-s3"
+        },
+        "message": "Allowlisted attack command completed",
+        "phase": "red-tool",
+        "timestamp": "2026-07-02T18:20:15.941488+00:00"
+      },
+      {
+        "data": {
+          "remaining_findings": 0,
+          "result": {
+            "detail": "Attack path denied after deterministic remediation. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage after --manifest <redacted-local-path>` target=offline://aws-public-s3.",
+            "status": "blocked"
+          }
+        },
+        "message": "Attack attempted after remediation",
+        "phase": "validation",
+        "timestamp": "2026-07-02T18:20:15.942134+00:00"
+      }
+    ],
+    "findings": [
+      {
+        "evidence": "Disabled controls: block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets",
+        "remediation": "Set every aws_s3_bucket_public_access_block control to true.",
+        "resource_address": "aws_s3_bucket_public_access_block.public_logs",
+        "rule_id": "AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED",
+        "severity": "high",
+        "summary": "S3 public access block controls are disabled."
+      }
+    ],
+    "metrics": {
+      "endpoint": {
+        "after": {
+          "base_url_host": null,
+          "endpoint_type": "offline",
+          "gpu_snapshot": {
+            "attempted": [
+              "amd-smi",
+              "rocm-smi"
+            ],
+            "status": "unavailable"
+          },
+          "vllm_metrics": {},
+          "vllm_metrics_artifact": null
+        },
+        "before": {
+          "base_url_host": null,
+          "endpoint_type": "offline",
+          "gpu_snapshot": {
+            "attempted": [
+              "amd-smi",
+              "rocm-smi"
+            ],
+            "status": "unavailable"
+          },
+          "vllm_metrics": {},
+          "vllm_metrics_artifact": null
+        }
+      },
+      "endpoints": {
+        "blue": {
+          "after": {
+            "base_url_host": null,
+            "endpoint_type": "offline",
+            "gpu_snapshot": {
+              "attempted": [
+                "amd-smi",
+                "rocm-smi"
+              ],
+              "status": "unavailable"
+            },
+            "vllm_metrics": {},
+            "vllm_metrics_artifact": null
+          },
+          "before": {
+            "base_url_host": null,
+            "endpoint_type": "offline",
+            "gpu_snapshot": {
+              "attempted": [
+                "amd-smi",
+                "rocm-smi"
+              ],
+              "status": "unavailable"
+            },
+            "vllm_metrics": {},
+            "vllm_metrics_artifact": null
+          }
+        },
+        "red": {
+          "after": {
+            "base_url_host": null,
+            "endpoint_type": "offline",
+            "gpu_snapshot": {
+              "attempted": [
+                "amd-smi",
+                "rocm-smi"
+              ],
+              "status": "unavailable"
+            },
+            "vllm_metrics": {},
+            "vllm_metrics_artifact": null
+          },
+          "before": {
+            "base_url_host": null,
+            "endpoint_type": "offline",
+            "gpu_snapshot": {
+              "attempted": [
+                "amd-smi",
+                "rocm-smi"
+              ],
+              "status": "unavailable"
+            },
+            "vllm_metrics": {},
+            "vllm_metrics_artifact": null
+          }
+        }
+      },
+      "model_calls": [
+        {
+          "completion_tokens": 0,
+          "latency_seconds": 0.0,
+          "model": "offline-mock",
+          "output_tokens_per_second": 0.0,
+          "prompt_tokens": 0,
+          "role": "red",
+          "total_tokens": 0
+        },
+        {
+          "completion_tokens": 0,
+          "latency_seconds": 0.0,
+          "model": "offline-mock",
+          "output_tokens_per_second": 0.0,
+          "prompt_tokens": 0,
+          "role": "blue",
+          "total_tokens": 0
+        }
+      ],
+      "notes": "Token metrics come from OpenAI-compatible response usage when available. Offline mock mode records zero token counts. User-authored prompts are not required; nullstate sends internal agent instructions plus scenario evidence.",
+      "providers": {
+        "blue": "openai-compatible",
+        "red": "openai-compatible"
+      }
+    },
+    "remediation": {
+      "$schema": "https://schemas.nullstate.dev/remediation-metadata.schema.json",
+      "changed": true,
+      "changed_files": [
+        "main.tf"
+      ],
+      "rules_applied": [
+        "AWS_S3_BLOCK_PUBLIC_ACCESS",
+        "AWS_S3_REMOVE_PUBLIC_READ_POLICY",
+        "AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT"
+      ],
+      "ruleset_version": "2026.06.1",
+      "scenario": "aws-public-s3",
+      "schema_version": 1
+    },
+    "report_excerpt": "# nullstate Run Report\n\nRun ID: `20260702-182015`\n\nIaC input: `examples\\aws-public-s3`\n\n## Verdict\n\nExploit blocked after remediation\n\n## Findings\n\n- `HIGH` `AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED` on `aws_s3_bucket_public_access_block.public_logs`: S3 public access block controls are disabled. Evidence: Disabled controls: block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets Remediation: Set every aws_s3_bucket_public_access_block control to true.\n\n## Red Team Before Remediation\n\n- Status: `success`\n- Evidence: Anonymous S3 read hypothesis succeeded because public access block controls were disabled. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage before --manifest <redacted-local-path>` target=offline://aws-public-s3.\n\n## Blue Team Remediation\n\nRed: offline-mock. Blue: offline-mock. Offline blue team recommended enabling all S3 public access block controls.\n\n```diff\n--- a/main.tf\n+++ b/main.tf\n@@ -27,34 +27,10 @@\n \n resource \"aws_s3_bucket_public_access_block\" \"public_logs\" {\n   bucket                  = aws_s3_bucket.public_logs.id\n-  block_public_acls       = false\n-  block_public_policy     = false\n-  ignore_public_acls      = false\n-  restrict_public_buckets = false\n+  block_public_acls       = true\n+  block_public_policy     = true\n+  ignore_public_acls      = true\n+  restrict_public_buckets = true\n }\n \n-resource \"aws_s3_object\" \"evidence\" {\n-  bucket       = aws_s3_bucket.public_logs.id\n-  key          = \"evidence.txt\"\n-  content      = \"nullstate public S3 evidence\"\n-  content_type = \"text/plain\"\n-}\n \n-resource \"aws_s3_bucket_policy\" \"public_read\" {\n-  bucket = aws_s3_bucket.public_logs.id\n-\n-  policy = jsonencode({\n-    Version = \"2012-10-17\"\n-    Statement = [\n-      {\n-        Sid       = \"NullstatePublicReadEvidence\"\n-        Effect    = \"Allow\"\n-        Principal = \"*\"\n-        Action    = \"s3:GetObject\"\n-        Resource  = \"${aws_s3_bucket.public_logs.arn}/evidence.txt\"\n-      }\n-    ]\n-  })\n-\n-  depends_on = [aws_s3_bucket_public_access_block.public_logs]\n-}\n```\n\n## Red Team After Remediation\n\n- Status: `blocked`\n- Evidence: Attack path denied after deterministic remediation. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage after --manifest <redacted-local-path>` target=offline://aws-public-s3.\n\n## Runtime Command Evidence\n\n### Before remediation\n\n- Command: `<redacted-local-path> <redacted-local-path> --target-url offline://aws-public-s3 --stage before --manifest <redacted-local-path>`\n- Return code: `0`\n- Target: `offline://aws-public-s3`\n- Classification: `offline deterministic simulation`\n- Stdout excerpt:\n\n```text\nAttempting anonymous S3 object read against LocalStack AWS endpoint\nstage=before target=offline://aws-public-s3\noffline target selected; no network request performed\n```\n\n### After remediation\n\n- Command: `<redacted-local-path> <redacted-local-path> --target-url offline://aws-public-s3 --stage after --manifest <redacted-local-path>`\n- Return code: `0`\n- Target: `offline://aws-public-s3`\n- Classification: `offline deterministic simulation`\n- Stdout excerpt:\n\n```text\nAttempting anonymous S3 object read against LocalStack AWS endpoint\nstage=after target=offline://aws-public-s3\noffline target selected; no network request performed\n```\n\n\n## Remediation Metadata\n\n- Ruleset version: `2026.06.1`\n- Scenario: `aws-public-s3`\n- Changed: `True`\n\nRules applied:\n\n- `AWS_S3_BLOCK_PUBLIC_ACCESS`\n- `AWS_S3_REMOVE_PUBLIC_READ_POLICY`\n- `AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT`\n\nChanged files:\n\n- `main.tf`\n\n\n## Case Study Notes\n\nnullstate used deterministic IaC analysis for reliability, then layered red-team and blue-team agents over the evidence trail so the demo remains reproducible under hackathon time pressure.\n"
+  },
+  "generated_at": "2026-07-02T18:26:57.912535+00:00",
+  "product": "nullstate",
+  "product_version": "0.1.0",
+  "run": {
+    "finding_count": 1,
+    "id": "20260702-182015",
+    "offline": true,
+    "path": ".",
+    "scenario": "aws-public-s3",
+    "target": "localstack-aws",
+    "verdict": "blocked"
+  },
+  "schema_version": 1,
+  "scrub": {
+    "notes": "Bundle references local artifacts and excludes workspace/ and Terraform state by default.",
+    "status": "not_performed",
+    "workspace_included": false
+  }
+}

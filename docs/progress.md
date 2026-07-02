@@ -251,7 +251,9 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - `examples/sample-runs/20260702-182015`
     - inspect with `nullstate report --runs-dir examples/sample-runs`
     - inspect machine-readable output with `nullstate summary --runs-dir examples/sample-runs --json`
+    - includes checked-in `run-bundle.json` and `dashboard.html`
     - hardened scrubber redacts Windows local paths and scrub-report source/output directories
+    - run bundles now use portable `run.path = "."` and exclude `run-bundle.json` from their own artifact inventory
 
 ## Blocked
 

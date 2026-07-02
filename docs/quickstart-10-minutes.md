@@ -35,6 +35,8 @@ nullstate report --runs-dir examples/sample-runs
 nullstate summary --runs-dir examples/sample-runs --json
 ```
 
+The sample run includes `report.md`, `run-bundle.json`, and `dashboard.html` so you can review the core artifacts before running your own scan.
+
 ```powershell
 nullstate run examples/aws-public-s3 --offline --mock-agents
 ```

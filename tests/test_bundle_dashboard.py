@@ -28,12 +28,15 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertEqual(payload["$schema"], BUNDLE_SCHEMA_ID)
             self.assertEqual(payload["schema_version"], 1)
             self.assertEqual(payload["run"]["id"], run_dir.name)
+            self.assertEqual(payload["run"]["path"], ".")
             self.assertEqual(payload["run"]["verdict"], "blocked")
             self.assertEqual(payload["run"]["finding_count"], 1)
             self.assertEqual(payload["evidence"]["remediation"]["ruleset_version"], "2026.06.1")
             self.assertIn("AWS_S3_BLOCK_PUBLIC_ACCESS", payload["evidence"]["remediation"]["rules_applied"])
             self.assertFalse(payload["scrub"]["workspace_included"])
-            self.assertIn("report.md", {artifact["path"] for artifact in payload["artifacts"]})
+            artifact_paths = {artifact["path"] for artifact in payload["artifacts"]}
+            self.assertIn("report.md", artifact_paths)
+            self.assertNotIn("run-bundle.json", artifact_paths)
             self.assertIn("Bundle:", completed.stdout)
             self.assertIn("Bundle validation: passed", completed.stdout)
 

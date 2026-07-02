@@ -171,14 +171,20 @@ class GithubWorkflowTests(unittest.TestCase):
         sample_run = sample_runs[0]
         self.assertTrue(sample_run.joinpath("report.md").is_file())
         self.assertTrue(sample_run.joinpath("events.jsonl").is_file())
+        self.assertTrue(sample_run.joinpath("run-bundle.json").is_file())
+        self.assertTrue(sample_run.joinpath("dashboard.html").is_file())
         self.assertTrue(sample_run.joinpath("scrub-report.json").is_file())
         report = json.loads(sample_run.joinpath("scrub-report.json").read_text(encoding="utf-8"))
         self.assertEqual(report["source_run_dir"], "<redacted-source-run-dir>")
         self.assertEqual(report["scrubbed_run_dir"], "<redacted-scrubbed-run-dir>")
+        bundle = json.loads(sample_run.joinpath("run-bundle.json").read_text(encoding="utf-8"))
+        self.assertEqual(bundle["run"]["path"], ".")
+        self.assertIn("dashboard.html", {artifact["path"] for artifact in bundle["artifacts"]})
+        self.assertNotIn("run-bundle.json", {artifact["path"] for artifact in bundle["artifacts"]})
         combined_text = "\n".join(
             path.read_text(encoding="utf-8")
             for path in sample_run.rglob("*")
-            if path.is_file() and path.suffix.lower() in {"", ".json", ".jsonl", ".md", ".patch", ".py", ".tf", ".txt"}
+            if path.is_file() and path.suffix.lower() in {"", ".html", ".json", ".jsonl", ".md", ".patch", ".py", ".tf", ".txt"}
         )
         self.assertNotRegex(combined_text, r"C:\\Users\\")
         self.assertNotIn("LOCALSTACK_AUTH_TOKEN", combined_text)
