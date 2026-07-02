@@ -283,9 +283,13 @@ nullstate context validate examples/cloud-context/aws-readonly-context.json
 nullstate context summary examples/cloud-context/aws-readonly-context.json --json
 nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
 nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
+nullstate report --runs-dir examples/sample-runs
+nullstate summary --runs-dir examples/sample-runs --json
 ```
 
 The eval suite now includes a `baseline` block for a generic IaC-only review. `eval-results.json` and `eval-report.md` compare Nullstate's attack replay evidence, remediation validation, token metrics, and artifact coverage against that baseline. This is not yet an integration with Checkov, tfsec, Terrascan, or a coding-agent baseline.
+
+The repo now includes a scrubbed sample run under `examples/sample-runs/20260702-182015` so new users can inspect report and summary output without running Docker, Terraform, LocalStack, or model endpoints.
 
 Related files:
 

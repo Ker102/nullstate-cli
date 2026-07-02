@@ -28,6 +28,13 @@ Expected result:
 
 ## 3. Run a deterministic offline scan
 
+To inspect an already scrubbed sample before generating your own run:
+
+```powershell
+nullstate report --runs-dir examples/sample-runs
+nullstate summary --runs-dir examples/sample-runs --json
+```
+
 ```powershell
 nullstate run examples/aws-public-s3 --offline --mock-agents
 ```

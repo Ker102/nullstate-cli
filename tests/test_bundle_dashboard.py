@@ -99,6 +99,8 @@ class BundleDashboardTests(unittest.TestCase):
                 "'ARM_CLIENT_SECRET': 'yaml-fixture-value'\n"
                 "tenant=11111111-2222-3333-4444-555555555555\n"
                 "private=10.20.30.40 loopback=127.0.0.1\n"
+                "path=C:\\Users\\alice\\AppData\\Local\\Temp\\nullstate\\runs\\20260601\\attack.py\n"
+                '"json_path": "C:\\\\Users\\\\alice\\\\AppData\\\\Local\\\\Temp\\\\nullstate\\\\runs\\\\20260601\\\\attack.py"\n'
             )
             (run_dir / "events.jsonl").write_text(scrub_fixture_text, encoding="utf-8")
             (run_dir / "terraform.tfstate").write_text(
@@ -133,6 +135,9 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertIn("<redacted-azure-client-secret>", scrubbed_events)
             self.assertIn("<redacted-uuid>", scrubbed_events)
             self.assertIn("<redacted-private-ipv4>", scrubbed_events)
+            self.assertIn("<redacted-local-path>", scrubbed_events)
+            self.assertNotIn("C:\\Users\\alice", scrubbed_events)
+            self.assertNotIn("C:\\\\Users\\\\alice", scrubbed_events)
             self.assertIn("127.0.0.1", scrubbed_events)
             scrubbed_state = scrubbed_dir.joinpath("terraform.tfstate").read_text(encoding="utf-8")
             self.assertIn("<redacted-localstack-auth-token>", scrubbed_state)
@@ -145,6 +150,9 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertEqual(scrub_report["redaction_counts"]["model_api_key"], 2)
             self.assertEqual(scrub_report["redaction_counts"]["azure_client_secret"], 2)
             self.assertEqual(scrub_report["redaction_counts"]["private_ipv4"], 1)
+            self.assertEqual(scrub_report["redaction_counts"]["windows_local_path"], 2)
+            self.assertEqual(scrub_report["source_run_dir"], "<redacted-source-run-dir>")
+            self.assertEqual(scrub_report["scrubbed_run_dir"], "<redacted-scrubbed-run-dir>")
             self.assertIn("Scrubbed run:", completed.stdout)
 
     def test_scrub_command_refuses_to_overwrite_existing_output(self):

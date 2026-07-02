@@ -1,0 +1,14 @@
+{
+  "files_changed": [
+    "events.jsonl",
+    "report.md"
+  ],
+  "files_scanned": 10,
+  "notes": "Original run artifacts were not modified.",
+  "redaction_counts": {
+    "windows_local_path": 17
+  },
+  "schema_version": 1,
+  "scrubbed_run_dir": "<redacted-scrubbed-run-dir>",
+  "source_run_dir": "<redacted-source-run-dir>"
+}

@@ -51,6 +51,16 @@ REDACTION_RULES: tuple[tuple[str, str, str], ...] = (
         r"<redacted-aws-access-key>",
     ),
     (
+        "windows_local_path",
+        r"[A-Za-z]:\\Users\\[^\\\s`\"']+(?:\\[^\\\s`\"']+)*",
+        r"<redacted-local-path>",
+    ),
+    (
+        "windows_local_path",
+        r"[A-Za-z]:\\\\Users\\\\[^\\\\\s`\"']+(?:\\\\[^\\\\\s`\"']+)*",
+        r"<redacted-local-path>",
+    ),
+    (
         "uuid",
         r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b",
         r"<redacted-uuid>",
@@ -115,8 +125,8 @@ def scrub_run_artifacts(run_dir: Path, output_dir: Path) -> dict[str, Any]:
 
     report: dict[str, Any] = {
         "schema_version": 1,
-        "source_run_dir": str(source),
-        "scrubbed_run_dir": str(destination),
+        "source_run_dir": "<redacted-source-run-dir>",
+        "scrubbed_run_dir": "<redacted-scrubbed-run-dir>",
         "files_scanned": scanned_files,
         "files_changed": changed_files,
         "redaction_counts": {key: value for key, value in redaction_counts.items() if value},

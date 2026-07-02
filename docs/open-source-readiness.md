@@ -27,7 +27,7 @@ Acceptance criteria:
 - [x] Offline quickstart works without LocalStack, Terraform cloud credentials, or model infrastructure.
 - [x] Red-team command execution boundaries are documented honestly.
 - [x] Reports distinguish observed runtime evidence, deterministic simulation, and inconclusive runtime probes.
-- [ ] Attach or publish a sanitized sample run bundle for a first-time user to inspect without running Docker. Tracked in issue #29.
+- [x] Attach or publish a sanitized sample run artifact for a first-time user to inspect without running Docker. Tracked in issue #29.
 
 ## Milestone 2: Stable local sandbox validation
 

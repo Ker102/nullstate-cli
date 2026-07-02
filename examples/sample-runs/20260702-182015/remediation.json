@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.nullstate.dev/remediation-metadata.schema.json",
+  "changed": true,
+  "changed_files": [
+    "main.tf"
+  ],
+  "rules_applied": [
+    "AWS_S3_BLOCK_PUBLIC_ACCESS",
+    "AWS_S3_REMOVE_PUBLIC_READ_POLICY",
+    "AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT"
+  ],
+  "ruleset_version": "2026.06.1",
+  "scenario": "aws-public-s3",
+  "schema_version": 1
+}

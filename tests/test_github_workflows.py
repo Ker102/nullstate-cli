@@ -1,3 +1,4 @@
+import json
 import re
 import unittest
 from pathlib import Path
@@ -161,6 +162,27 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("nullstate run examples/aws-public-s3 --offline --mock-agents", text)
         self.assertIn("nullstate dashboard --open", text)
         self.assertIn("docs/quickstart-10-minutes.md", readme_text)
+
+    def test_sample_run_artifact_is_present_and_scrubbed(self):
+        sample_root = Path("examples/sample-runs")
+        sample_runs = [path for path in sample_root.iterdir() if path.is_dir()]
+
+        self.assertTrue(sample_runs, "Expected at least one sanitized sample run artifact.")
+        sample_run = sample_runs[0]
+        self.assertTrue(sample_run.joinpath("report.md").is_file())
+        self.assertTrue(sample_run.joinpath("events.jsonl").is_file())
+        self.assertTrue(sample_run.joinpath("scrub-report.json").is_file())
+        report = json.loads(sample_run.joinpath("scrub-report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["source_run_dir"], "<redacted-source-run-dir>")
+        self.assertEqual(report["scrubbed_run_dir"], "<redacted-scrubbed-run-dir>")
+        combined_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sample_run.rglob("*")
+            if path.is_file() and path.suffix.lower() in {"", ".json", ".jsonl", ".md", ".patch", ".py", ".tf", ".txt"}
+        )
+        self.assertNotRegex(combined_text, r"C:\\Users\\")
+        self.assertNotIn("LOCALSTACK_AUTH_TOKEN", combined_text)
+        self.assertNotIn("NULLSTATE_LLM_API_KEY", combined_text)
 
     def test_case_study_records_alpha_status_without_overclaiming_azure(self):
         case_study = Path("docs/case-study.md").read_text(encoding="utf-8")

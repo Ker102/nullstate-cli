@@ -247,6 +247,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - writes a scenario-scoped `nullstate-policy.json`
     - refuses to overwrite existing files unless `--force` is passed
     - lowers first-run friction for open-source users and coding agents setting up CI
+  - Added sanitized sample run artifact:
+    - `examples/sample-runs/20260702-182015`
+    - inspect with `nullstate report --runs-dir examples/sample-runs`
+    - inspect machine-readable output with `nullstate summary --runs-dir examples/sample-runs --json`
+    - hardened scrubber redacts Windows local paths and scrub-report source/output directories
 
 ## Blocked
 

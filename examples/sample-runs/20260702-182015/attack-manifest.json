@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schemas.nullstate.dev/attack-manifest.schema.json",
+  "backend": "localstack-aws",
+  "resources": {
+    "bucket_hint": "nullstate-public-logs-",
+    "object_key": "evidence.txt"
+  },
+  "scenario": "aws-public-s3",
+  "schema_version": 1,
+  "target_url": "offline://aws-public-s3"
+}

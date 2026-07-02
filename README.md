@@ -168,6 +168,13 @@ nullstate report
 nullstate scrub
 ```
 
+Inspect a sanitized sample run without Docker, Terraform, LocalStack, or model access:
+
+```powershell
+nullstate report --runs-dir examples/sample-runs
+nullstate summary --runs-dir examples/sample-runs --json
+```
+
 Run another offline scenario:
 
 ```powershell
