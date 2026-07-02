@@ -228,6 +228,12 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - `nullstate agent blast-radius <manifest>`
     - deterministic posture reports fail or need review when evidence is stale, failed, or unknown
     - blast-radius reports separate agent identities, delegated users, sensitive resources, high-risk actions, and attack-path classes
+  - Added agent/CI evidence contracts:
+    - `nullstate summary --json` emits compact run status, finding count, highest severity, attack before/after state, token totals, artifact paths, and limitations
+    - `docs/schemas/run-summary.schema.json` documents the machine-readable summary contract
+    - `nullstate context validate <context.json>` validates local read-only cloud context manifests
+    - `nullstate context summary <context.json> --json` summarizes providers, accounts, identities, resources, public resources, and sensitive resources
+    - `docs/schemas/cloud-context.schema.json` documents the future collector output contract without adding live cloud credentials yet
 
 ## Blocked
 

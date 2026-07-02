@@ -6,6 +6,8 @@ Nullstate is an evidence-backed cloud attack-path validation platform. It correl
 
 The product is not intended to require a perfect Terraform representation of an entire cloud account. IaC describes intended and managed configuration, while read-only discovery describes deployed reality. Nullstate should combine both into a normalized environment graph and preserve the source and confidence of every relationship.
 
+The open-source product should first act as a local DevSecOps validation framework for humans, CI jobs, and coding agents. `nullstate summary --json` gives agents a compact run result instead of forcing them to parse Markdown reports, while `nullstate context validate` and `nullstate context summary --json` define a safe read-only cloud-context contract before live collectors are added.
+
 ## Environment graph
 
 The environment graph should accept:
@@ -20,6 +22,15 @@ The environment graph should accept:
 - Optional data classification supplied by the user or inferred from safe metadata and synthetic fixtures.
 
 The graph does not need to clone every resource. It must identify security-relevant paths and create a minimal attack-path twin containing only the relationships required to test a hypothesis.
+
+The current context manifest preview is intentionally local-only:
+
+```bash
+nullstate context validate examples/cloud-context/aws-readonly-context.json
+nullstate context summary examples/cloud-context/aws-readonly-context.json --json
+```
+
+It validates the shape of provider, account, identity, resource, public exposure, and data-classification metadata without requesting cloud credentials. Future collectors should emit this contract using short-lived read-only cloud identities.
 
 ## Identity-aware attack analysis
 

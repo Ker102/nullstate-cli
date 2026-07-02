@@ -219,13 +219,23 @@ nullstate report 20260509-200601 --runs-dir runs
 Create a portable run bundle or a free local HTML dashboard:
 
 ```powershell
+nullstate summary --json
 nullstate bundle
 nullstate dashboard --open
 nullstate sarif
 nullstate upload --dry-run
 ```
 
-The dashboard summarizes findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt from the selected run.
+`summary --json` emits a compact machine-readable object for coding agents, GitHub Actions steps, and PR-comment automation. The dashboard summarizes findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt from the selected run.
+
+Read-only cloud context preview:
+
+```powershell
+nullstate context validate examples/cloud-context/aws-readonly-context.json
+nullstate context summary examples/cloud-context/aws-readonly-context.json --json
+```
+
+The context command validates and summarizes a local cloud inventory manifest. It is the safe contract for future AWS/Azure/GCP read-only collectors; it does not call cloud APIs or request credentials yet.
 
 ## Live LocalStack demo path
 
@@ -447,6 +457,8 @@ nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstat
 - [Product and validation model](docs/product-validation-model.md)
 - [External agent trust and runtime posture design](docs/plans/2026-06-22-external-agent-trust-design.md)
 - [External agent manifest schema](docs/schemas/external-agent-manifest.schema.json)
+- [Cloud context schema](docs/schemas/cloud-context.schema.json)
+- [Run summary schema](docs/schemas/run-summary.schema.json)
 - [Security model](docs/security-model.md)
 - [Threat model](docs/threat-model.md)
 - [CI/CD](docs/ci-cd.md)

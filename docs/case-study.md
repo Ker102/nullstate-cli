@@ -150,12 +150,14 @@ What is proven today:
 - The red runner executes real commands, but only through generated run-directory `attack.py` scripts. It does not give the model arbitrary shell access.
 - Offline deterministic scenarios, CI summaries, SARIF export, policy files, scrubbed artifacts, evidence manifests, bundles, and the local dashboard are covered by tests.
 - External AI-agent trust now has an initial manifest-driven CLI preview. `nullstate agent posture verify` and `nullstate agent blast-radius` validate local runtime posture evidence, keep stale or unknown evidence visible, and separate agent identity, delegated-user authority, sensitive resources, high-risk actions, and attack-path classes.
+- Coding-agent and CI integration now has a compact evidence interface. `nullstate summary --json` emits run status, findings, attack before/after state, token totals, artifacts, and limitations, while `nullstate context summary --json` defines the local read-only cloud-context contract that future collectors can produce.
 
 What is not yet proven:
 
 - The Azure Blob path is not yet live-validated against LocalStack Azure. The current local attempt fails because the LocalStack account/workspace does not have LocalStack Azure Emulator entitlement.
 - Kubernetes, Docker Compose, on-prem, and generic plan-review targets remain offline/scaffolded unless explicitly documented otherwise.
 - External AI-agent trust does not yet collect live provider inventory, verify third-party runtime attestation, or enforce a tenant authorization gateway.
+- Cloud context is currently a manifest validation and summary contract, not a live AWS/Azure/GCP collector.
 - The project still needs a stable release artifact flow and a first-time-user walkthrough before it should be marketed as a stable open-source CLI.
 
 The readiness milestones are tracked in `docs/open-source-readiness.md`.

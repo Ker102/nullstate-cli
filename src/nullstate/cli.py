@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 import webbrowser
 from datetime import UTC, datetime
@@ -24,6 +26,7 @@ from .attack_runner import run_attack_script
 from .baseline import DEFAULT_BASELINE_FILENAME, load_baseline_identities, split_known_and_new_findings, write_baseline
 from .bundle import BUNDLE_FILENAME, write_run_bundle
 from .ci import CI_SUMMARY_FILENAME, build_ci_summary, normalize_fail_on_severity
+from .cloud_context import build_context_summary, load_cloud_context
 from .dashboard import write_run_dashboard
 from .demo import create_demo
 from .evidence_manifest import (
@@ -50,6 +53,7 @@ from .sarif import SARIF_FILENAME, write_sarif
 from .sandbox import get_backend, list_backends, probe_backend, render_commands, run_commands
 from .scenario_detection import infer_scenario
 from .scenarios import get_scenario, list_scenarios
+from .summary import build_run_summary
 from .terraform import apply_saved_plan, load_plan_json
 from .upload import DEFAULT_UPLOAD_ENDPOINT, DEFAULT_UPLOAD_TOKEN_ENV, UPLOAD_PLAN_FILENAME, write_upload_plan
 
@@ -64,10 +68,12 @@ scenarios_app = typer.Typer(no_args_is_help=True, help="Inspect supported attack
 policy_app = typer.Typer(no_args_is_help=True, help="Manage red-tool execution policies.")
 agent_app = typer.Typer(no_args_is_help=True, help="Assess external AI-agent cloud trust and blast radius.")
 agent_posture_app = typer.Typer(no_args_is_help=True, help="Verify external AI-agent runtime posture evidence.")
+context_app = typer.Typer(no_args_is_help=True, help="Validate local read-only cloud context manifests.")
 app.add_typer(sandbox_app, name="sandbox")
 app.add_typer(scenarios_app, name="scenarios")
 app.add_typer(policy_app, name="policy")
 app.add_typer(agent_app, name="agent")
+app.add_typer(context_app, name="context")
 agent_app.add_typer(agent_posture_app, name="posture")
 console = Console()
 
@@ -687,6 +693,52 @@ def agent_blast_radius(
     )
 
 
+@context_app.command("validate")
+def context_validate(
+    context_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="Read-only cloud context JSON."),
+) -> None:
+    """Validate a local read-only cloud context manifest."""
+    try:
+        context = load_cloud_context(context_file)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    summary_payload = build_context_summary(context)
+    console.print(f"Cloud context validation: passed ({context_file})")
+    console.print(
+        f"providers={summary_payload['provider_count']} accounts={summary_payload['account_count']} "
+        f"identities={summary_payload['identity_count']} resources={summary_payload['resource_count']}"
+    )
+    _print_next_steps([f"nullstate context summary {context_file} --json"])
+
+
+@context_app.command("summary")
+def context_summary(
+    context_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="Read-only cloud context JSON."),
+    json_output: bool = typer.Option(False, "--json", help="Print machine-readable JSON for coding agents and CI."),
+) -> None:
+    """Summarize a local read-only cloud context manifest."""
+    try:
+        context = load_cloud_context(context_file)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    payload = build_context_summary(context)
+    if json_output:
+        sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        return
+    table = Table(title="Cloud context summary")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Mode", str(payload["mode"]))
+    table.add_row("Providers", ", ".join(payload["providers"]) or "none")
+    table.add_row("Accounts", str(payload["account_count"]))
+    table.add_row("Identities", str(payload["identity_count"]))
+    table.add_row("Resources", str(payload["resource_count"]))
+    table.add_row("Public resources", str(payload["public_resource_count"]))
+    table.add_row("Sensitive resources", str(payload["sensitive_resource_count"]))
+    console.print(table)
+    _print_next_steps([f"nullstate context summary {context_file} --json"])
+
+
 @sandbox_app.command("status")
 def sandbox_status(name: str = typer.Argument("plan-only", help="Sandbox backend name.")) -> None:
     """Show backend status and setup requirements."""
@@ -822,6 +874,38 @@ def report(
     report_path = _resolve_report_path(run_id, runs_dir)
     console.print(f"Report: {report_path}")
     console.print(_console_safe_text(report_path.read_text(encoding="utf-8")), markup=False, highlight=False)
+
+
+@app.command()
+def summary(
+    run_id: str | None = typer.Argument(None, help="Run ID to summarize. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    json_output: bool = typer.Option(False, "--json", help="Print machine-readable JSON for coding agents and CI."),
+) -> None:
+    """Summarize a run for coding agents, CI checks, and PR comments."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    payload = build_run_summary(run_dir)
+    if json_output:
+        sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        return
+    table = Table(title="Run summary")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Run", payload["run"]["id"])
+    table.add_row("Status", payload["status"])
+    table.add_row("Findings", str(payload["finding_count"]))
+    table.add_row("Highest severity", str(payload["highest_severity"] or "none"))
+    table.add_row("Attack before", str(payload["attack"]["before"] or "unknown"))
+    table.add_row("Attack after", str(payload["attack"]["after"] or "unknown"))
+    table.add_row("Tokens", str(payload["tokens"]["total_tokens"]))
+    table.add_row("Limitations", ", ".join(payload["limitations"]) or "none")
+    console.print(table)
+    _print_next_steps(
+        [
+            f"nullstate summary {run_dir.name} --runs-dir {runs_dir} --json",
+            f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
 
 
 @app.command()

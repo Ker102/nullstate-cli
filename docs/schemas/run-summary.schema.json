@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/run-summary.schema.json",
+  "title": "Nullstate run summary",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "$schema",
+    "schema_version",
+    "run",
+    "status",
+    "finding_count",
+    "highest_severity",
+    "attack",
+    "artifacts",
+    "tokens",
+    "limitations"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/run-summary.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "run": {
+      "type": "object",
+      "required": [
+        "id",
+        "path"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "needs-review"
+      ]
+    },
+    "finding_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "highest_severity": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "attack": {
+      "type": "object",
+      "required": [
+        "before",
+        "after"
+      ],
+      "properties": {
+        "before": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "after": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "required": [
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens"
+      ],
+      "properties": {
+        "prompt_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completion_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

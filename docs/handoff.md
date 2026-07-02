@@ -278,15 +278,28 @@ Current branch feature now includes:
 ```powershell
 nullstate agent posture verify examples/agent-trust/external-agent-manifest.json
 nullstate agent blast-radius examples/agent-trust/external-agent-manifest.json
+nullstate summary --json
+nullstate context validate examples/cloud-context/aws-readonly-context.json
+nullstate context summary examples/cloud-context/aws-readonly-context.json --json
 ```
 
 Related files:
 
 - `src/nullstate/agent_trust.py`
+- `src/nullstate/cloud_context.py`
+- `src/nullstate/summary.py`
 - `tests/test_agent_trust.py`
+- `tests/test_cloud_context.py`
+- `tests/test_summary.py`
 - `docs/schemas/external-agent-manifest.schema.json`
+- `docs/schemas/cloud-context.schema.json`
+- `docs/schemas/run-summary.schema.json`
 - `examples/agent-trust/external-agent-manifest.json`
 - `examples/agent-trust/README.md`
+- `examples/cloud-context/aws-readonly-context.json`
+- `examples/cloud-context/README.md`
+
+The context command is a local manifest contract only. It does not call AWS, Azure, GCP, or any cloud API yet.
 
 Next highest-value feature:
 
