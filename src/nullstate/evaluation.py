@@ -94,21 +94,32 @@ def write_eval_report(results: dict[str, Any], output_dir: Path) -> Path:
         f"- Total tokens: {results['totals']['total_tokens']}",
         f"- Artifacts: {results['totals']['artifact_count']}",
         "",
+        "## Baseline Comparison",
+        "",
+        f"- Cases with attack replay evidence: {results['totals']['comparison']['cases_with_runtime_attack_evidence']}",
+        f"- Cases with remediation validation: {results['totals']['comparison']['cases_with_remediation_validation']}",
+        f"- Artifact delta: {results['totals']['comparison']['artifact_delta']}",
+        "",
         "## Cases",
         "",
     ]
     for case in results["cases"]:
+        comparison = case["comparison"]
         lines.extend(
             [
                 f"### {case['id']}",
                 "",
                 f"- Status: {case['status']}",
+                f"- Baseline: {comparison['baseline_id']}",
                 f"- Duration seconds: {case['duration_seconds']}",
                 f"- Findings: {case['summary']['finding_count']}",
                 f"- Highest severity: {case['summary']['highest_severity']}",
                 f"- Attack before: {case['summary']['attack']['before']}",
                 f"- Attack after: {case['summary']['attack']['after']}",
                 f"- Artifacts: {case['metrics']['artifact_count']}",
+                f"- Adds attack replay evidence: {comparison['adds_runtime_attack_evidence']}",
+                f"- Adds remediation validation: {comparison['adds_remediation_validation']}",
+                f"- Artifact delta: {comparison['artifact_delta']}",
                 "",
             ]
         )
@@ -161,6 +172,12 @@ def _run_eval_case(case: dict[str, Any], *, output_dir: Path, suite_root: Path) 
     run_dir = _latest_run_dir(case_runs_dir)
     summary = build_run_summary(run_dir) if run_dir is not None else _empty_summary(case_runs_dir)
     status = "passed" if completed.returncode == 0 and _matches_expectations(summary, case.get("expected") or {}) else "failed"
+    metrics = {
+        "artifact_count": len(summary.get("artifacts") or {}),
+        "prompt_tokens": summary["tokens"]["prompt_tokens"],
+        "completion_tokens": summary["tokens"]["completion_tokens"],
+        "total_tokens": summary["tokens"]["total_tokens"],
+    }
     return {
         "id": case["id"],
         "status": status,
@@ -171,12 +188,8 @@ def _run_eval_case(case: dict[str, Any], *, output_dir: Path, suite_root: Path) 
         "stderr_path": _write_text(case_dir / "stderr.txt", completed.stderr),
         "run_dir": str(run_dir) if run_dir is not None else None,
         "summary": summary,
-        "metrics": {
-            "artifact_count": len(summary.get("artifacts") or {}),
-            "prompt_tokens": summary["tokens"]["prompt_tokens"],
-            "completion_tokens": summary["tokens"]["completion_tokens"],
-            "total_tokens": summary["tokens"]["total_tokens"],
-        },
+        "metrics": metrics,
+        "comparison": _build_comparison(case.get("baseline") or {}, summary=summary, metrics=metrics),
         "expectations": case.get("expected") or {},
     }
 
@@ -220,7 +233,17 @@ def _write_text(path: Path, value: str) -> str:
     return str(path)
 
 
-def _totals(cases: list[dict[str, Any]]) -> dict[str, int | float]:
+def _totals(cases: list[dict[str, Any]]) -> dict[str, Any]:
+    comparison = {
+        "cases_with_runtime_attack_evidence": sum(
+            1 for case in cases if case["comparison"]["adds_runtime_attack_evidence"]
+        ),
+        "cases_with_remediation_validation": sum(
+            1 for case in cases if case["comparison"]["adds_remediation_validation"]
+        ),
+        "cases_with_token_metrics": sum(1 for case in cases if case["comparison"]["adds_token_metrics"]),
+        "artifact_delta": sum(int(case["comparison"]["artifact_delta"]) for case in cases),
+    }
     return {
         "duration_seconds": round(sum(float(case["duration_seconds"]) for case in cases), 3),
         "finding_count": sum(int(case["summary"]["finding_count"]) for case in cases),
@@ -228,4 +251,45 @@ def _totals(cases: list[dict[str, Any]]) -> dict[str, int | float]:
         "completion_tokens": sum(int(case["metrics"]["completion_tokens"]) for case in cases),
         "total_tokens": sum(int(case["metrics"]["total_tokens"]) for case in cases),
         "artifact_count": sum(int(case["metrics"]["artifact_count"]) for case in cases),
+        "comparison": comparison,
+    }
+
+
+def _build_comparison(
+    baseline: dict[str, Any],
+    *,
+    summary: dict[str, Any],
+    metrics: dict[str, int],
+) -> dict[str, Any]:
+    baseline_id = str(baseline.get("id") or "unspecified-baseline")
+    baseline_artifact_count = int(baseline.get("artifact_count") or 0)
+    baseline_runtime_evidence = bool(baseline.get("runtime_attack_evidence"))
+    baseline_remediation_validation = bool(baseline.get("remediation_validation"))
+    baseline_token_metrics = bool(baseline.get("token_metrics"))
+    has_attack_evidence = bool(summary.get("attack", {}).get("before"))
+    has_remediation_validation = bool(summary.get("attack", {}).get("after"))
+    has_token_metrics = int(metrics.get("total_tokens") or 0) > 0
+    advantages = []
+    if has_attack_evidence and not baseline_runtime_evidence:
+        advantages.append("attack replay evidence")
+    if has_remediation_validation and not baseline_remediation_validation:
+        advantages.append("post-remediation validation")
+    if has_token_metrics and not baseline_token_metrics:
+        advantages.append("model token metrics")
+    if int(metrics["artifact_count"]) > baseline_artifact_count:
+        advantages.append("structured artifact coverage")
+    return {
+        "baseline_id": baseline_id,
+        "baseline_description": baseline.get("description"),
+        "baseline_finding_count": int(baseline.get("finding_count") or 0),
+        "baseline_highest_severity": baseline.get("highest_severity"),
+        "baseline_artifact_count": baseline_artifact_count,
+        "nullstate_finding_count": int(summary.get("finding_count") or 0),
+        "nullstate_highest_severity": summary.get("highest_severity"),
+        "nullstate_artifact_count": int(metrics["artifact_count"]),
+        "artifact_delta": int(metrics["artifact_count"]) - baseline_artifact_count,
+        "adds_runtime_attack_evidence": has_attack_evidence and not baseline_runtime_evidence,
+        "adds_remediation_validation": has_remediation_validation and not baseline_remediation_validation,
+        "adds_token_metrics": has_token_metrics and not baseline_token_metrics,
+        "advantages": advantages,
     }

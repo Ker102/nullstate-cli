@@ -63,6 +63,39 @@
           "expected": {
             "type": "object",
             "additionalProperties": true
+          },
+          "baseline": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string"
+              },
+              "finding_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "highest_severity": {
+                "type": "string"
+              },
+              "artifact_count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "runtime_attack_evidence": {
+                "type": "boolean"
+              },
+              "remediation_validation": {
+                "type": "boolean"
+              },
+              "token_metrics": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": true
           }
         },
         "additionalProperties": true

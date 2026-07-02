@@ -251,7 +251,7 @@ Evaluation metrics:
 nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
 ```
 
-The evaluation harness runs repeatable benchmark cases and writes `eval-results.json` plus `eval-report.md`. Use it for case-study evidence such as duration, finding count, highest severity, attack before/after status, token totals, artifact count, and pass/fail expectation checks.
+The evaluation harness runs repeatable benchmark cases and writes `eval-results.json` plus `eval-report.md`. Use it for case-study evidence such as duration, finding count, highest severity, attack before/after status, token totals, artifact count, pass/fail expectation checks, and baseline comparison. The included sample compares Nullstate against a transparent generic IaC-only review baseline, showing whether the run adds attack replay evidence, post-remediation validation, token metrics, and structured artifact coverage. It does not yet benchmark external scanners such as Checkov, tfsec, or Terrascan.
 
 ## Live LocalStack demo path
 

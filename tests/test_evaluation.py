@@ -19,6 +19,7 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(suite["schema_version"], 1)
         self.assertEqual(suite["suite"]["id"], "iac-security-regression")
         self.assertEqual(len(suite["cases"]), 1)
+        self.assertEqual(suite["cases"][0]["baseline"]["id"], "generic-iac-only-review")
         self.assertEqual(validate_eval_suite(suite), [])
 
     def test_eval_suite_validation_reports_missing_required_fields(self):
@@ -63,8 +64,17 @@ class EvaluationTests(unittest.TestCase):
             self.assertEqual(results["cases"][0]["summary"]["attack"]["before"], "success")
             self.assertEqual(results["cases"][0]["summary"]["attack"]["after"], "blocked")
             self.assertIn("artifact_count", results["cases"][0]["metrics"])
+            self.assertEqual(results["cases"][0]["comparison"]["baseline_id"], "generic-iac-only-review")
+            self.assertTrue(results["cases"][0]["comparison"]["adds_runtime_attack_evidence"])
+            self.assertTrue(results["cases"][0]["comparison"]["adds_remediation_validation"])
+            self.assertGreater(results["cases"][0]["comparison"]["artifact_delta"], 0)
+            self.assertEqual(results["totals"]["comparison"]["cases_with_runtime_attack_evidence"], 1)
+            self.assertEqual(results["totals"]["comparison"]["cases_with_remediation_validation"], 1)
             self.assertTrue((output_dir / "eval-results.json").is_file())
             self.assertTrue((output_dir / "eval-report.md").is_file())
+            report = (output_dir / "eval-report.md").read_text(encoding="utf-8")
+            self.assertIn("## Baseline Comparison", report)
+            self.assertIn("generic-iac-only-review", report)
 
     def test_eval_cli_runs_suite_and_writes_results(self):
         with TemporaryDirectory() as raw_tmp:

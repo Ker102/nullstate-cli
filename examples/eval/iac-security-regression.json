@@ -13,6 +13,16 @@
       "terraform_dir": "examples/aws-public-s3",
       "offline": true,
       "mock_agents": true,
+      "baseline": {
+        "id": "generic-iac-only-review",
+        "description": "Represents a conventional IaC-only review that can flag the risky setting but does not replay an attack or validate the post-remediation state.",
+        "finding_count": 1,
+        "highest_severity": "high",
+        "artifact_count": 1,
+        "runtime_attack_evidence": false,
+        "remediation_validation": false,
+        "token_metrics": false
+      },
       "expected": {
         "min_findings": 1,
         "highest_severity": "high",

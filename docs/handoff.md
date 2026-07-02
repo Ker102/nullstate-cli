@@ -285,6 +285,8 @@ nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-
 nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
 ```
 
+The eval suite now includes a `baseline` block for a generic IaC-only review. `eval-results.json` and `eval-report.md` compare Nullstate's attack replay evidence, remediation validation, token metrics, and artifact coverage against that baseline. This is not yet an integration with Checkov, tfsec, Terrascan, or a coding-agent baseline.
+
 Related files:
 
 - `src/nullstate/agent_trust.py`

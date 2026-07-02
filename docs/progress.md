@@ -239,7 +239,8 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - `docs/schemas/eval-suite.schema.json` documents benchmark suite inputs
     - writes `eval-results.json` and `eval-report.md`
     - records per-case duration, finding count, highest severity, attack before/after status, token totals, artifact count, and expectation pass/fail status
-    - current suite is internal/offline only; external scanner and coding-agent baselines remain future work
+    - compares against a transparent generic IaC-only review baseline for attack replay evidence, remediation validation, token metrics, and structured artifact coverage
+    - current suite is internal/offline only; Checkov, tfsec, Terrascan, and coding-agent baseline execution remain future work
   - Added GitHub Actions bootstrap:
     - `nullstate init-ci github`
     - writes `.github/workflows/nullstate.yml`
