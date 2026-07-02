@@ -487,6 +487,7 @@ nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstat
 - [Run summary schema](docs/schemas/run-summary.schema.json)
 - [Security model](docs/security-model.md)
 - [Threat model](docs/threat-model.md)
+- [Dependency audit](docs/dependency-audit.md)
 - [CI/CD](docs/ci-cd.md)
 - [Runbook](docs/runbook.md)
 - [Model serving runbook](docs/model-serving.md)

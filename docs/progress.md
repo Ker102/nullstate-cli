@@ -254,6 +254,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - includes checked-in `run-bundle.json` and `dashboard.html`
     - hardened scrubber redacts Windows local paths and scrub-report source/output directories
     - run bundles now use portable `run.path = "."` and exclude `run-bundle.json` from their own artifact inventory
+  - Added dependency audit documentation:
+    - `docs/dependency-audit.md`
+    - local command run on 2026-07-02: `python -m pip_audit . --skip-editable`
+    - result: no known vulnerabilities found with `pip-audit 2.10.0`
+    - no accepted vulnerable dependency risk is currently documented
 
 ## Blocked
 

@@ -59,7 +59,7 @@ Acceptance criteria:
 - [x] Add a short "first 10 minutes" walkthrough tested from a clean checkout.
 - [x] Include at least one sanitized demo run bundle and dashboard artifact.
 - [ ] Keep every non-live scenario clearly labeled as offline/scaffolded.
-- [ ] Run dependency audit and document any accepted risk.
+- [x] Run dependency audit and document any accepted risk.
 - [ ] Confirm GitHub Actions release dry-run passes before tagging the next release.
 - [ ] Confirm `pip install` from the latest tag exposes the `nullstate` console command on Windows and Linux.
 

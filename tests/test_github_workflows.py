@@ -148,6 +148,19 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("Milestone 3: Open-source stable CLI", text)
         self.assertIn("LocalStack Azure entitlement", text)
         self.assertIn("Azurite fallback", text)
+        self.assertIn("[x] Run dependency audit and document any accepted risk.", text)
+
+    def test_dependency_audit_status_is_documented(self):
+        audit_doc = Path("docs/dependency-audit.md")
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertTrue(audit_doc.is_file(), "Expected dependency audit documentation.")
+        text = audit_doc.read_text(encoding="utf-8")
+        self.assertIn("python -m pip_audit . --skip-editable", text)
+        self.assertIn("pip-audit 2.10.0", text)
+        self.assertIn("No known vulnerabilities found", text)
+        self.assertIn("No accepted vulnerable dependency risk is currently documented.", text)
+        self.assertIn("docs/dependency-audit.md", readme_text)
 
     def test_first_ten_minutes_quickstart_is_documented(self):
         quickstart = Path("docs/quickstart-10-minutes.md")
