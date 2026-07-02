@@ -67,7 +67,13 @@ When `--baseline-file` is set, `ci-summary.json` records known and new finding c
 
 The repository includes `.github/workflows/nullstate-sarif.yml` as the first GitHub Actions example. It runs an offline AWS S3 scenario with `--ci --fail-on-severity none` so the intentionally vulnerable demo can still upload SARIF, uploads it with `github/codeql-action/upload-sarif`, and stores the run artifacts for review. Change the threshold to `high` or `critical` when using the workflow as an enforcing PR gate against real project IaC.
 
-For a stricter copyable workflow, start from `docs/templates/github-actions/nullstate-enforcing.yml`. It expects a committed `nullstate-policy.json`, runs `nullstate run --ci --fail-on-severity high`, keeps the run step as `continue-on-error: true` so SARIF, policy-result, evidence manifest, bundle, and dry-run upload artifacts are still produced, then fails the job at the end if the nullstate gate failed. Set `NULLSTATE_IAC_PATH`, `NULLSTATE_SCENARIO`, `NULLSTATE_POLICY_FILE`, `NULLSTATE_BASELINE_FILE`, and `NULLSTATE_FAIL_ON_SEVERITY` for the target repository before copying it into `.github/workflows/`.
+For a stricter workflow, prefer the bootstrap command:
+
+```bash
+nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
+```
+
+It writes `.github/workflows/nullstate.yml` plus a scenario-scoped `nullstate-policy.json`. The workflow is based on `docs/templates/github-actions/nullstate-enforcing.yml`, runs `nullstate run --ci --fail-on-severity high`, keeps the run step as `continue-on-error: true` so SARIF, policy-result, evidence manifest, bundle, and dry-run upload artifacts are still produced, then fails the job at the end if the nullstate gate failed. Set `--iac-path`, `--scenario`, and `--fail-on-severity` for the target repository before committing the generated files.
 
 Run `nullstate scrub` before attaching bundles or reports to public issues, support tickets, or case-study artifacts.
 

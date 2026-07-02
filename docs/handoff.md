@@ -282,16 +282,19 @@ nullstate summary --json
 nullstate context validate examples/cloud-context/aws-readonly-context.json
 nullstate context summary examples/cloud-context/aws-readonly-context.json --json
 nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
+nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
 ```
 
 Related files:
 
 - `src/nullstate/agent_trust.py`
 - `src/nullstate/cloud_context.py`
+- `src/nullstate/ci_templates.py`
 - `src/nullstate/evaluation.py`
 - `src/nullstate/summary.py`
 - `tests/test_agent_trust.py`
 - `tests/test_cloud_context.py`
+- `tests/test_ci_templates.py`
 - `tests/test_evaluation.py`
 - `tests/test_summary.py`
 - `docs/schemas/external-agent-manifest.schema.json`

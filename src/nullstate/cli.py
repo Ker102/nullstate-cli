@@ -26,6 +26,7 @@ from .attack_runner import run_attack_script
 from .baseline import DEFAULT_BASELINE_FILENAME, load_baseline_identities, split_known_and_new_findings, write_baseline
 from .bundle import BUNDLE_FILENAME, write_run_bundle
 from .ci import CI_SUMMARY_FILENAME, build_ci_summary, normalize_fail_on_severity
+from .ci_templates import write_github_ci_files
 from .cloud_context import build_context_summary, load_cloud_context
 from .dashboard import write_run_dashboard
 from .demo import create_demo
@@ -158,6 +159,46 @@ def init_demo(
         [
             f"nullstate run {output} --offline",
             "nullstate sandbox status localstack-azure",
+        ]
+    )
+
+
+@app.command("init-ci")
+def init_ci(
+    provider: str = typer.Argument("github", help="CI provider to initialize. Currently supported: github."),
+    output: Path = typer.Option(Path(".github/workflows/nullstate.yml"), "--output", "-o", help="Workflow output path."),
+    policy_output: Path = typer.Option(Path("nullstate-policy.json"), "--policy-output", help="Starter policy output path."),
+    scenario: str = typer.Option("aws-public-s3", "--scenario", help="Scenario preset for the workflow and policy."),
+    iac_path: str = typer.Option("examples/aws-public-s3", "--iac-path", help="IaC path that the workflow should scan."),
+    fail_on_severity: str = typer.Option("high", "--fail-on-severity", help="CI failure threshold."),
+    baseline_file: str = typer.Option("nullstate-baseline.json", "--baseline-file", help="Optional baseline file checked by the workflow."),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing workflow or policy files."),
+) -> None:
+    """Create starter CI files for running nullstate in pull requests."""
+    if provider != "github":
+        raise typer.BadParameter("Only the 'github' CI provider is supported.")
+    try:
+        result = write_github_ci_files(
+            workflow_path=output,
+            policy_path=policy_output,
+            scenario=scenario,
+            iac_path=iac_path,
+            fail_on_severity=fail_on_severity,
+            baseline_file=baseline_file,
+            force=force,
+        )
+    except (FileExistsError, KeyError, ValueError) as error:
+        raise typer.BadParameter(str(error)) from error
+    console.print(f"GitHub Actions workflow: {result['workflow_path']}")
+    console.print(f"Nullstate policy: {result['policy_path']}")
+    console.print(
+        f"Scenario={result['scenario']} · IaC={result['iac_path']} · "
+        f"fail_on_severity={result['fail_on_severity']}"
+    )
+    _print_next_steps(
+        [
+            f"git add {result['workflow_path']} {result['policy_path']}",
+            "nullstate policy validate " + str(result["policy_path"]),
         ]
     )
 

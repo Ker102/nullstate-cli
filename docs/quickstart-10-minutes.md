@@ -79,7 +79,20 @@ nullstate scrub
 
 Share the scrubbed copy under `scrubbed-runs/`, not the raw `runs/` directory.
 
-## 7. Optional live AWS LocalStack path
+## 7. Optional GitHub Actions gate
+
+```powershell
+nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
+```
+
+Generated files:
+
+- `.github/workflows/nullstate.yml`
+- `nullstate-policy.json`
+
+Commit both files to run the offline Nullstate gate on pull requests. Adjust `--iac-path` to your Terraform directory before using this in a real repository.
+
+## 8. Optional live AWS LocalStack path
 
 Use this only after Docker and LocalStack are configured:
 

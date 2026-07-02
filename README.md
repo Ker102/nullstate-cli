@@ -194,6 +194,14 @@ nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 
 Runtime attack probes stay local by default. Future non-local HTTP(S) probe targets require `--allow-live-cloud`, and the approval is recorded in `events.jsonl`; when a policy file includes `allowed_target_hosts`, the target hostname must also match that allowlist. Current built-in scenarios still resolve to local/offline sandbox targets.
 
+Bootstrap GitHub Actions:
+
+```powershell
+nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
+```
+
+This writes `.github/workflows/nullstate.yml` and `nullstate-policy.json` so a repository can run Nullstate as a pull-request gate without manually copying the workflow template.
+
 External AI-agent trust preview:
 
 ```powershell

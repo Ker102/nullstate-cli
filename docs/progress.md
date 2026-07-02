@@ -240,6 +240,12 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - writes `eval-results.json` and `eval-report.md`
     - records per-case duration, finding count, highest severity, attack before/after status, token totals, artifact count, and expectation pass/fail status
     - current suite is internal/offline only; external scanner and coding-agent baselines remain future work
+  - Added GitHub Actions bootstrap:
+    - `nullstate init-ci github`
+    - writes `.github/workflows/nullstate.yml`
+    - writes a scenario-scoped `nullstate-policy.json`
+    - refuses to overwrite existing files unless `--force` is passed
+    - lowers first-run friction for open-source users and coding agents setting up CI
 
 ## Blocked
 
