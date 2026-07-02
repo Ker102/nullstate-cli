@@ -281,25 +281,33 @@ nullstate agent blast-radius examples/agent-trust/external-agent-manifest.json
 nullstate summary --json
 nullstate context validate examples/cloud-context/aws-readonly-context.json
 nullstate context summary examples/cloud-context/aws-readonly-context.json --json
+nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
 ```
 
 Related files:
 
 - `src/nullstate/agent_trust.py`
 - `src/nullstate/cloud_context.py`
+- `src/nullstate/evaluation.py`
 - `src/nullstate/summary.py`
 - `tests/test_agent_trust.py`
 - `tests/test_cloud_context.py`
+- `tests/test_evaluation.py`
 - `tests/test_summary.py`
 - `docs/schemas/external-agent-manifest.schema.json`
 - `docs/schemas/cloud-context.schema.json`
+- `docs/schemas/eval-suite.schema.json`
 - `docs/schemas/run-summary.schema.json`
 - `examples/agent-trust/external-agent-manifest.json`
 - `examples/agent-trust/README.md`
 - `examples/cloud-context/aws-readonly-context.json`
 - `examples/cloud-context/README.md`
+- `examples/eval/iac-security-regression.json`
+- `examples/eval/README.md`
 
 The context command is a local manifest contract only. It does not call AWS, Azure, GCP, or any cloud API yet.
+
+The eval harness measures Nullstate's own supported cases today. It does not yet compare against scanner-only tools, manual review, or generic coding-agent review.
 
 Next highest-value feature:
 

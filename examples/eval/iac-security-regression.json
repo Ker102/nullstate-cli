@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.nullstate.dev/eval-suite.schema.json",
+  "schema_version": 1,
+  "suite": {
+    "id": "iac-security-regression",
+    "name": "IaC security regression smoke suite",
+    "description": "Measures Nullstate's ability to detect, replay, remediate, and summarize one supported IaC attack path without cloud credentials."
+  },
+  "cases": [
+    {
+      "id": "aws-public-s3-offline",
+      "name": "AWS public S3 offline regression",
+      "terraform_dir": "examples/aws-public-s3",
+      "offline": true,
+      "mock_agents": true,
+      "expected": {
+        "min_findings": 1,
+        "highest_severity": "high",
+        "attack_before": "success",
+        "attack_after": "blocked"
+      }
+    }
+  ]
+}

@@ -151,6 +151,7 @@ What is proven today:
 - Offline deterministic scenarios, CI summaries, SARIF export, policy files, scrubbed artifacts, evidence manifests, bundles, and the local dashboard are covered by tests.
 - External AI-agent trust now has an initial manifest-driven CLI preview. `nullstate agent posture verify` and `nullstate agent blast-radius` validate local runtime posture evidence, keep stale or unknown evidence visible, and separate agent identity, delegated-user authority, sensitive resources, high-risk actions, and attack-path classes.
 - Coding-agent and CI integration now has a compact evidence interface. `nullstate summary --json` emits run status, findings, attack before/after state, token totals, artifacts, and limitations, while `nullstate context summary --json` defines the local read-only cloud-context contract that future collectors can produce.
+- Product-value measurement now has a first evaluation harness. `nullstate eval run examples/eval/iac-security-regression.json` writes `eval-results.json` and `eval-report.md` with duration, findings, severity, attack before/after status, token totals, artifact count, and expectation pass/fail metrics for repeatable case-study evidence.
 
 What is not yet proven:
 
@@ -158,6 +159,7 @@ What is not yet proven:
 - Kubernetes, Docker Compose, on-prem, and generic plan-review targets remain offline/scaffolded unless explicitly documented otherwise.
 - External AI-agent trust does not yet collect live provider inventory, verify third-party runtime attestation, or enforce a tenant authorization gateway.
 - Cloud context is currently a manifest validation and summary contract, not a live AWS/Azure/GCP collector.
+- The evaluation harness currently measures Nullstate's own supported scenarios. It does not yet compare against Checkov, tfsec, Terrascan, manual review, or generic coding-agent review baselines.
 - The project still needs a stable release artifact flow and a first-time-user walkthrough before it should be marketed as a stable open-source CLI.
 
 The readiness milestones are tracked in `docs/open-source-readiness.md`.

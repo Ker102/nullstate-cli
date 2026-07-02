@@ -32,6 +32,16 @@ nullstate context summary examples/cloud-context/aws-readonly-context.json --jso
 
 It validates the shape of provider, account, identity, resource, public exposure, and data-classification metadata without requesting cloud credentials. Future collectors should emit this contract using short-lived read-only cloud identities.
 
+## Evaluation and Product Metrics
+
+Nullstate's case-study value should be measured, not only described. The current evaluation harness starts with repeatable internal benchmarks:
+
+```bash
+nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
+```
+
+The harness records duration, finding count, highest severity, attack before/after status, token totals, artifact count, and expectation pass/fail status. This is the first step toward comparing Nullstate against scanner-only review, manual review, and generic coding-agent review. Until those baselines exist, claims should be limited to measured Nullstate behavior rather than broad accuracy or time-savings claims.
+
 ## Identity-aware attack analysis
 
 An open port or public container is not the whole finding. Nullstate should evaluate what each authorized attacker perspective can reach:

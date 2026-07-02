@@ -237,6 +237,14 @@ nullstate context summary examples/cloud-context/aws-readonly-context.json --jso
 
 The context command validates and summarizes a local cloud inventory manifest. It is the safe contract for future AWS/Azure/GCP read-only collectors; it does not call cloud APIs or request credentials yet.
 
+Evaluation metrics:
+
+```powershell
+nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
+```
+
+The evaluation harness runs repeatable benchmark cases and writes `eval-results.json` plus `eval-report.md`. Use it for case-study evidence such as duration, finding count, highest severity, attack before/after status, token totals, artifact count, and pass/fail expectation checks.
+
 ## Live LocalStack demo path
 
 Use this after Docker, Terraform, LocalStack access, and model endpoint variables are configured.
@@ -458,6 +466,7 @@ nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstat
 - [External agent trust and runtime posture design](docs/plans/2026-06-22-external-agent-trust-design.md)
 - [External agent manifest schema](docs/schemas/external-agent-manifest.schema.json)
 - [Cloud context schema](docs/schemas/cloud-context.schema.json)
+- [Eval suite schema](docs/schemas/eval-suite.schema.json)
 - [Run summary schema](docs/schemas/run-summary.schema.json)
 - [Security model](docs/security-model.md)
 - [Threat model](docs/threat-model.md)

@@ -234,6 +234,12 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - `nullstate context validate <context.json>` validates local read-only cloud context manifests
     - `nullstate context summary <context.json> --json` summarizes providers, accounts, identities, resources, public resources, and sensitive resources
     - `docs/schemas/cloud-context.schema.json` documents the future collector output contract without adding live cloud credentials yet
+  - Added evaluation metrics harness:
+    - `nullstate eval run examples/eval/iac-security-regression.json`
+    - `docs/schemas/eval-suite.schema.json` documents benchmark suite inputs
+    - writes `eval-results.json` and `eval-report.md`
+    - records per-case duration, finding count, highest severity, attack before/after status, token totals, artifact count, and expectation pass/fail status
+    - current suite is internal/offline only; external scanner and coding-agent baselines remain future work
 
 ## Blocked
 

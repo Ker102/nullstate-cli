@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/eval-suite.schema.json",
+  "title": "Nullstate evaluation suite",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "$schema",
+    "schema_version",
+    "suite",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/eval-suite.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "suite": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "terraform_dir",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "terraform_dir": {
+            "type": "string",
+            "minLength": 1
+          },
+          "offline": {
+            "type": "boolean"
+          },
+          "mock_agents": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}

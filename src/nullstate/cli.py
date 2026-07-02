@@ -35,6 +35,7 @@ from .evidence_manifest import (
     verify_evidence_manifest,
     write_evidence_manifest,
 )
+from .evaluation import run_eval_suite
 from .findings import find_scenario_findings
 from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
@@ -69,11 +70,13 @@ policy_app = typer.Typer(no_args_is_help=True, help="Manage red-tool execution p
 agent_app = typer.Typer(no_args_is_help=True, help="Assess external AI-agent cloud trust and blast radius.")
 agent_posture_app = typer.Typer(no_args_is_help=True, help="Verify external AI-agent runtime posture evidence.")
 context_app = typer.Typer(no_args_is_help=True, help="Validate local read-only cloud context manifests.")
+eval_app = typer.Typer(no_args_is_help=True, help="Run benchmark suites for case-study and product metrics.")
 app.add_typer(sandbox_app, name="sandbox")
 app.add_typer(scenarios_app, name="scenarios")
 app.add_typer(policy_app, name="policy")
 app.add_typer(agent_app, name="agent")
 app.add_typer(context_app, name="context")
+app.add_typer(eval_app, name="eval")
 agent_app.add_typer(agent_posture_app, name="posture")
 console = Console()
 
@@ -737,6 +740,33 @@ def context_summary(
     table.add_row("Sensitive resources", str(payload["sensitive_resource_count"]))
     console.print(table)
     _print_next_steps([f"nullstate context summary {context_file} --json"])
+
+
+@eval_app.command("run")
+def eval_run(
+    suite: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="Evaluation suite JSON."),
+    output_dir: Path = typer.Option(Path("eval-runs"), "--output-dir", help="Directory for eval results and nested runs."),
+) -> None:
+    """Run a repeatable evaluation suite and write case-study metrics."""
+    try:
+        results = run_eval_suite(suite, output_dir)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    console.print(f"Evaluation results: {output_dir / 'eval-results.json'}")
+    console.print(f"Evaluation report: {output_dir / 'eval-report.md'}")
+    console.print(
+        f"Suite {results['suite']['id']} · cases={results['case_count']} · "
+        f"passed={results['passed_count']} · failed={results['failed_count']} · "
+        f"duration={results['totals']['duration_seconds']}s"
+    )
+    _print_next_steps(
+        [
+            f"nullstate summary --runs-dir {output_dir}",
+            f"Get-Content {output_dir / 'eval-report.md'}",
+        ]
+    )
+    if results["failed_count"]:
+        raise typer.Exit(code=2)
 
 
 @sandbox_app.command("status")
