@@ -120,6 +120,20 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("gh workflow run Release --field dry_run=true", docs_text)
         self.assertIn("gh release view v0.1.0", docs_text)
 
+    def test_release_install_smoke_script_checks_console_entrypoint(self):
+        script = Path("scripts/release/install_smoke.py")
+        pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertTrue(script.is_file(), "Expected a local release install-smoke script.")
+        text = script.read_text(encoding="utf-8")
+        self.assertIn('"build"', pyproject)
+        self.assertIn('"-m", "build"', text)
+        self.assertIn("venv.EnvBuilder", text)
+        self.assertIn('"doctor", "--offline"', text)
+        self.assertIn("nullstate console command", text)
+        self.assertIn("scripts/release/install_smoke.py", readme_text)
+
     def test_public_docs_point_to_current_prerelease(self):
         readme_text = Path("README.md").read_text(encoding="utf-8")
 

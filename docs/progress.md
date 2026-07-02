@@ -259,6 +259,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - local command run on 2026-07-02: `python -m pip_audit . --skip-editable`
     - result: no known vulnerabilities found with `pip-audit 2.10.0`
     - no accepted vulnerable dependency risk is currently documented
+  - Added local release install-smoke helper:
+    - `scripts/release/install_smoke.py`
+    - builds the wheel into a temporary directory
+    - installs it into a clean virtual environment
+    - verifies the `nullstate` console command and `nullstate doctor --offline`
 
 ## Blocked
 

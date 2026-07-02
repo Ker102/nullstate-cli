@@ -525,6 +525,12 @@ Sigstore signing bundles are uploaded as adjacent release assets such as `nullst
 
 Before tagging, run the `Release` workflow manually with `dry_run=true` to rehearse the build, SBOM validation, attestations, signing, and signature-bundle checks without creating a GitHub release.
 
+Before tagging locally, verify that a built wheel installs and exposes the `nullstate` console command:
+
+```powershell
+python scripts/release/install_smoke.py
+```
+
 Verify a wheel signature with Cosign by matching the artifact to its adjacent bundle and the release workflow identity:
 
 ```powershell

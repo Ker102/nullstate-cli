@@ -293,6 +293,8 @@ The repo now includes a scrubbed sample run under `examples/sample-runs/20260702
 
 Dependency audit status is documented in `docs/dependency-audit.md`. Last local audit on 2026-07-02 used `python -m pip_audit . --skip-editable` with `pip-audit 2.10.0` and found no known vulnerabilities.
 
+Local release install smoke is available through `python scripts/release/install_smoke.py`. It builds the wheel into a temp directory, installs it into a clean venv, and verifies the `nullstate` console command plus `nullstate doctor --offline`. This supports release readiness but does not replace testing install from a published tag.
+
 Related files:
 
 - `src/nullstate/agent_trust.py`

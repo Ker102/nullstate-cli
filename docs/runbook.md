@@ -136,6 +136,12 @@ gh workflow run Release --field dry_run=true
 gh run list --workflow Release --limit 1
 ```
 
+Verify the built wheel installs the `nullstate` console command locally:
+
+```powershell
+python scripts/release/install_smoke.py
+```
+
 After the approved merge and tag process, inspect the published release:
 
 ```powershell
