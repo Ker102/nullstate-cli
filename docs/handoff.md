@@ -295,6 +295,8 @@ Dependency audit status is documented in `docs/dependency-audit.md`. Last local 
 
 Local release install smoke is available through `python scripts/release/install_smoke.py`. It builds the wheel into a temp directory, installs it into a clean venv, and verifies the `nullstate` console command plus `nullstate doctor --offline`. This supports release readiness but does not replace testing install from a published tag.
 
+The tagged release workflow also performs a `Smoke install release wheel` step after `python -m build`; it installs `dist/*.whl` into `.smoke-venv` and runs the generated `nullstate` console command before SBOM generation, attestation, signing, or release creation.
+
 Related files:
 
 - `src/nullstate/agent_trust.py`

@@ -95,6 +95,7 @@ merge to main
 -> update CHANGELOG.md
 -> tag v0.1.0
 -> release workflow builds package
+-> release workflow smoke-installs the built wheel and runs nullstate doctor --offline
 -> sbom.spdx.json records the installed wheel and runtime dependency versions
 -> SBOM validation checks required package fields and root-package relationships
 -> SPDX tools validate the generated SBOM document

@@ -264,6 +264,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - builds the wheel into a temporary directory
     - installs it into a clean virtual environment
     - verifies the `nullstate` console command and `nullstate doctor --offline`
+  - Hardened tagged release workflow:
+    - adds `Smoke install release wheel`
+    - installs `dist/*.whl` into `.smoke-venv`
+    - runs `.smoke-venv/bin/nullstate --help`
+    - runs `.smoke-venv/bin/nullstate doctor --offline`
 
 ## Blocked
 
