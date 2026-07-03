@@ -407,6 +407,14 @@ Current productization checkpoints merged into `main` include:
 - deeper local dashboard evidence view with remediation, bundle contract, and artifact inventory sections
 - enforcing GitHub Actions template under `docs/templates/github-actions/nullstate-enforcing.yml`
 
+Current branch-only updates on `docs/open-source-readiness` include:
+
+- explicit scenario evidence levels in `src/nullstate/scenarios.py`
+- `nullstate scenarios list` prints a full evidence-level legend before the Rich table
+- `nullstate scenarios status <name>` includes the evidence level and evidence summary
+- README scenario table now distinguishes `live-validated`, `offline-deterministic`, `scaffolded`, and `plan-only`
+- open-source readiness milestone for labeling non-live scenarios is marked complete
+
 Do not jump straight to full SaaS before stabilizing:
 
 1. live upload implementation after a real ingestion API exists

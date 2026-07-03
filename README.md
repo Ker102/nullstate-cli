@@ -195,6 +195,7 @@ nullstate sandbox list
 nullstate sandbox status localstack-azure
 nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
+nullstate scenarios status aws-public-s3
 nullstate policy init --output nullstate-policy.json
 nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 ```
@@ -372,14 +373,16 @@ Users do not need to write prompts. `nullstate` sends internal red-team and blue
 
 ## Scenarios
 
-| Scenario | Backend | Status |
-|---|---|---|
-| `azure-public-blob` | `localstack-azure` | manifest-backed/offline demo available; live LocalStack Azure validation pending emulator entitlement |
-| `aws-public-s3` | `localstack-aws` | live LocalStack demo available |
-| `k8s-privileged-pod` | `kind-kubernetes` | offline demo available; live kind pending |
-| `compose-exposed-admin` | `docker-compose` | offline demo available; live Docker probe pending |
-| `onprem-ssh-password` | `microvm-onprem` | offline demo available; microVM digital twin pending |
-| `generic-plan-review` | `plan-only` | available |
+`nullstate scenarios list` prints an explicit evidence level so users can see what is proven live versus deterministic or scaffolded before running it.
+
+| Scenario | Backend | Evidence level | Status |
+|---|---|---|---|
+| `aws-public-s3` | `localstack-aws` | `live-validated` | LocalStack AWS S3 deployment and constrained anonymous object-read probe are validated before and after remediation |
+| `azure-public-blob` | `localstack-azure` | `offline-deterministic` | Static IaC detection, remediation, manifest-backed probe generation, and offline report evidence are implemented; live Azure emulator proof is pending |
+| `k8s-privileged-pod` | `kind-kubernetes` | `scaffolded` | Offline deterministic detection and remediation flow is available; live kind cluster probing is pending |
+| `compose-exposed-admin` | `docker-compose` | `scaffolded` | Offline deterministic detection and remediation flow is available; live container/network probing is pending |
+| `onprem-ssh-password` | `microvm-onprem` | `scaffolded` | Offline deterministic detection and remediation flow is available; microVM digital-twin execution is pending |
+| `generic-plan-review` | `plan-only` | `plan-only` | Static plan/configuration review is available; no executable sandbox or runtime exploit probe is attempted |
 
 ## Artifacts
 

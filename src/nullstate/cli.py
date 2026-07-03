@@ -592,14 +592,26 @@ def scenarios_list() -> None:
     """List supported and scaffolded scenarios."""
     scenarios = list_scenarios()
     console.print("Scenarios: " + ", ".join(scenario.name for scenario in scenarios))
+    console.print(
+        "Evidence levels: "
+        + ", ".join(sorted({scenario.evidence_level for scenario in scenarios}))
+    )
     table = Table(title="nullstate scenarios")
     table.add_column("Scenario")
     table.add_column("Backend")
     table.add_column("Mode")
+    table.add_column("Evidence")
     table.add_column("Status")
     table.add_column("Risk")
     for scenario in scenarios:
-        table.add_row(scenario.name, scenario.backend, scenario.mode, scenario.status, scenario.risk)
+        table.add_row(
+            scenario.name,
+            scenario.backend,
+            scenario.mode,
+            scenario.evidence_level,
+            scenario.status,
+            scenario.risk,
+        )
     console.print(table)
 
 
@@ -616,6 +628,8 @@ def scenarios_status(name: str = typer.Argument(..., help="Scenario name.")) -> 
     table.add_row("Backend", scenario.backend)
     table.add_row("Mode", scenario.mode)
     table.add_row("IaC targets", ", ".join(scenario.iac_targets))
+    table.add_row("Evidence", scenario.evidence_level)
+    table.add_row("Evidence summary", scenario.evidence_summary)
     table.add_row("Status", scenario.status)
     table.add_row("Risk", scenario.risk)
     table.add_row("Description", scenario.description)

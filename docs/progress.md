@@ -269,6 +269,13 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - installs `dist/*.whl` into `.smoke-venv`
     - runs `.smoke-venv/bin/nullstate --help`
     - runs `.smoke-venv/bin/nullstate doctor --offline`
+  - Added explicit scenario evidence levels:
+    - `aws-public-s3`: `live-validated`
+    - `azure-public-blob`: `offline-deterministic`
+    - Kubernetes, Docker Compose, and on-prem scenarios: `scaffolded`
+    - generic plan review: `plan-only`
+    - `nullstate scenarios list` prints a full evidence-level legend before the Rich table
+    - `nullstate scenarios status <name>` shows the evidence summary for one scenario
 
 ## Blocked
 
