@@ -10,9 +10,13 @@ from pathlib import Path
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build nullstate and verify the wheel installs the console command.")
+    parser = argparse.ArgumentParser(description="Verify nullstate installs and exposes the console command.")
     parser.add_argument("--keep-temp", action="store_true", help="Keep the temporary build and virtualenv directory.")
+    parser.add_argument("--tag", help="Install nullstate from the public GitHub repository at this tag instead of building a local wheel.")
+    parser.add_argument("--package-spec", help="Install an explicit pip package spec instead of building a local wheel.")
     args = parser.parse_args()
+    if args.tag and args.package_spec:
+        parser.error("--tag and --package-spec are mutually exclusive.")
 
     repo_root = Path(__file__).resolve().parents[2]
     temp_context: tempfile.TemporaryDirectory[str] | None = tempfile.TemporaryDirectory(
@@ -20,19 +24,15 @@ def main() -> int:
     )
     temp_root = Path(temp_context.name)
     try:
-        dist_dir = temp_root / "dist"
         venv_dir = temp_root / "venv"
-        _run([sys.executable, "-m", "build", "--outdir", str(dist_dir)], cwd=repo_root)
-        wheels = sorted(dist_dir.glob("nullstate-*.whl"))
-        if not wheels:
-            raise SystemExit(f"No nullstate wheel produced in {dist_dir}")
+        package_spec = _resolve_package_spec(args.tag, args.package_spec, temp_root=temp_root, repo_root=repo_root)
         venv.EnvBuilder(with_pip=True, clear=True).create(venv_dir)
         python = _venv_python(venv_dir)
-        _run([str(python), "-m", "pip", "install", str(wheels[0])], cwd=repo_root)
+        _run([str(python), "-m", "pip", "install", str(package_spec)], cwd=repo_root)
         nullstate = _console_script(venv_dir)
         _run([str(nullstate), "--help"], cwd=repo_root)
         _run([str(nullstate), "doctor", "--offline"], cwd=repo_root)
-        print(f"Install smoke passed: {wheels[0].name}")
+        print(f"Install smoke passed: {package_spec}")
         if args.keep_temp:
             print(f"Temporary artifacts kept at: {temp_root}")
             temp_context = None
@@ -40,6 +40,20 @@ def main() -> int:
     finally:
         if temp_context is not None:
             temp_context.cleanup()
+
+
+def _resolve_package_spec(tag: str | None, package_spec: str | None, *, temp_root: Path, repo_root: Path) -> str | Path:
+    if tag:
+        return f"git+https://github.com/Ker102/nullstate-cli.git@{tag}"
+    if package_spec:
+        return package_spec
+
+    dist_dir = temp_root / "dist"
+    _run([sys.executable, "-m", "build", "--outdir", str(dist_dir)], cwd=repo_root)
+    wheels = sorted(dist_dir.glob("nullstate-*.whl"))
+    if not wheels:
+        raise SystemExit(f"No nullstate wheel produced in {dist_dir}")
+    return wheels[0]
 
 
 def _run(command: list[str], *, cwd: Path) -> None:

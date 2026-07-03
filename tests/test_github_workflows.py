@@ -136,7 +136,10 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("venv.EnvBuilder", text)
         self.assertIn('"doctor", "--offline"', text)
         self.assertIn("nullstate console command", text)
+        self.assertIn("--tag", text)
+        self.assertIn("git+https://github.com/Ker102/nullstate-cli.git@", text)
         self.assertIn("scripts/release/install_smoke.py", readme_text)
+        self.assertIn("python scripts/release/install_smoke.py --tag v0.1.0-alpha.2", readme_text)
 
     def test_public_docs_point_to_current_prerelease(self):
         readme_text = Path("README.md").read_text(encoding="utf-8")

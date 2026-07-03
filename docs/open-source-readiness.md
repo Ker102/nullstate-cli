@@ -63,6 +63,11 @@ Acceptance criteria:
 - [ ] Confirm GitHub Actions release dry-run passes before tagging the next release.
 - [ ] Confirm `pip install` from the latest tag exposes the `nullstate` console command on Windows and Linux.
 
+Notes:
+
+- Windows tag install smoke passed locally on 2026-07-03 with `python scripts/release/install_smoke.py --tag v0.1.0-alpha.2`.
+- Linux latest-tag install still needs confirmation on a Linux runner or release dry-run environment before the install acceptance item is complete.
+
 ## Azure Emulator Decision
 
 The current LocalStack Azure startup failure means the provided auth token is valid enough to activate a cached/trial license, but the LocalStack workspace/user is not entitled to run the Azure Emulator image. This is different from Azure cloud permissions; it is a LocalStack product entitlement/license issue.

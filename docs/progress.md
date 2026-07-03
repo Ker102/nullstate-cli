@@ -276,6 +276,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - generic plan review: `plan-only`
     - `nullstate scenarios list` prints a full evidence-level legend before the Rich table
     - `nullstate scenarios status <name>` shows the evidence summary for one scenario
+  - Extended `scripts/release/install_smoke.py`:
+    - default mode still builds and installs a local wheel
+    - `--tag <tag>` installs from `git+https://github.com/Ker102/nullstate-cli.git@<tag>`
+    - `--package-spec <spec>` supports arbitrary pip install specs
+    - Windows tag install smoke passed on 2026-07-03 with `--tag v0.1.0-alpha.2`
 
 ## Blocked
 

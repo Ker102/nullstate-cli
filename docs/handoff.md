@@ -414,6 +414,8 @@ Current branch-only updates on `docs/open-source-readiness` include:
 - `nullstate scenarios status <name>` includes the evidence level and evidence summary
 - README scenario table now distinguishes `live-validated`, `offline-deterministic`, `scaffolded`, and `plan-only`
 - open-source readiness milestone for labeling non-live scenarios is marked complete
+- `scripts/release/install_smoke.py` supports `--tag <tag>` and `--package-spec <spec>` in addition to local-wheel mode
+- Windows latest-tag smoke passed for `v0.1.0-alpha.2`; Linux latest-tag smoke is still pending
 
 Do not jump straight to full SaaS before stabilizing:
 

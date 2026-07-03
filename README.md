@@ -534,6 +534,12 @@ Before tagging locally, verify that a built wheel installs and exposes the `null
 python scripts/release/install_smoke.py
 ```
 
+After publishing a prerelease tag, verify that the public GitHub install path exposes the same console command:
+
+```powershell
+python scripts/release/install_smoke.py --tag v0.1.0-alpha.2
+```
+
 Verify a wheel signature with Cosign by matching the artifact to its adjacent bundle and the release workflow identity:
 
 ```powershell
