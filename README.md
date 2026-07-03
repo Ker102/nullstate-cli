@@ -246,6 +246,8 @@ nullstate upload --dry-run
 
 `summary --json` emits a compact machine-readable object for coding agents, GitHub Actions steps, and PR-comment automation. The dashboard summarizes findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt from the selected run.
 
+Run summaries and bundles include the scenario evidence level, so automation can distinguish live-validated runs from offline deterministic, scaffolded, or plan-only evidence.
+
 Read-only cloud context preview:
 
 ```powershell

@@ -18,6 +18,8 @@ class RunSummaryTests(unittest.TestCase):
             self.assertEqual(summary["$schema"], RUN_SUMMARY_SCHEMA_ID)
             self.assertEqual(summary["schema_version"], 1)
             self.assertEqual(summary["run"]["id"], "20260702-120000")
+            self.assertEqual(summary["scenario"]["name"], "aws-public-s3")
+            self.assertEqual(summary["scenario"]["evidence_level"], "live-validated")
             self.assertEqual(summary["status"], "failed")
             self.assertEqual(summary["finding_count"], 1)
             self.assertEqual(summary["highest_severity"], "high")
@@ -61,6 +63,7 @@ class RunSummaryTests(unittest.TestCase):
 
         self.assertEqual(schema["$id"], RUN_SUMMARY_SCHEMA_ID)
         self.assertEqual(schema["properties"]["schema_version"]["const"], 1)
+        self.assertIn("scenario", schema["required"])
         self.assertIn("artifacts", schema["required"])
 
     def test_summary_cli_prints_json_for_latest_run(self):
@@ -99,6 +102,17 @@ def _write_run(run_dir: Path) -> Path:
     (run_dir / "events.jsonl").write_text(
         "\n".join(
             [
+                json.dumps(
+                    {
+                        "phase": "start",
+                        "message": "Run started",
+                        "data": {
+                            "scenario": "aws-public-s3",
+                            "scenario_evidence_level": "live-validated",
+                            "scenario_evidence_summary": "LocalStack AWS S3 runtime probe validated.",
+                        },
+                    }
+                ),
                 json.dumps(
                     {
                         "phase": "red-team",

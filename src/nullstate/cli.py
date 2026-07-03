@@ -336,6 +336,8 @@ def run(
         target=backend.name,
         target_mode=backend.mode,
         scenario=scenario_spec.name,
+        scenario_evidence_level=scenario_spec.evidence_level,
+        scenario_evidence_summary=scenario_spec.evidence_summary,
         offline=offline,
         mock_agents=use_mock_agents,
         red_mock_agent=use_red_mock,

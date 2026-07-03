@@ -88,6 +88,9 @@ class CliTests(unittest.TestCase):
                 for line in (reports[0].parent / "events.jsonl").read_text(encoding="utf-8").splitlines()
             ]
             red_tool_events = [event for event in events if event["phase"] == "red-tool"]
+            start_event = next(event for event in events if event["phase"] == "start")
+            self.assertEqual(start_event["data"]["scenario_evidence_level"], "offline-deterministic")
+            self.assertIn("live Azure emulator proof is pending", start_event["data"]["scenario_evidence_summary"])
             self.assertEqual(len(red_tool_events), 2)
             self.assertEqual(red_tool_events[0]["data"]["stage"], "before")
             self.assertEqual(red_tool_events[1]["data"]["stage"], "after")

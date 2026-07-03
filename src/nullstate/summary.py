@@ -12,7 +12,7 @@ SEVERITY_ORDER = {"low": 1, "medium": 2, "high": 3, "critical": 4}
 
 def build_run_summary(run_dir: Path) -> dict[str, Any]:
     findings, finding_limitations = _read_findings(run_dir / "findings.json")
-    event_statuses, event_limitations = _read_attack_statuses(run_dir / "events.jsonl")
+    event_statuses, scenario, event_limitations = _read_events_metadata(run_dir / "events.jsonl")
     tokens, token_limitations = _read_token_totals(run_dir / "metrics.json")
     artifacts, artifact_limitations = _artifact_paths(run_dir)
     highest_severity = _highest_severity(findings)
@@ -25,6 +25,7 @@ def build_run_summary(run_dir: Path) -> dict[str, Any]:
             "id": run_dir.name,
             "path": str(run_dir),
         },
+        "scenario": scenario,
         "status": status,
         "finding_count": len(findings),
         "highest_severity": highest_severity,
@@ -55,6 +56,11 @@ def validate_run_summary(payload: Any) -> list[str]:
         errors.append("run.id is required")
     if not isinstance(payload.get("status"), str) or not payload.get("status"):
         errors.append("status is required")
+    scenario = payload.get("scenario")
+    if not isinstance(scenario, dict):
+        errors.append("scenario must be an object")
+    elif scenario.get("name") is not None and not isinstance(scenario.get("name"), str):
+        errors.append("scenario.name must be a string or null")
     if not isinstance(payload.get("finding_count"), int):
         errors.append("finding_count must be an integer")
     if not isinstance(payload.get("artifacts"), dict):
@@ -83,10 +89,15 @@ def _read_findings(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
     return findings, []
 
 
-def _read_attack_statuses(path: Path) -> tuple[dict[str, str | None], list[str]]:
+def _read_events_metadata(path: Path) -> tuple[dict[str, str | None], dict[str, str | None], list[str]]:
     statuses: dict[str, str | None] = {"before": None, "after": None}
+    scenario: dict[str, str | None] = {
+        "name": None,
+        "evidence_level": None,
+        "evidence_summary": None,
+    }
     if not path.is_file():
-        return statuses, ["events.jsonl missing"]
+        return statuses, scenario, ["events.jsonl missing"]
     limitations = []
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -97,13 +108,21 @@ def _read_attack_statuses(path: Path) -> tuple[dict[str, str | None], list[str]]
             limitations.append("events.jsonl contains malformed JSON")
             continue
         phase = event.get("phase")
+        data = event.get("data") or {}
+        if phase == "start" and isinstance(data, dict):
+            if isinstance(data.get("scenario"), str):
+                scenario["name"] = data["scenario"]
+            if isinstance(data.get("scenario_evidence_level"), str):
+                scenario["evidence_level"] = data["scenario_evidence_level"]
+            if isinstance(data.get("scenario_evidence_summary"), str):
+                scenario["evidence_summary"] = data["scenario_evidence_summary"]
         result = ((event.get("data") or {}).get("result") or {}) if isinstance(event.get("data"), dict) else {}
         status = result.get("status") if isinstance(result, dict) else None
         if isinstance(status, str) and phase == "red-team":
             statuses["before"] = status
         elif isinstance(status, str) and phase == "validation":
             statuses["after"] = status
-    return statuses, limitations
+    return statuses, scenario, limitations
 
 
 def _read_token_totals(path: Path) -> tuple[dict[str, int], list[str]]:

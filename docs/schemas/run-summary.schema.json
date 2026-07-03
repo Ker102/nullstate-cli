@@ -8,6 +8,7 @@
     "$schema",
     "schema_version",
     "run",
+    "scenario",
     "status",
     "finding_count",
     "highest_severity",
@@ -36,6 +37,35 @@
         },
         "path": {
           "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "scenario": {
+      "type": "object",
+      "required": [
+        "name",
+        "evidence_level",
+        "evidence_summary"
+      ],
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_summary": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "additionalProperties": true

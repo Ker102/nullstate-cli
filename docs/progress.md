@@ -281,6 +281,11 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - `--tag <tag>` installs from `git+https://github.com/Ker102/nullstate-cli.git@<tag>`
     - `--package-spec <spec>` supports arbitrary pip install specs
     - Windows tag install smoke passed on 2026-07-03 with `--tag v0.1.0-alpha.2`
+  - Added scenario evidence metadata to generated artifacts:
+    - run start events include `scenario_evidence_level` and `scenario_evidence_summary`
+    - `summary --json` exposes a `scenario` object for coding agents and CI
+    - `run-bundle.json` includes scenario evidence level and summary in the `run` object
+    - run-summary and run-bundle schemas document the new fields
 
 ## Blocked
 

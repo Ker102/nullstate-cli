@@ -29,6 +29,8 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertEqual(payload["schema_version"], 1)
             self.assertEqual(payload["run"]["id"], run_dir.name)
             self.assertEqual(payload["run"]["path"], ".")
+            self.assertEqual(payload["run"]["scenario_evidence_level"], "live-validated")
+            self.assertIn("runtime probe validated", payload["run"]["scenario_evidence_summary"])
             self.assertEqual(payload["run"]["verdict"], "blocked")
             self.assertEqual(payload["run"]["finding_count"], 1)
             self.assertEqual(payload["evidence"]["remediation"]["ruleset_version"], "2026.06.1")
@@ -224,7 +226,13 @@ def _minimal_run(runs_dir: Path) -> Path:
                 "timestamp": "2026-06-01T12:00:00+00:00",
                 "phase": "start",
                 "message": "Run started",
-                "data": {"scenario": "aws-public-s3", "target": "localstack-aws", "offline": True},
+                "data": {
+                    "scenario": "aws-public-s3",
+                    "target": "localstack-aws",
+                    "offline": True,
+                    "scenario_evidence_level": "live-validated",
+                    "scenario_evidence_summary": "LocalStack AWS S3 runtime probe validated.",
+                },
             }
         )
         + "\n",

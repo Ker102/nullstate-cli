@@ -48,6 +48,8 @@ def build_run_bundle(run_dir: Path) -> dict[str, Any]:
             "id": run_dir.name,
             "path": ".",
             "scenario": manifest.get("scenario") or _event_data(events, "start", "scenario"),
+            "scenario_evidence_level": _event_data(events, "start", "scenario_evidence_level"),
+            "scenario_evidence_summary": _event_data(events, "start", "scenario_evidence_summary"),
             "target": manifest.get("backend") or _event_data(events, "start", "target"),
             "offline": _event_data(events, "start", "offline"),
             "finding_count": len(findings) if isinstance(findings, list) else 0,
@@ -95,6 +97,10 @@ def validate_run_bundle(bundle: Any) -> list[str]:
     else:
         if not run.get("id"):
             errors.append("run.id is required")
+        if "scenario_evidence_level" not in run:
+            errors.append("run.scenario_evidence_level is required")
+        if "scenario_evidence_summary" not in run:
+            errors.append("run.scenario_evidence_summary is required")
         if "finding_count" in run and not isinstance(run.get("finding_count"), int):
             errors.append("run.finding_count must be an integer")
         if "verdict" in run and run.get("verdict") not in {"blocked", "failed", "unknown"}:
