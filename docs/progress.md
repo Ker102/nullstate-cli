@@ -286,6 +286,7 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - `summary --json` exposes a `scenario` object for coding agents and CI
     - `run-bundle.json` includes scenario evidence level and summary in the `run` object
     - run-summary and run-bundle schemas document the new fields
+    - refreshed the checked-in sanitized sample run bundle so it remains valid against the new schema
 
 ## Blocked
 

@@ -18,8 +18,8 @@
     },
     {
       "path": "events.jsonl",
-      "sha256": "e65dbb735ef7bedc890cc8f02394df554c407f930bbbdd206131b3b8d07b30ac",
-      "size_bytes": 4837
+      "sha256": "989ab5303c23e69e3f0104f7b9594715756afe3401c2effec3b111b41dd6a47c",
+      "size_bytes": 5030
     },
     {
       "path": "findings.json",
@@ -79,6 +79,8 @@
           "red_mock_agent": true,
           "role_specific_endpoints": false,
           "scenario": "aws-public-s3",
+          "scenario_evidence_level": "live-validated",
+          "scenario_evidence_summary": "LocalStack AWS S3 deployment and constrained anonymous object-read probe are validated before and after remediation.",
           "target": "localstack-aws",
           "target_mode": "executable",
           "terraform_dir": "examples\\aws-public-s3",
@@ -381,7 +383,7 @@
     },
     "report_excerpt": "# nullstate Run Report\n\nRun ID: `20260702-182015`\n\nIaC input: `examples\\aws-public-s3`\n\n## Verdict\n\nExploit blocked after remediation\n\n## Findings\n\n- `HIGH` `AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED` on `aws_s3_bucket_public_access_block.public_logs`: S3 public access block controls are disabled. Evidence: Disabled controls: block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets Remediation: Set every aws_s3_bucket_public_access_block control to true.\n\n## Red Team Before Remediation\n\n- Status: `success`\n- Evidence: Anonymous S3 read hypothesis succeeded because public access block controls were disabled. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage before --manifest <redacted-local-path>` target=offline://aws-public-s3.\n\n## Blue Team Remediation\n\nRed: offline-mock. Blue: offline-mock. Offline blue team recommended enabling all S3 public access block controls.\n\n```diff\n--- a/main.tf\n+++ b/main.tf\n@@ -27,34 +27,10 @@\n \n resource \"aws_s3_bucket_public_access_block\" \"public_logs\" {\n   bucket                  = aws_s3_bucket.public_logs.id\n-  block_public_acls       = false\n-  block_public_policy     = false\n-  ignore_public_acls      = false\n-  restrict_public_buckets = false\n+  block_public_acls       = true\n+  block_public_policy     = true\n+  ignore_public_acls      = true\n+  restrict_public_buckets = true\n }\n \n-resource \"aws_s3_object\" \"evidence\" {\n-  bucket       = aws_s3_bucket.public_logs.id\n-  key          = \"evidence.txt\"\n-  content      = \"nullstate public S3 evidence\"\n-  content_type = \"text/plain\"\n-}\n \n-resource \"aws_s3_bucket_policy\" \"public_read\" {\n-  bucket = aws_s3_bucket.public_logs.id\n-\n-  policy = jsonencode({\n-    Version = \"2012-10-17\"\n-    Statement = [\n-      {\n-        Sid       = \"NullstatePublicReadEvidence\"\n-        Effect    = \"Allow\"\n-        Principal = \"*\"\n-        Action    = \"s3:GetObject\"\n-        Resource  = \"${aws_s3_bucket.public_logs.arn}/evidence.txt\"\n-      }\n-    ]\n-  })\n-\n-  depends_on = [aws_s3_bucket_public_access_block.public_logs]\n-}\n```\n\n## Red Team After Remediation\n\n- Status: `blocked`\n- Evidence: Attack path denied after deterministic remediation. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage after --manifest <redacted-local-path>` target=offline://aws-public-s3.\n\n## Runtime Command Evidence\n\n### Before remediation\n\n- Command: `<redacted-local-path> <redacted-local-path> --target-url offline://aws-public-s3 --stage before --manifest <redacted-local-path>`\n- Return code: `0`\n- Target: `offline://aws-public-s3`\n- Classification: `offline deterministic simulation`\n- Stdout excerpt:\n\n```text\nAttempting anonymous S3 object read against LocalStack AWS endpoint\nstage=before target=offline://aws-public-s3\noffline target selected; no network request performed\n```\n\n### After remediation\n\n- Command: `<redacted-local-path> <redacted-local-path> --target-url offline://aws-public-s3 --stage after --manifest <redacted-local-path>`\n- Return code: `0`\n- Target: `offline://aws-public-s3`\n- Classification: `offline deterministic simulation`\n- Stdout excerpt:\n\n```text\nAttempting anonymous S3 object read against LocalStack AWS endpoint\nstage=after target=offline://aws-public-s3\noffline target selected; no network request performed\n```\n\n\n## Remediation Metadata\n\n- Ruleset version: `2026.06.1`\n- Scenario: `aws-public-s3`\n- Changed: `True`\n\nRules applied:\n\n- `AWS_S3_BLOCK_PUBLIC_ACCESS`\n- `AWS_S3_REMOVE_PUBLIC_READ_POLICY`\n- `AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT`\n\nChanged files:\n\n- `main.tf`\n\n\n## Case Study Notes\n\nnullstate used deterministic IaC analysis for reliability, then layered red-team and blue-team agents over the evidence trail so the demo remains reproducible under hackathon time pressure.\n"
   },
-  "generated_at": "2026-07-02T18:26:57.912535+00:00",
+  "generated_at": "2026-07-03T17:39:35.253871+00:00",
   "product": "nullstate",
   "product_version": "0.1.0",
   "run": {
@@ -390,6 +392,8 @@
     "offline": true,
     "path": ".",
     "scenario": "aws-public-s3",
+    "scenario_evidence_level": "live-validated",
+    "scenario_evidence_summary": "LocalStack AWS S3 deployment and constrained anonymous object-read probe are validated before and after remediation.",
     "target": "localstack-aws",
     "verdict": "blocked"
   },

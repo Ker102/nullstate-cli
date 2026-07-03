@@ -417,6 +417,7 @@ Current branch-only updates on `docs/open-source-readiness` include:
 - `scripts/release/install_smoke.py` supports `--tag <tag>` and `--package-spec <spec>` in addition to local-wheel mode
 - Windows latest-tag smoke passed for `v0.1.0-alpha.2`; Linux latest-tag smoke is still pending
 - run start events, `summary --json`, and `run-bundle.json` now carry scenario evidence level/summary metadata for automation
+- checked-in sanitized sample run `examples/sample-runs/20260702-182015` has been refreshed for the new bundle schema
 
 Do not jump straight to full SaaS before stabilizing:
 

@@ -213,6 +213,8 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual(report["scrubbed_run_dir"], "<redacted-scrubbed-run-dir>")
         bundle = json.loads(sample_run.joinpath("run-bundle.json").read_text(encoding="utf-8"))
         self.assertEqual(bundle["run"]["path"], ".")
+        self.assertEqual(bundle["run"]["scenario_evidence_level"], "live-validated")
+        self.assertIn("object-read probe", bundle["run"]["scenario_evidence_summary"])
         self.assertIn("dashboard.html", {artifact["path"] for artifact in bundle["artifacts"]})
         self.assertNotIn("run-bundle.json", {artifact["path"] for artifact in bundle["artifacts"]})
         combined_text = "\n".join(
