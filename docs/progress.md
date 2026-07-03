@@ -287,6 +287,7 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
     - `run-bundle.json` includes scenario evidence level and summary in the `run` object
     - run-summary and run-bundle schemas document the new fields
     - refreshed the checked-in sanitized sample run bundle so it remains valid against the new schema
+    - local dashboard now displays scenario evidence level and summary
 
 ## Blocked
 

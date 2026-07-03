@@ -418,6 +418,7 @@ Current branch-only updates on `docs/open-source-readiness` include:
 - Windows latest-tag smoke passed for `v0.1.0-alpha.2`; Linux latest-tag smoke is still pending
 - run start events, `summary --json`, and `run-bundle.json` now carry scenario evidence level/summary metadata for automation
 - checked-in sanitized sample run `examples/sample-runs/20260702-182015` has been refreshed for the new bundle schema
+- local dashboard displays scenario evidence level and evidence summary from the run bundle
 
 Do not jump straight to full SaaS before stabilizing:
 

@@ -77,6 +77,7 @@ def render_dashboard(bundle: dict[str, Any]) -> str:
       <div class="card"><div class="label">Red tool events</div><div class="metric">{red_tool_count}</div></div>
       <div class="card"><div class="label">Model calls</div><div class="metric">{len(model_calls)}</div></div>
       <div class="card"><div class="label">Artifacts</div><div class="metric">{artifact_count}</div></div>
+      <div class="card"><div class="label">Evidence level</div><div class="metric">{html.escape(str(run.get("scenario_evidence_level") or "unknown"))}</div></div>
     </section>
     <section class="card" style="margin-top: 20px;">
       <h2>Findings</h2>
@@ -154,11 +155,14 @@ def _render_remediation(remediation: Any) -> str:
 
 
 def _render_bundle_contract(bundle: dict[str, Any]) -> str:
+    raw_run = bundle.get("run")
+    run: dict[str, Any] = raw_run if isinstance(raw_run, dict) else {}
     return (
         "<table><tbody>"
         f"<tr><th>Schema</th><td><code>{html.escape(str(bundle.get('$schema', 'unknown')))}</code></td></tr>"
         f"<tr><th>Version</th><td><code>{html.escape(str(bundle.get('schema_version', 'unknown')))}</code></td></tr>"
         f"<tr><th>Generated</th><td>{html.escape(str(bundle.get('generated_at', 'unknown')))}</td></tr>"
+        f"<tr><th>Evidence summary</th><td>{html.escape(str(run.get('scenario_evidence_summary') or 'unknown'))}</td></tr>"
         "</tbody></table>"
     )
 

@@ -83,6 +83,8 @@ class BundleDashboardTests(unittest.TestCase):
             self.assertIn("AWS_S3_BLOCK_PUBLIC_ACCESS", html)
             self.assertIn("Bundle contract", html)
             self.assertIn(BUNDLE_SCHEMA_ID, html)
+            self.assertIn("Evidence level", html)
+            self.assertIn("live-validated", html)
             self.assertIn("Artifacts", html)
             self.assertIn("report.md", html)
             self.assertIn("border-radius: 8px", html)
