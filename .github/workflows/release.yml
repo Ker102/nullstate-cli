@@ -224,11 +224,11 @@ jobs:
           )
           PY
       - name: Attest release artifacts
-        uses: actions/attest@v4
+        uses: actions/attest@v4.2.0
         with:
           subject-path: dist/*
       - name: Attest release SBOM
-        uses: actions/attest@v4
+        uses: actions/attest@v4.2.0
         with:
           subject-path: dist/*
           sbom-path: dist/sbom.spdx.json
