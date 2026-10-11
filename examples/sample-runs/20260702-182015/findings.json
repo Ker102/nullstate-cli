@@ -1,0 +1,10 @@
+[
+  {
+    "evidence": "Disabled controls: block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets",
+    "remediation": "Set every aws_s3_bucket_public_access_block control to true.",
+    "resource_address": "aws_s3_bucket_public_access_block.public_logs",
+    "rule_id": "AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED",
+    "severity": "high",
+    "summary": "S3 public access block controls are disabled."
+  }
+]

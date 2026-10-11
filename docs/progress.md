@@ -4,11 +4,23 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Current Branch
 
-- Branch: `main`
+- Branch: `docs/open-source-readiness`
 - Rule: hackathon freeze lifted by the project owner on 2026-06-18.
 - Remote policy: use feature branches and PRs for substantive follow-up slices.
 
 ## Checkpoints
+
+### 2026-10-11
+
+- Added six-language mirrors for all 38 maintained public documentation sources
+  (228 documents), native README links, source-hash checks, and strict CI coverage.
+- The documentation validator and all 7 focused tests passed. Application,
+  emulator, model, and live-cloud validation were not repeated for this slice.
+- The owner authorized publication of the existing readiness branch with these
+  translations as a pull request; no automatic main-branch merge is included.
+- Remote PR validation passed all 192 unit tests and stopped at the repository
+  lint backlog. The new documentation test's import spacing was corrected and
+  checked with the same Ruff version as CI; the broader backlog is issue #35.
 
 ### 2026-06-11
 
@@ -197,12 +209,103 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## In Progress
 
-- No active implementation slice at this checkpoint.
+- `docs/open-source-readiness`
+  - Refresh public install and release wording for `v0.1.0-alpha.2`.
+  - Tighten contributor setup, security boundaries, and safe artifact-sharing expectations.
+  - Improve issue templates so outside bug reports include run/artifact context without exposing secrets.
+  - Reproduced the LocalStack Azure entitlement failure on the main device and hardened `sandbox up` so soon-exiting containers are reported as failed starts.
+  - Added `docs/open-source-readiness.md` to track alpha, stable sandbox, and stable open-source CLI milestones.
+  - Updated the case study to distinguish live AWS evidence from Azure live-validation blockers.
+  - Added `docs/quickstart-10-minutes.md` as the first-time open-source user path with no Docker, LocalStack, cloud credentials, or model endpoint required.
+  - Created GitHub milestones for alpha publication readiness, stable local sandbox validation, and open-source stable CLI.
+  - Created issue #29 for sanitized sample run artifacts and issue #30 for an Azurite fallback.
+  - Clarified the product model beyond IaC-only scanning:
+    - correlate intended IaC with observed AWS and Azure state
+    - evaluate attack paths from external, human, workload, CI, IAM-role, and managed-identity perspectives
+    - classify what data or privileged capability is actually reachable
+    - use read-only production discovery and controlled exploit validation instead of autonomous production attacks
+    - support pull-request CI, post-deployment validation, and scheduled assurance
+    - treat AI agents as first-class cloud principals with separate agent-native, delegated-user, runtime/tool, and downstream credential paths
+    - cover prompt injection, excessive agency, confused-deputy behavior, shared runtime identities, and agent-to-agent trust as future validation scenarios
+  - Added `docs/product-validation-model.md` as the durable product rationale and validation architecture reference.
+  - Added `docs/plans/2026-06-22-external-agent-trust-design.md`:
+    - defines runtime posture dimensions and evidence confidence classifications
+    - models external agent compromise across identity, delegation, tools, data, and recovery controls
+    - proposes a tenant-controlled authorization gateway and posture-aware privilege reduction
+    - keeps hardware attestation and artifact signatures scoped to the properties they can actually prove
+  - Added initial external-agent trust CLI preview:
+    - `docs/schemas/external-agent-manifest.schema.json`
+    - `examples/agent-trust/external-agent-manifest.json`
+    - `nullstate agent posture verify <manifest>`
+    - `nullstate agent blast-radius <manifest>`
+    - deterministic posture reports fail or need review when evidence is stale, failed, or unknown
+    - blast-radius reports separate agent identities, delegated users, sensitive resources, high-risk actions, and attack-path classes
+  - Added agent/CI evidence contracts:
+    - `nullstate summary --json` emits compact run status, finding count, highest severity, attack before/after state, token totals, artifact paths, and limitations
+    - `docs/schemas/run-summary.schema.json` documents the machine-readable summary contract
+    - `nullstate context validate <context.json>` validates local read-only cloud context manifests
+    - `nullstate context summary <context.json> --json` summarizes providers, accounts, identities, resources, public resources, and sensitive resources
+    - `docs/schemas/cloud-context.schema.json` documents the future collector output contract without adding live cloud credentials yet
+  - Added evaluation metrics harness:
+    - `nullstate eval run examples/eval/iac-security-regression.json`
+    - `docs/schemas/eval-suite.schema.json` documents benchmark suite inputs
+    - writes `eval-results.json` and `eval-report.md`
+    - records per-case duration, finding count, highest severity, attack before/after status, token totals, artifact count, and expectation pass/fail status
+    - compares against a transparent generic IaC-only review baseline for attack replay evidence, remediation validation, token metrics, and structured artifact coverage
+    - current suite is internal/offline only; Checkov, tfsec, Terrascan, and coding-agent baseline execution remain future work
+  - Added GitHub Actions bootstrap:
+    - `nullstate init-ci github`
+    - writes `.github/workflows/nullstate.yml`
+    - writes a scenario-scoped `nullstate-policy.json`
+    - refuses to overwrite existing files unless `--force` is passed
+    - lowers first-run friction for open-source users and coding agents setting up CI
+  - Added sanitized sample run artifact:
+    - `examples/sample-runs/20260702-182015`
+    - inspect with `nullstate report --runs-dir examples/sample-runs`
+    - inspect machine-readable output with `nullstate summary --runs-dir examples/sample-runs --json`
+    - includes checked-in `run-bundle.json` and `dashboard.html`
+    - hardened scrubber redacts Windows local paths and scrub-report source/output directories
+    - run bundles now use portable `run.path = "."` and exclude `run-bundle.json` from their own artifact inventory
+  - Added dependency audit documentation:
+    - `docs/dependency-audit.md`
+    - local command run on 2026-07-02: `python -m pip_audit . --skip-editable`
+    - result: no known vulnerabilities found with `pip-audit 2.10.0`
+    - no accepted vulnerable dependency risk is currently documented
+  - Added local release install-smoke helper:
+    - `scripts/release/install_smoke.py`
+    - builds the wheel into a temporary directory
+    - installs it into a clean virtual environment
+    - verifies the `nullstate` console command and `nullstate doctor --offline`
+  - Hardened tagged release workflow:
+    - adds `Smoke install release wheel`
+    - installs `dist/*.whl` into `.smoke-venv`
+    - runs `.smoke-venv/bin/nullstate --help`
+    - runs `.smoke-venv/bin/nullstate doctor --offline`
+  - Added explicit scenario evidence levels:
+    - `aws-public-s3`: `live-validated`
+    - `azure-public-blob`: `offline-deterministic`
+    - Kubernetes, Docker Compose, and on-prem scenarios: `scaffolded`
+    - generic plan review: `plan-only`
+    - `nullstate scenarios list` prints a full evidence-level legend before the Rich table
+    - `nullstate scenarios status <name>` shows the evidence summary for one scenario
+  - Extended `scripts/release/install_smoke.py`:
+    - default mode still builds and installs a local wheel
+    - `--tag <tag>` installs from `git+https://github.com/Ker102/nullstate-cli.git@<tag>`
+    - `--package-spec <spec>` supports arbitrary pip install specs
+    - Windows tag install smoke passed on 2026-07-03 with `--tag v0.1.0-alpha.2`
+  - Added scenario evidence metadata to generated artifacts:
+    - run start events include `scenario_evidence_level` and `scenario_evidence_summary`
+    - `summary --json` exposes a `scenario` object for coding agents and CI
+    - `run-bundle.json` includes scenario evidence level and summary in the `run` object
+    - run-summary and run-bundle schemas document the new fields
+    - refreshed the checked-in sanitized sample run bundle so it remains valid against the new schema
+    - local dashboard now displays scenario evidence level and summary
 
 ## Blocked
 
 - Live LocalStack Azure validation:
   - Blocker: LocalStack account/license does not currently have Azure Emulator entitlement.
+  - Reconfirmed on 2026-06-21: `localstack/localstack-azure-alpha` exits with code `55` and logs that the Azure Emulator is not enabled for the account.
   - Do not keep retrying because the Azure image is large and disk space is limited.
 
 ## Next Candidates

@@ -25,6 +25,30 @@
 - Blue agent: partially trusted remediation role.
 - External model server: trusted only for configured endpoint behavior.
 - CI runner: ephemeral automation identity with minimal permissions.
+- Customer AI agent: partially trusted non-human principal that may use a dedicated agent identity, workload identity, service principal, IAM role, managed identity, or delegated user authority.
+- Agent tool/runtime identity: separate principal used by an agent host, gateway, connector, plugin, MCP server, or downstream tool.
+
+Agent identity analysis must preserve these distinctions:
+
+- the agent's own identity and permissions
+- the human user or workload that requested the action
+- delegated/on-behalf-of authority
+- runtime and tool identities
+- downstream credentials and token audiences
+- the final resource and operation
+
+A report must not attribute a delegated action only to the human or only to the agent when both identities contributed to authorization.
+
+For externally hosted agents, a valid federated identity is necessary but insufficient. High-impact authorization should depend on runtime evidence where available:
+
+- workload identity is bound to expected runtime attributes
+- deployed artifact digest matches an approved signed artifact
+- build provenance and issuer are verified
+- runtime or hardware attestation is fresh and valid where required
+- network and tool policy match the approved profile
+- revocation and audit controls are operational
+
+Evidence must be classified as cryptographically verified, provider observed, operator attested, inferred, or unknown. Unknown posture cannot be silently promoted to trusted posture.
 
 ## Network controls
 
@@ -91,3 +115,4 @@ Artifacts must be reviewed before publishing. Do not publish tokens, real tenant
 - Broader organization-specific artifact redaction rules.
 - Policy-as-code guardrails for agent tools.
 - Live-cloud approval gate with auditable operator intent.
+- Provider-specific inventory and attack-path controls for AI agent identities, delegated user context, tool identities, and agent-to-agent trust.

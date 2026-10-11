@@ -1,6 +1,6 @@
 # Nullstate Project Handoff
 
-Last updated: 2026-06-19
+Last updated: 2026-06-27
 
 ## Read this first
 
@@ -8,8 +8,8 @@ This file is written for a fresh agent with no conversation history and no MCP t
 
 The hackathon freeze rule was lifted on 2026-06-18 by the project owner. PR #24 was squash-merged into `main` after review blockers and remote checks were cleared.
 
-- Current active branch: `main`.
-- Current local state at handoff: `main` is aligned with `origin/main`; run `git status --short --branch` and `git log --oneline -8` for exact local state.
+- Current active branch: `docs/open-source-readiness`.
+- Current local state at handoff: this branch contains unmerged open-source readiness and external-agent trust work. Run `git status --short --branch` and `git log --oneline -8` for exact local state.
 
 Recent merged checkpoint:
 
@@ -71,8 +71,24 @@ When this project is opened on the main device:
 Core positioning:
 
 ```text
-Prove, patch, and validate IaC risk.
+Prove, patch, and validate cloud attack paths.
 ```
+
+Expanded product direction:
+
+- IaC remains a first-class source of intended AWS and Azure state, but it is not assumed to describe the complete environment.
+- Future read-only provider discovery supplies deployed resources, identity relationships, network paths, logs, and drift.
+- A normalized environment graph connects attacker identities to reachable services, exposed data, and privileged capabilities.
+- AI agents are first-class principals. Preserve their own identity, delegated user, runtime/tool identity, downstream credentials, and target operation as separate graph nodes.
+- Future AWS and Azure discovery should inventory provider-native agent identities as well as conventional service principals, managed identities, IAM roles, and workload identities used by agents.
+- Agent security scenarios should cover compromised instructions, prompt injection, memory/tool compromise, excessive agency, confused-deputy behavior, shared runtime identities, and agent-to-agent trust.
+- External agent runtime posture is designed in `docs/plans/2026-06-22-external-agent-trust-design.md`.
+- Posture evidence must preserve source, issuer, verification method, freshness, confidence, and unknown assumptions.
+- Do not reduce posture to a single opaque score or claim that signed artifacts/hardware attestation prove complete application safety.
+- Production is observed with read-only access and only explicitly approved non-destructive checks.
+- Exploit validation reconstructs the minimum relevant path in a controlled environment using synthetic evidence data.
+- CI has three modes: pull-request IaC validation, post-deployment observed-state validation, and scheduled drift/assurance runs.
+- `docs/product-validation-model.md` is the primary reference for this architecture and its production-safety rationale.
 
 ## Current technical state
 
@@ -168,6 +184,7 @@ Important limitation:
 - The constrained red runner is real. AWS now has a live-validated object-read probe path. Azure now has a manifest-backed blob-read probe, but live LocalStack Azure validation is still pending.
 - The before/after success verdict is still mostly deterministic via `simulate_attack()`.
 - Enterprise-grade exploit validation still requires live Azure emulator confirmation and possible URL/API tuning if LocalStack Azure semantics differ.
+- External-agent trust posture is currently manifest-driven and deterministic. It validates a local manifest and reports posture/blast-radius risk, but it does not yet collect live provider inventory, verify third-party runtime attestation, or enforce a tenant authorization gateway.
 
 ## Important docs
 
@@ -178,12 +195,20 @@ Start here:
 - `docs/case-study.md`
 - `docs/enterprise-roadmap.md`
 - `docs/enterprise-readiness.md`
+- `docs/product-validation-model.md`
+- `docs/plans/2026-06-22-external-agent-trust-design.md`
 - `docs/plans/2026-06-01-real-sandbox-red-team-commands.md`
 
 The implementation plan for the next core security feature is:
 
 ```text
 docs/plans/2026-06-01-real-sandbox-red-team-commands.md
+```
+
+The implementation plan for the current external-agent CLI preview is:
+
+```text
+docs/superpowers/plans/2026-06-27-external-agent-trust-cli.md
 ```
 
 ## Last verification run
@@ -247,6 +272,57 @@ Run artifacts are under `runs/` and may be ignored by Git. If this repository is
 Live LocalStack Azure validation attempt on 2026-06-11 did not reach Terraform execution. The container started and exited with LocalStack reporting that the Azure Emulator is not enabled for the account/license. Do not keep retrying until the LocalStack account has Azure Emulator entitlement; each retry pulls a large image and can exhaust disk.
 
 ## Where to continue
+
+Current branch feature now includes:
+
+```powershell
+nullstate agent posture verify examples/agent-trust/external-agent-manifest.json
+nullstate agent blast-radius examples/agent-trust/external-agent-manifest.json
+nullstate summary --json
+nullstate context validate examples/cloud-context/aws-readonly-context.json
+nullstate context summary examples/cloud-context/aws-readonly-context.json --json
+nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
+nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
+nullstate report --runs-dir examples/sample-runs
+nullstate summary --runs-dir examples/sample-runs --json
+```
+
+The eval suite now includes a `baseline` block for a generic IaC-only review. `eval-results.json` and `eval-report.md` compare Nullstate's attack replay evidence, remediation validation, token metrics, and artifact coverage against that baseline. This is not yet an integration with Checkov, tfsec, Terrascan, or a coding-agent baseline.
+
+The repo now includes a scrubbed sample run under `examples/sample-runs/20260702-182015` so new users can inspect report, summary, bundle, and dashboard output without running Docker, Terraform, LocalStack, or model endpoints. The sample includes checked-in `report.md`, `run-bundle.json`, and `dashboard.html`.
+
+Dependency audit status is documented in `docs/dependency-audit.md`. Last local audit on 2026-07-02 used `python -m pip_audit . --skip-editable` with `pip-audit 2.10.0` and found no known vulnerabilities.
+
+Local release install smoke is available through `python scripts/release/install_smoke.py`. It builds the wheel into a temp directory, installs it into a clean venv, and verifies the `nullstate` console command plus `nullstate doctor --offline`. This supports release readiness but does not replace testing install from a published tag.
+
+The tagged release workflow also performs a `Smoke install release wheel` step after `python -m build`; it installs `dist/*.whl` into `.smoke-venv` and runs the generated `nullstate` console command before SBOM generation, attestation, signing, or release creation.
+
+Related files:
+
+- `src/nullstate/agent_trust.py`
+- `src/nullstate/cloud_context.py`
+- `src/nullstate/ci_templates.py`
+- `src/nullstate/evaluation.py`
+- `src/nullstate/summary.py`
+- `tests/test_agent_trust.py`
+- `tests/test_cloud_context.py`
+- `tests/test_ci_templates.py`
+- `tests/test_evaluation.py`
+- `tests/test_summary.py`
+- `docs/schemas/external-agent-manifest.schema.json`
+- `docs/schemas/cloud-context.schema.json`
+- `docs/schemas/eval-suite.schema.json`
+- `docs/schemas/run-summary.schema.json`
+- `examples/agent-trust/external-agent-manifest.json`
+- `examples/agent-trust/README.md`
+- `examples/cloud-context/aws-readonly-context.json`
+- `examples/cloud-context/README.md`
+- `examples/eval/iac-security-regression.json`
+- `examples/eval/README.md`
+
+The context command is a local manifest contract only. It does not call AWS, Azure, GCP, or any cloud API yet.
+
+The eval harness measures Nullstate's own supported cases today. It does not yet compare against scanner-only tools, manual review, or generic coding-agent review.
 
 Next highest-value feature:
 
@@ -330,6 +406,19 @@ Current productization checkpoints merged into `main` include:
 - run-bundle v1 schema documentation and local bundle validation
 - deeper local dashboard evidence view with remediation, bundle contract, and artifact inventory sections
 - enforcing GitHub Actions template under `docs/templates/github-actions/nullstate-enforcing.yml`
+
+Current branch-only updates on `docs/open-source-readiness` include:
+
+- explicit scenario evidence levels in `src/nullstate/scenarios.py`
+- `nullstate scenarios list` prints a full evidence-level legend before the Rich table
+- `nullstate scenarios status <name>` includes the evidence level and evidence summary
+- README scenario table now distinguishes `live-validated`, `offline-deterministic`, `scaffolded`, and `plan-only`
+- open-source readiness milestone for labeling non-live scenarios is marked complete
+- `scripts/release/install_smoke.py` supports `--tag <tag>` and `--package-spec <spec>` in addition to local-wheel mode
+- Windows latest-tag smoke passed for `v0.1.0-alpha.2`; Linux latest-tag smoke is still pending
+- run start events, `summary --json`, and `run-bundle.json` now carry scenario evidence level/summary metadata for automation
+- checked-in sanitized sample run `examples/sample-runs/20260702-182015` has been refreshed for the new bundle schema
+- local dashboard displays scenario evidence level and evidence summary from the run bundle
 
 Do not jump straight to full SaaS before stabilizing:
 

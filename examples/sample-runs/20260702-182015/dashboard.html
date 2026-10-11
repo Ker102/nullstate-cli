@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nullstate run dashboard</title>
+  <style>
+    body { font-family: Inter, Segoe UI, Arial, sans-serif; margin: 0; background: #10131a; color: #eef3f8; }
+    header { padding: 32px; background: #132238; border-bottom: 3px solid #2f9e8f; }
+    main { padding: 24px 32px 48px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: #171b24; border: 1px solid #364052; border-radius: 8px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.22); }
+    .metric { font-size: 32px; font-weight: 700; margin: 6px 0; }
+    .label { color: #b5c4ce; font-size: 13px; text-transform: uppercase; letter-spacing: 0; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #0b0e13; padding: 14px; border-radius: 8px; border: 1px solid #303846; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { border-bottom: 1px solid #384455; padding: 10px; text-align: left; vertical-align: top; }
+    code { color: #8ee6d6; }
+    a { color: #8ec5ff; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="label">nullstate local dashboard</div>
+    <h1>Run 20260702-182015</h1>
+    <p>Scenario: <strong>aws-public-s3</strong> · Target: <strong>localstack-aws</strong></p>
+  </header>
+  <main>
+    <section class="grid">
+      <div class="card"><div class="label">Verdict</div><div class="metric">blocked</div></div>
+      <div class="card"><div class="label">Findings</div><div class="metric">1</div></div>
+      <div class="card"><div class="label">Red tool events</div><div class="metric">2</div></div>
+      <div class="card"><div class="label">Model calls</div><div class="metric">2</div></div>
+      <div class="card"><div class="label">Artifacts</div><div class="metric">10</div></div>
+      <div class="card"><div class="label">Evidence level</div><div class="metric">live-validated</div></div>
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Findings</h2>
+      <table><thead><tr><th>Severity</th><th>Rule</th><th>Resource</th><th>Summary</th></tr></thead><tbody><tr><td>HIGH</td><td>AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED</td><td>aws_s3_bucket_public_access_block.public_logs</td><td>S3 public access block controls are disabled.</td></tr></tbody></table>
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Remediation</h2>
+      <p>Ruleset: <code>2026.06.1</code> Scenario: <code>aws-public-s3</code> Changed files: <strong>1</strong></p><table><thead><tr><th>Rule ID</th></tr></thead><tbody><tr><td>AWS_S3_BLOCK_PUBLIC_ACCESS</td></tr><tr><td>AWS_S3_REMOVE_PUBLIC_READ_POLICY</td></tr><tr><td>AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT</td></tr></tbody></table>
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Bundle contract</h2>
+      <table><tbody><tr><th>Schema</th><td><code>https://schemas.nullstate.dev/run-bundle.schema.json</code></td></tr><tr><th>Version</th><td><code>1</code></td></tr><tr><th>Generated</th><td>2026-07-03T17:39:35.253871+00:00</td></tr><tr><th>Evidence summary</th><td>LocalStack AWS S3 deployment and constrained anonymous object-read probe are validated before and after remediation.</td></tr></tbody></table>
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Artifacts</h2>
+      <table><thead><tr><th>Path</th><th>Bytes</th><th>SHA-256 prefix</th></tr></thead><tbody><tr><td>attack-manifest.json</td><td>316</td><td><code>a98c6e4319ac8c6e</code></td></tr><tr><td>attack.py</td><td>3327</td><td><code>25b9eb536599340f</code></td></tr><tr><td>dashboard.html</td><td>9755</td><td><code>108dcad537a4eaef</code></td></tr><tr><td>events.jsonl</td><td>5030</td><td><code>989ab5303c23e69e</code></td></tr><tr><td>findings.json</td><td>441</td><td><code>e119d47669721a02</code></td></tr><tr><td>metrics.json</td><td>2809</td><td><code>7045a60f798ae107</code></td></tr><tr><td>remediation.json</td><td>387</td><td><code>bc08487ca897426c</code></td></tr><tr><td>remediation.patch</td><td>1170</td><td><code>a2bbc334fd5b5ca8</code></td></tr><tr><td>report.md</td><td>3946</td><td><code>b9827564af0c64e8</code></td></tr><tr><td>scrub-report.json</td><td>341</td><td><code>f17d1b5065825d66</code></td></tr></tbody></table>
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Evidence timeline</h2>
+      <table><thead><tr><th>Time</th><th>Phase</th><th>Message</th></tr></thead><tbody><tr><td>2026-07-02T18:20:15.380501+00:00</td><td>start</td><td>Run started</td></tr><tr><td>2026-07-02T18:20:15.383721+00:00</td><td>analysis</td><td>IaC input analyzed</td></tr><tr><td>2026-07-02T18:20:15.667037+00:00</td><td>red-tool</td><td>Allowlisted attack command completed</td></tr><tr><td>2026-07-02T18:20:15.667744+00:00</td><td>red-team</td><td>Attack attempted before remediation</td></tr><tr><td>2026-07-02T18:20:15.739953+00:00</td><td>blue-team</td><td>IaC remediation generated</td></tr><tr><td>2026-07-02T18:20:15.941488+00:00</td><td>red-tool</td><td>Allowlisted attack command completed</td></tr><tr><td>2026-07-02T18:20:15.942134+00:00</td><td>validation</td><td>Attack attempted after remediation</td></tr></tbody></table>
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Report excerpt</h2>
+      <pre># nullstate Run Report
+
+Run ID: `20260702-182015`
+
+IaC input: `examples\aws-public-s3`
+
+## Verdict
+
+Exploit blocked after remediation
+
+## Findings
+
+- `HIGH` `AWS_S3_PUBLIC_ACCESS_BLOCK_DISABLED` on `aws_s3_bucket_public_access_block.public_logs`: S3 public access block controls are disabled. Evidence: Disabled controls: block_public_acls, block_public_policy, ignore_public_acls, restrict_public_buckets Remediation: Set every aws_s3_bucket_public_access_block control to true.
+
+## Red Team Before Remediation
+
+- Status: `success`
+- Evidence: Anonymous S3 read hypothesis succeeded because public access block controls were disabled. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage before --manifest &lt;redacted-local-path&gt;` target=offline://aws-public-s3.
+
+## Blue Team Remediation
+
+Red: offline-mock. Blue: offline-mock. Offline blue team recommended enabling all S3 public access block controls.
+
+```diff
+--- a/main.tf
++++ b/main.tf
+@@ -27,34 +27,10 @@
+ 
+ resource &quot;aws_s3_bucket_public_access_block&quot; &quot;public_logs&quot; {
+   bucket                  = aws_s3_bucket.public_logs.id
+-  block_public_acls       = false
+-  block_public_policy     = false
+-  ignore_public_acls      = false
+-  restrict_public_buckets = false
++  block_public_acls       = true
++  block_public_policy     = true
++  ignore_public_acls      = true
++  restrict_public_buckets = true
+ }
+ 
+-resource &quot;aws_s3_object&quot; &quot;evidence&quot; {
+-  bucket       = aws_s3_bucket.public_logs.id
+-  key          = &quot;evidence.txt&quot;
+-  content      = &quot;nullstate public S3 evidence&quot;
+-  content_type = &quot;text/plain&quot;
+-}
+ 
+-resource &quot;aws_s3_bucket_policy&quot; &quot;public_read&quot; {
+-  bucket = aws_s3_bucket.public_logs.id
+-
+-  policy = jsonencode({
+-    Version = &quot;2012-10-17&quot;
+-    Statement = [
+-      {
+-        Sid       = &quot;NullstatePublicReadEvidence&quot;
+-        Effect    = &quot;Allow&quot;
+-        Principal = &quot;*&quot;
+-        Action    = &quot;s3:GetObject&quot;
+-        Resource  = &quot;${aws_s3_bucket.public_logs.arn}/evidence.txt&quot;
+-      }
+-    ]
+-  })
+-
+-  depends_on = [aws_s3_bucket_public_access_block.public_logs]
+-}
+```
+
+## Red Team After Remediation
+
+- Status: `blocked`
+- Evidence: Attack path denied after deterministic remediation. Allowlisted tool command returned 0: `python attack.py --target-url offline://aws-public-s3 --stage after --manifest &lt;redacted-local-path&gt;` target=offline://aws-public-s3.
+
+## Runtime Command Evidence
+
+### Before remediation
+
+- Command: `&lt;redacted-local-path&gt; &lt;redacted-local-path&gt; --target-url offline://aws-public-s3 --stage before --manifest &lt;redacted-local-path&gt;`
+- Return code: `0`
+- Target: `offline://aws-public-s3`
+- Classification: `offline deterministic simulation`
+- Stdout excerpt:
+
+```text
+Attempting anonymous S3 object read against LocalStack AWS endpoint
+stage=before target=offline://aws-public-s3
+offline target selected; no network request performed
+```
+
+### After remediation
+
+- Command: `&lt;redacted-local-path&gt; &lt;redacted-local-path&gt; --target-url offline://aws-public-s3 --stage after --manifest &lt;redacted-local-path&gt;`
+- Return code: `0`
+- Target: `offline://aws-public-s3`
+- Classification: `offline deterministic simulation`
+- Stdout excerpt:
+
+```text
+Attempting anonymous S3 object read against LocalStack AWS endpoint
+stage=after target=offline://aws-public-s3
+offline target selected; no network request performed
+```
+
+
+## Remediation Metadata
+
+- Ruleset version: `2026.06.1`
+- Scenario: `aws-public-s3`
+- Changed: `True`
+
+Rules applied:
+
+- `AWS_S3_BLOCK_PUBLIC_ACCESS`
+- `AWS_S3_REMOVE_PUBLIC_READ_POLICY`
+- `AWS_S3_REMOVE_PUBLIC_EVIDENCE_OBJECT`
+
+Changed files:
+
+- `main.tf`
+
+
+## Case Study Notes
+
+nullstate used deterministic IaC analysis for reliability, then layered red-team and blue-team agents over the evidence trail so the demo remains reproducible under hackathon time pressure.
+</pre>
+    </section>
+    <section class="card" style="margin-top: 20px;">
+      <h2>Next paid-platform path</h2>
+      <p>This local dashboard is single-user and offline. Team dashboards, cloud upload, managed model calls, support, scheduled scans, alerts, RBAC, and compliance exports belong in Nullstate Cloud or the self-hosted Enterprise app.</p>
+    </section>
+  </main>
+</body>
+</html>

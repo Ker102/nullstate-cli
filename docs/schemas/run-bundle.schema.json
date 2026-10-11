@@ -38,6 +38,8 @@
         "id",
         "path",
         "scenario",
+        "scenario_evidence_level",
+        "scenario_evidence_summary",
         "target",
         "finding_count",
         "verdict"
@@ -51,6 +53,18 @@
           "type": "string"
         },
         "scenario": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenario_evidence_level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scenario_evidence_summary": {
           "type": [
             "string",
             "null"

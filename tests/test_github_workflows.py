@@ -1,3 +1,4 @@
+import json
 import re
 import unittest
 from pathlib import Path
@@ -59,6 +60,10 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("workflow_dispatch:", text)
         self.assertIn("dry_run:", text)
         self.assertIn("python -m build", text)
+        self.assertIn("Smoke install release wheel", text)
+        self.assertIn("python -m venv .smoke-venv", text)
+        self.assertIn(".smoke-venv/bin/python -m pip install dist/*.whl", text)
+        self.assertIn(".smoke-venv/bin/nullstate doctor --offline", text)
         self.assertIn("release-manifest.json", text)
         self.assertIn("sbom.spdx.json", text)
         self.assertIn("spdxVersion", text)
@@ -118,6 +123,116 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertIn("First Tagged Release Checklist", docs_text)
         self.assertIn("gh workflow run Release --field dry_run=true", docs_text)
         self.assertIn("gh release view v0.1.0", docs_text)
+
+    def test_release_install_smoke_script_checks_console_entrypoint(self):
+        script = Path("scripts/release/install_smoke.py")
+        pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertTrue(script.is_file(), "Expected a local release install-smoke script.")
+        text = script.read_text(encoding="utf-8")
+        self.assertIn('"build"', pyproject)
+        self.assertIn('"-m", "build"', text)
+        self.assertIn("venv.EnvBuilder", text)
+        self.assertIn('"doctor", "--offline"', text)
+        self.assertIn("nullstate console command", text)
+        self.assertIn("--tag", text)
+        self.assertIn("git+https://github.com/Ker102/nullstate-cli.git@", text)
+        self.assertIn("scripts/release/install_smoke.py", readme_text)
+        self.assertIn("python scripts/release/install_smoke.py --tag v0.1.0-alpha.2", readme_text)
+
+    def test_public_docs_point_to_current_prerelease(self):
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertIn("v0.1.0-alpha.2", readme_text)
+        self.assertIn("git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-alpha.2", readme_text)
+        self.assertIn("Open-source readiness prerelease", readme_text)
+
+    def test_issue_templates_collect_safe_repro_context(self):
+        bug_template = Path(".github/ISSUE_TEMPLATE/bug_report.yml").read_text(encoding="utf-8")
+        feature_template = Path(".github/ISSUE_TEMPLATE/feature_request.yml").read_text(encoding="utf-8")
+
+        self.assertIn("Run ID or artifact context", bug_template)
+        self.assertIn("Do not paste secrets", bug_template)
+        self.assertIn("Security boundary", bug_template)
+        self.assertIn("Open-source or paid-platform scope", feature_template)
+        self.assertIn("User workflow", feature_template)
+
+    def test_open_source_readiness_milestones_are_documented(self):
+        readiness = Path("docs/open-source-readiness.md")
+
+        self.assertTrue(readiness.is_file(), "Expected an open-source readiness milestone document.")
+        text = readiness.read_text(encoding="utf-8")
+
+        self.assertIn("Milestone 1: Alpha publication readiness", text)
+        self.assertIn("Milestone 2: Stable local sandbox validation", text)
+        self.assertIn("Milestone 3: Open-source stable CLI", text)
+        self.assertIn("LocalStack Azure entitlement", text)
+        self.assertIn("Azurite fallback", text)
+        self.assertIn("[x] Run dependency audit and document any accepted risk.", text)
+
+    def test_dependency_audit_status_is_documented(self):
+        audit_doc = Path("docs/dependency-audit.md")
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertTrue(audit_doc.is_file(), "Expected dependency audit documentation.")
+        text = audit_doc.read_text(encoding="utf-8")
+        self.assertIn("python -m pip_audit . --skip-editable", text)
+        self.assertIn("pip-audit 2.10.0", text)
+        self.assertIn("No known vulnerabilities found", text)
+        self.assertIn("No accepted vulnerable dependency risk is currently documented.", text)
+        self.assertIn("docs/dependency-audit.md", readme_text)
+
+    def test_first_ten_minutes_quickstart_is_documented(self):
+        quickstart = Path("docs/quickstart-10-minutes.md")
+        readme_text = Path("README.md").read_text(encoding="utf-8")
+
+        self.assertTrue(quickstart.is_file(), "Expected a first-10-minutes quickstart.")
+        text = quickstart.read_text(encoding="utf-8")
+
+        self.assertIn("No Docker required", text)
+        self.assertIn("python -m pip install -e", text)
+        self.assertIn("nullstate doctor --offline", text)
+        self.assertIn("nullstate run examples/aws-public-s3 --offline --mock-agents", text)
+        self.assertIn("nullstate dashboard --open", text)
+        self.assertIn("docs/quickstart-10-minutes.md", readme_text)
+
+    def test_sample_run_artifact_is_present_and_scrubbed(self):
+        sample_root = Path("examples/sample-runs")
+        sample_runs = [path for path in sample_root.iterdir() if path.is_dir()]
+
+        self.assertTrue(sample_runs, "Expected at least one sanitized sample run artifact.")
+        sample_run = sample_runs[0]
+        self.assertTrue(sample_run.joinpath("report.md").is_file())
+        self.assertTrue(sample_run.joinpath("events.jsonl").is_file())
+        self.assertTrue(sample_run.joinpath("run-bundle.json").is_file())
+        self.assertTrue(sample_run.joinpath("dashboard.html").is_file())
+        self.assertTrue(sample_run.joinpath("scrub-report.json").is_file())
+        report = json.loads(sample_run.joinpath("scrub-report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["source_run_dir"], "<redacted-source-run-dir>")
+        self.assertEqual(report["scrubbed_run_dir"], "<redacted-scrubbed-run-dir>")
+        bundle = json.loads(sample_run.joinpath("run-bundle.json").read_text(encoding="utf-8"))
+        self.assertEqual(bundle["run"]["path"], ".")
+        self.assertEqual(bundle["run"]["scenario_evidence_level"], "live-validated")
+        self.assertIn("object-read probe", bundle["run"]["scenario_evidence_summary"])
+        self.assertIn("dashboard.html", {artifact["path"] for artifact in bundle["artifacts"]})
+        self.assertNotIn("run-bundle.json", {artifact["path"] for artifact in bundle["artifacts"]})
+        combined_text = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sample_run.rglob("*")
+            if path.is_file() and path.suffix.lower() in {"", ".html", ".json", ".jsonl", ".md", ".patch", ".py", ".tf", ".txt"}
+        )
+        self.assertNotRegex(combined_text, r"C:\\Users\\")
+        self.assertNotIn("LOCALSTACK_AUTH_TOKEN", combined_text)
+        self.assertNotIn("NULLSTATE_LLM_API_KEY", combined_text)
+
+    def test_case_study_records_alpha_status_without_overclaiming_azure(self):
+        case_study = Path("docs/case-study.md").read_text(encoding="utf-8")
+
+        self.assertIn("Open-source readiness status", case_study)
+        self.assertIn("AWS LocalStack path is live-validated", case_study)
+        self.assertIn("Azure Blob path is not yet live-validated", case_study)
+        self.assertIn("LocalStack Azure Emulator entitlement", case_study)
 
 
 if __name__ == "__main__":

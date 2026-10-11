@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 import webbrowser
 from datetime import UTC, datetime
@@ -14,6 +16,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from .agent_trust import build_blast_radius_report, build_posture_report, load_agent_manifest
 from .agents import LlmAgent
 from .artifacts import EventLog, new_run_id, write_json
 from .artifact_scrubber import scrub_run_artifacts
@@ -23,6 +26,8 @@ from .attack_runner import run_attack_script
 from .baseline import DEFAULT_BASELINE_FILENAME, load_baseline_identities, split_known_and_new_findings, write_baseline
 from .bundle import BUNDLE_FILENAME, write_run_bundle
 from .ci import CI_SUMMARY_FILENAME, build_ci_summary, normalize_fail_on_severity
+from .ci_templates import write_github_ci_files
+from .cloud_context import build_context_summary, load_cloud_context
 from .dashboard import write_run_dashboard
 from .demo import create_demo
 from .evidence_manifest import (
@@ -31,6 +36,7 @@ from .evidence_manifest import (
     verify_evidence_manifest,
     write_evidence_manifest,
 )
+from .evaluation import run_eval_suite
 from .findings import find_scenario_findings
 from .llm_providers import LlmEndpointConfig, normalize_provider, resolve_base_url
 from .metrics import collect_run_metrics
@@ -49,6 +55,7 @@ from .sarif import SARIF_FILENAME, write_sarif
 from .sandbox import get_backend, list_backends, probe_backend, render_commands, run_commands
 from .scenario_detection import infer_scenario
 from .scenarios import get_scenario, list_scenarios
+from .summary import build_run_summary
 from .terraform import apply_saved_plan, load_plan_json
 from .upload import DEFAULT_UPLOAD_ENDPOINT, DEFAULT_UPLOAD_TOKEN_ENV, UPLOAD_PLAN_FILENAME, write_upload_plan
 
@@ -61,9 +68,17 @@ app = typer.Typer(
 sandbox_app = typer.Typer(no_args_is_help=True, help="Manage local sandbox backends.")
 scenarios_app = typer.Typer(no_args_is_help=True, help="Inspect supported attack scenarios.")
 policy_app = typer.Typer(no_args_is_help=True, help="Manage red-tool execution policies.")
+agent_app = typer.Typer(no_args_is_help=True, help="Assess external AI-agent cloud trust and blast radius.")
+agent_posture_app = typer.Typer(no_args_is_help=True, help="Verify external AI-agent runtime posture evidence.")
+context_app = typer.Typer(no_args_is_help=True, help="Validate local read-only cloud context manifests.")
+eval_app = typer.Typer(no_args_is_help=True, help="Run benchmark suites for case-study and product metrics.")
 app.add_typer(sandbox_app, name="sandbox")
 app.add_typer(scenarios_app, name="scenarios")
 app.add_typer(policy_app, name="policy")
+app.add_typer(agent_app, name="agent")
+app.add_typer(context_app, name="context")
+app.add_typer(eval_app, name="eval")
+agent_app.add_typer(agent_posture_app, name="posture")
 console = Console()
 
 BANNER = r"""
@@ -102,6 +117,7 @@ def main(ctx: typer.Context) -> None:
             "nullstate sandbox list",
             "nullstate sandbox up localstack-aws",
             "nullstate run examples/aws-public-s3 --target localstack-aws",
+            "nullstate agent posture verify examples/agent-trust/external-agent-manifest.json",
             "nullstate report",
         ]
     )
@@ -143,6 +159,46 @@ def init_demo(
         [
             f"nullstate run {output} --offline",
             "nullstate sandbox status localstack-azure",
+        ]
+    )
+
+
+@app.command("init-ci")
+def init_ci(
+    provider: str = typer.Argument("github", help="CI provider to initialize. Currently supported: github."),
+    output: Path = typer.Option(Path(".github/workflows/nullstate.yml"), "--output", "-o", help="Workflow output path."),
+    policy_output: Path = typer.Option(Path("nullstate-policy.json"), "--policy-output", help="Starter policy output path."),
+    scenario: str = typer.Option("aws-public-s3", "--scenario", help="Scenario preset for the workflow and policy."),
+    iac_path: str = typer.Option("examples/aws-public-s3", "--iac-path", help="IaC path that the workflow should scan."),
+    fail_on_severity: str = typer.Option("high", "--fail-on-severity", help="CI failure threshold."),
+    baseline_file: str = typer.Option("nullstate-baseline.json", "--baseline-file", help="Optional baseline file checked by the workflow."),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing workflow or policy files."),
+) -> None:
+    """Create starter CI files for running nullstate in pull requests."""
+    if provider != "github":
+        raise typer.BadParameter("Only the 'github' CI provider is supported.")
+    try:
+        result = write_github_ci_files(
+            workflow_path=output,
+            policy_path=policy_output,
+            scenario=scenario,
+            iac_path=iac_path,
+            fail_on_severity=fail_on_severity,
+            baseline_file=baseline_file,
+            force=force,
+        )
+    except (FileExistsError, KeyError, ValueError) as error:
+        raise typer.BadParameter(str(error)) from error
+    console.print(f"GitHub Actions workflow: {result['workflow_path']}")
+    console.print(f"Nullstate policy: {result['policy_path']}")
+    console.print(
+        f"Scenario={result['scenario']} · IaC={result['iac_path']} · "
+        f"fail_on_severity={result['fail_on_severity']}"
+    )
+    _print_next_steps(
+        [
+            f"git add {result['workflow_path']} {result['policy_path']}",
+            "nullstate policy validate " + str(result["policy_path"]),
         ]
     )
 
@@ -280,6 +336,8 @@ def run(
         target=backend.name,
         target_mode=backend.mode,
         scenario=scenario_spec.name,
+        scenario_evidence_level=scenario_spec.evidence_level,
+        scenario_evidence_summary=scenario_spec.evidence_summary,
         offline=offline,
         mock_agents=use_mock_agents,
         red_mock_agent=use_red_mock,
@@ -536,14 +594,26 @@ def scenarios_list() -> None:
     """List supported and scaffolded scenarios."""
     scenarios = list_scenarios()
     console.print("Scenarios: " + ", ".join(scenario.name for scenario in scenarios))
+    console.print(
+        "Evidence levels: "
+        + ", ".join(sorted({scenario.evidence_level for scenario in scenarios}))
+    )
     table = Table(title="nullstate scenarios")
     table.add_column("Scenario")
     table.add_column("Backend")
     table.add_column("Mode")
+    table.add_column("Evidence")
     table.add_column("Status")
     table.add_column("Risk")
     for scenario in scenarios:
-        table.add_row(scenario.name, scenario.backend, scenario.mode, scenario.status, scenario.risk)
+        table.add_row(
+            scenario.name,
+            scenario.backend,
+            scenario.mode,
+            scenario.evidence_level,
+            scenario.status,
+            scenario.risk,
+        )
     console.print(table)
 
 
@@ -560,6 +630,8 @@ def scenarios_status(name: str = typer.Argument(..., help="Scenario name.")) -> 
     table.add_row("Backend", scenario.backend)
     table.add_row("Mode", scenario.mode)
     table.add_row("IaC targets", ", ".join(scenario.iac_targets))
+    table.add_row("Evidence", scenario.evidence_level)
+    table.add_row("Evidence summary", scenario.evidence_summary)
     table.add_row("Status", scenario.status)
     table.add_row("Risk", scenario.risk)
     table.add_row("Description", scenario.description)
@@ -614,6 +686,143 @@ def policy_validate(
     if payload["status"] != "valid":
         if payload.get("error"):
             console.print(str(payload["error"]))
+        raise typer.Exit(code=2)
+
+
+@agent_posture_app.command("verify")
+def agent_posture_verify(
+    manifest: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="External agent manifest JSON."),
+) -> None:
+    """Verify external AI-agent runtime posture evidence."""
+    try:
+        payload = load_agent_manifest(manifest)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    report = build_posture_report(payload)
+
+    table = Table(title="External agent posture")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Agent", str(report["agent_id"]))
+    table.add_row("Runtime", str(report["runtime_environment"]))
+    table.add_row("Status", str(report["status"]))
+    table.add_row("Evidence", str(report["evidence_count"]))
+    table.add_row("Unknown claims", ", ".join(report["unknown_claims"]) or "none")
+    table.add_row("Stale claims", ", ".join(report["stale_claims"]) or "none")
+    table.add_row("Failed claims", ", ".join(report["failed_claims"]) or "none")
+    console.print(table)
+    for finding in report["findings"]:
+        console.print(f"[yellow]Finding:[/] {finding['claim']} ({finding['severity']}) - {finding['detail']}")
+    _print_next_steps(
+        [
+            f"nullstate agent blast-radius {manifest}",
+            "nullstate agent posture verify <manifest>",
+        ]
+    )
+    if not report["passed"]:
+        raise typer.Exit(code=1)
+
+
+@agent_app.command("blast-radius")
+def agent_blast_radius(
+    manifest: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="External agent manifest JSON."),
+) -> None:
+    """Summarize blast radius if an external AI-agent runtime or identity is compromised."""
+    try:
+        payload = load_agent_manifest(manifest)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    report = build_blast_radius_report(payload)
+
+    table = Table(title="External agent blast radius")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Agent", str(report["agent_id"]))
+    table.add_row("Identity types", ", ".join(report["identity_types"]) or "none")
+    table.add_row("Permissions", ", ".join(report["permissions"]) or "none")
+    table.add_row("Reachable resources", str(report["reachable_resource_count"]))
+    table.add_row("Sensitive resources", ", ".join(report["sensitive_resources"]) or "none")
+    table.add_row("High-risk actions", ", ".join(report["high_risk_actions"]) or "none")
+    table.add_row("Attack paths", ", ".join(report["attack_paths"]) or "none")
+    console.print(table)
+    _print_next_steps(
+        [
+            f"nullstate agent posture verify {manifest}",
+            "nullstate run examples/aws-public-s3 --offline",
+        ]
+    )
+
+
+@context_app.command("validate")
+def context_validate(
+    context_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="Read-only cloud context JSON."),
+) -> None:
+    """Validate a local read-only cloud context manifest."""
+    try:
+        context = load_cloud_context(context_file)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    summary_payload = build_context_summary(context)
+    console.print(f"Cloud context validation: passed ({context_file})")
+    console.print(
+        f"providers={summary_payload['provider_count']} accounts={summary_payload['account_count']} "
+        f"identities={summary_payload['identity_count']} resources={summary_payload['resource_count']}"
+    )
+    _print_next_steps([f"nullstate context summary {context_file} --json"])
+
+
+@context_app.command("summary")
+def context_summary(
+    context_file: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="Read-only cloud context JSON."),
+    json_output: bool = typer.Option(False, "--json", help="Print machine-readable JSON for coding agents and CI."),
+) -> None:
+    """Summarize a local read-only cloud context manifest."""
+    try:
+        context = load_cloud_context(context_file)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    payload = build_context_summary(context)
+    if json_output:
+        sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        return
+    table = Table(title="Cloud context summary")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Mode", str(payload["mode"]))
+    table.add_row("Providers", ", ".join(payload["providers"]) or "none")
+    table.add_row("Accounts", str(payload["account_count"]))
+    table.add_row("Identities", str(payload["identity_count"]))
+    table.add_row("Resources", str(payload["resource_count"]))
+    table.add_row("Public resources", str(payload["public_resource_count"]))
+    table.add_row("Sensitive resources", str(payload["sensitive_resource_count"]))
+    console.print(table)
+    _print_next_steps([f"nullstate context summary {context_file} --json"])
+
+
+@eval_app.command("run")
+def eval_run(
+    suite: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False, help="Evaluation suite JSON."),
+    output_dir: Path = typer.Option(Path("eval-runs"), "--output-dir", help="Directory for eval results and nested runs."),
+) -> None:
+    """Run a repeatable evaluation suite and write case-study metrics."""
+    try:
+        results = run_eval_suite(suite, output_dir)
+    except ValueError as error:
+        raise typer.BadParameter(str(error)) from error
+    console.print(f"Evaluation results: {output_dir / 'eval-results.json'}")
+    console.print(f"Evaluation report: {output_dir / 'eval-report.md'}")
+    console.print(
+        f"Suite {results['suite']['id']} · cases={results['case_count']} · "
+        f"passed={results['passed_count']} · failed={results['failed_count']} · "
+        f"duration={results['totals']['duration_seconds']}s"
+    )
+    _print_next_steps(
+        [
+            f"nullstate summary --runs-dir {output_dir}",
+            f"Get-Content {output_dir / 'eval-report.md'}",
+        ]
+    )
+    if results["failed_count"]:
         raise typer.Exit(code=2)
 
 
@@ -752,6 +961,38 @@ def report(
     report_path = _resolve_report_path(run_id, runs_dir)
     console.print(f"Report: {report_path}")
     console.print(_console_safe_text(report_path.read_text(encoding="utf-8")), markup=False, highlight=False)
+
+
+@app.command()
+def summary(
+    run_id: str | None = typer.Argument(None, help="Run ID to summarize. Defaults to the latest run."),
+    runs_dir: Path = typer.Option(Path("runs"), "--runs-dir", help="Directory containing runs."),
+    json_output: bool = typer.Option(False, "--json", help="Print machine-readable JSON for coding agents and CI."),
+) -> None:
+    """Summarize a run for coding agents, CI checks, and PR comments."""
+    run_dir = _resolve_run_dir(run_id, runs_dir)
+    payload = build_run_summary(run_dir)
+    if json_output:
+        sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        return
+    table = Table(title="Run summary")
+    table.add_column("Field")
+    table.add_column("Value")
+    table.add_row("Run", payload["run"]["id"])
+    table.add_row("Status", payload["status"])
+    table.add_row("Findings", str(payload["finding_count"]))
+    table.add_row("Highest severity", str(payload["highest_severity"] or "none"))
+    table.add_row("Attack before", str(payload["attack"]["before"] or "unknown"))
+    table.add_row("Attack after", str(payload["attack"]["after"] or "unknown"))
+    table.add_row("Tokens", str(payload["tokens"]["total_tokens"]))
+    table.add_row("Limitations", ", ".join(payload["limitations"]) or "none")
+    console.print(table)
+    _print_next_steps(
+        [
+            f"nullstate summary {run_dir.name} --runs-dir {runs_dir} --json",
+            f"nullstate report {run_dir.name} --runs-dir {runs_dir}",
+        ]
+    )
 
 
 @app.command()
@@ -1188,33 +1429,38 @@ def _verify_sandbox_container_started(
     *,
     runner=None,
     sleep_seconds: float = 2.0,
+    stability_interval_seconds: float = 3.0,
 ) -> tuple[bool, str]:
     if not container_name:
         return True, "No container runtime to verify."
-    if sleep_seconds > 0:
-        time.sleep(sleep_seconds)
     run = runner or subprocess.run
-    result = run(
-        [
-            "docker",
-            "inspect",
-            "--format",
-            "{{.State.Running}} {{.State.Status}} {{.State.ExitCode}}",
-            container_name,
-        ],
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return False, (result.stderr or result.stdout or f"Could not inspect container {container_name}.").strip()
-    raw = result.stdout.strip()
-    parts = raw.split()
-    if parts and parts[0].lower() == "true":
-        return True, f"{container_name} is running."
-    status = parts[1] if len(parts) > 1 else "unknown"
-    exit_code = parts[2] if len(parts) > 2 else "unknown"
-    return False, f"{container_name} status={status} exit_code={exit_code}"
+    for attempt in range(3):
+        delay = sleep_seconds if attempt == 0 else stability_interval_seconds
+        if sleep_seconds == 0:
+            delay = 0
+        if delay > 0:
+            time.sleep(delay)
+        result = run(
+            [
+                "docker",
+                "inspect",
+                "--format",
+                "{{.State.Running}} {{.State.Status}} {{.State.ExitCode}}",
+                container_name,
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return False, (result.stderr or result.stdout or f"Could not inspect container {container_name}.").strip()
+        raw = result.stdout.strip()
+        parts = raw.split()
+        if not parts or parts[0].lower() != "true":
+            status = parts[1] if len(parts) > 1 else "unknown"
+            exit_code = parts[2] if len(parts) > 2 else "unknown"
+            return False, f"{container_name} status={status} exit_code={exit_code}"
+    return True, f"{container_name} is running and stable."
 
 
 def _resolve_sandbox_down_commands(backend, *, container_lister=None) -> tuple[list[list[str]], str]:
@@ -1257,6 +1503,22 @@ def _list_sandbox_containers(backend) -> list[str]:
 def _print_sandbox_start_failure_hints(backend) -> None:
     if backend.name not in {"localstack-aws", "localstack-azure"}:
         return
+    if backend.name == "localstack-azure":
+        console.print(
+            Panel(
+                "\n".join(
+                    [
+                        "If the container exits with code 55, LocalStack usually rejected Azure Emulator startup.",
+                        "Check `docker logs localstack-azure` for a message such as:",
+                        "`The Localstack for Azure Emulator is not enabled for your account.`",
+                        "",
+                        "Resolve the LocalStack account entitlement before retrying live Azure validation.",
+                    ]
+                ),
+                title="LocalStack Azure License Hint",
+                border_style="yellow",
+            )
+        )
     console.print(
         Panel(
             "\n".join(

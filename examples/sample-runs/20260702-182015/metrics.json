@@ -1,0 +1,113 @@
+{
+  "endpoint": {
+    "after": {
+      "base_url_host": null,
+      "endpoint_type": "offline",
+      "gpu_snapshot": {
+        "attempted": [
+          "amd-smi",
+          "rocm-smi"
+        ],
+        "status": "unavailable"
+      },
+      "vllm_metrics": {},
+      "vllm_metrics_artifact": null
+    },
+    "before": {
+      "base_url_host": null,
+      "endpoint_type": "offline",
+      "gpu_snapshot": {
+        "attempted": [
+          "amd-smi",
+          "rocm-smi"
+        ],
+        "status": "unavailable"
+      },
+      "vllm_metrics": {},
+      "vllm_metrics_artifact": null
+    }
+  },
+  "endpoints": {
+    "blue": {
+      "after": {
+        "base_url_host": null,
+        "endpoint_type": "offline",
+        "gpu_snapshot": {
+          "attempted": [
+            "amd-smi",
+            "rocm-smi"
+          ],
+          "status": "unavailable"
+        },
+        "vllm_metrics": {},
+        "vllm_metrics_artifact": null
+      },
+      "before": {
+        "base_url_host": null,
+        "endpoint_type": "offline",
+        "gpu_snapshot": {
+          "attempted": [
+            "amd-smi",
+            "rocm-smi"
+          ],
+          "status": "unavailable"
+        },
+        "vllm_metrics": {},
+        "vllm_metrics_artifact": null
+      }
+    },
+    "red": {
+      "after": {
+        "base_url_host": null,
+        "endpoint_type": "offline",
+        "gpu_snapshot": {
+          "attempted": [
+            "amd-smi",
+            "rocm-smi"
+          ],
+          "status": "unavailable"
+        },
+        "vllm_metrics": {},
+        "vllm_metrics_artifact": null
+      },
+      "before": {
+        "base_url_host": null,
+        "endpoint_type": "offline",
+        "gpu_snapshot": {
+          "attempted": [
+            "amd-smi",
+            "rocm-smi"
+          ],
+          "status": "unavailable"
+        },
+        "vllm_metrics": {},
+        "vllm_metrics_artifact": null
+      }
+    }
+  },
+  "model_calls": [
+    {
+      "completion_tokens": 0,
+      "latency_seconds": 0.0,
+      "model": "offline-mock",
+      "output_tokens_per_second": 0.0,
+      "prompt_tokens": 0,
+      "role": "red",
+      "total_tokens": 0
+    },
+    {
+      "completion_tokens": 0,
+      "latency_seconds": 0.0,
+      "model": "offline-mock",
+      "output_tokens_per_second": 0.0,
+      "prompt_tokens": 0,
+      "role": "blue",
+      "total_tokens": 0
+    }
+  ],
+  "notes": "Token metrics come from OpenAI-compatible response usage when available. Offline mock mode records zero token counts. User-authored prompts are not required; nullstate sends internal agent instructions plus scenario evidence.",
+  "providers": {
+    "blue": "openai-compatible",
+    "red": "openai-compatible"
+  }
+}

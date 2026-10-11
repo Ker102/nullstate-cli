@@ -1,12 +1,16 @@
 # nullstate
 
-Local-first purple-teaming CLI for infrastructure-as-code sandboxes.
+<!-- i18n-switcher:start -->
+[English](README.md) | [Español](docs/i18n/es/README.md) | [简体中文](docs/i18n/zh-CN/README.md) | [Français](docs/i18n/fr/README.md) | [日本語](docs/i18n/ja/README.md) | [Deutsch](docs/i18n/de/README.md) | [Português (Brasil)](docs/i18n/pt-BR/README.md)
+<!-- i18n-switcher:end -->
+
+Evidence-backed cloud attack-path validation for infrastructure-as-code and deployed environments.
 
 ![Nullstate terminal showcase](https://github.com/Ker102/nullstate-cli/releases/download/Media/Showcaseimage)
 
-`nullstate` turns Terraform security review into a repeatable attack, patch, and validation loop. It combines a deterministic IaC security core with model-assisted red-team and blue-team reasoning from OpenAI-compatible endpoints such as vLLM on AMD MI300X.
+`nullstate` turns cloud and infrastructure security review into a repeatable discover, attack, patch, and validation loop. It combines deterministic IaC analysis with model-assisted red-team and blue-team reasoning from OpenAI-compatible endpoints such as vLLM on AMD MI300X.
 
-The V1 demo proves public cloud-storage exposure in local sandboxes, applies Terraform remediation, reruns validation, and writes evidence artifacts that can be reviewed by security, cloud, and DevSecOps teams.
+The V1 demo proves public cloud-storage exposure in local sandboxes, applies Terraform remediation, reruns validation, and writes evidence artifacts that can be reviewed by security, cloud, and DevSecOps teams. The product direction extends this loop by correlating IaC with read-only AWS and Azure inventory, identity relationships, network paths, runtime findings, and data classifications. The current public release is an alpha intended for local evaluation, demos, and contribution.
 
 ## What it does
 
@@ -24,7 +28,48 @@ Hackathon V1 includes a live-validated LocalStack AWS S3 path, a manifest-backed
 
 ## Why this exists
 
-Static IaC scanners can identify risky configuration, but they do not always prove whether an attacker can use it or whether a remediation blocks the path. `nullstate` turns IaC security review into a repeatable purple-team loop with local-first sandboxes and sanitized evidence artifacts.
+Static IaC scanners and cloud posture tools can identify risky configuration, but they do not always answer the operational questions that determine actual risk:
+
+- Can an external attacker, compromised workload, developer, CI identity, AI agent, or over-privileged cloud role use the path?
+- What data, metadata, credentials, services, or privileges become reachable?
+- Does an apparently harmless opening expose filenames, tenant details, internal topology, logs, backups, source artifacts, or other information that enables a later attack?
+- Can the path be reproduced without putting production data and workloads at risk?
+- Does the proposed remediation actually block the same attack?
+
+`nullstate` is intended to correlate declared infrastructure with observed cloud state, construct attack paths across network, identity, service, and data relationships, validate relevant paths in a controlled environment, and replay them after remediation.
+
+### Why not attack production directly?
+
+Read-only discovery and carefully bounded validation can run against production, but autonomous exploitation should not be the default:
+
+- Exploits can modify, delete, corrupt, or expose real customer data.
+- Network and authentication probes can trigger outages, throttling, quarantine, or automated incident response.
+- IAM and privilege-escalation tests can create persistent access that survives the test.
+- Exfiltration tests can violate privacy, contractual, regulatory, or data-residency requirements.
+- Production dependencies can affect customers and third parties outside the approved test scope.
+- Cleanup cannot always restore the exact original state.
+
+Nullstate therefore separates observation from exploitation. It can discover and model production with read-only access, perform explicitly allowlisted non-destructive checks where approved, and reconstruct the relevant attack path with synthetic data inside a disposable AWS, Azure, emulator, Kubernetes, container, or VM environment. The goal is not to clone an entire subscription or account. It is to reproduce the smallest security-relevant graph needed to prove or reject an attack hypothesis.
+
+### What makes it different?
+
+The intended value is not another list of cloud misconfigurations. Nullstate should produce evidence connecting:
+
+```text
+attacker identity
+-> reachable entry point
+-> identity or privilege transition
+-> accessible service
+-> exposed data or capability
+-> remediation
+-> blocked replay
+```
+
+Attack analysis is identity-aware. A run may evaluate an anonymous internet user, authenticated tenant user, developer, CI workload, compromised compute identity, managed identity, IAM role, AI agent identity, or another explicitly authorized principal. For AI agents, Nullstate should distinguish the agent's own identity from a tool/runtime identity and authority delegated by a human user. Reports should state which identity and delegation mode were tested and distinguish configuration exposure from observed access to sensitive data.
+
+Externally hosted agents create an additional trust boundary. A valid cloud identity does not prove that the machine, container, agent framework, memory store, connector, or hosting provider using it is secure. Nullstate's product direction therefore includes runtime posture verification: short-lived workload identity, artifact signatures and provenance, immutable deployment digests, host/runtime attestation where available, network restrictions, tool authorization, auditability, evidence freshness, and revocation readiness. Missing evidence remains unknown rather than being treated as secure.
+
+See [Product and validation model](docs/product-validation-model.md).
 
 ## Demo result
 
@@ -32,8 +77,8 @@ Final AMD MI300X/vLLM demo runs used `nullstate-gemma4-26b-a4b` for both red and
 
 | Scenario | Target | Finding | Result |
 |---|---|---|---|
-| `aws-public-s3` | LocalStack AWS | S3 public access block disabled | `Red before: success`, `Red after: blocked` |
-| `azure-public-blob` | LocalStack Azure | Anonymous Blob container access | `Red before: success`, `Red after: blocked` |
+| `aws-public-s3` | LocalStack AWS | S3 public access block disabled | Live runtime probe observed access before remediation and blocked access after remediation |
+| `azure-public-blob` | LocalStack Azure/offline path | Anonymous Blob container access | Manifest-backed probe generated; live LocalStack Azure validation is pending emulator entitlement |
 
 Representative model metrics:
 
@@ -100,10 +145,19 @@ To see where Python installed console scripts:
 python -c "import sysconfig; print(sysconfig.get_path('scripts'))"
 ```
 
-After the first prerelease tag exists, install directly from GitHub:
+Install the current prerelease directly from GitHub:
 
 ```powershell
-python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-alpha.1"
+python -m pip install "git+https://github.com/Ker102/nullstate-cli.git@v0.1.0-alpha.2"
+```
+
+For contributor work, install development tools too:
+
+```powershell
+python -m pip install -e ".[dev]"
+python -m ruff check src tests
+python -m mypy src
+python -m unittest discover -s tests -v
 ```
 
 ## Quickstart
@@ -117,6 +171,15 @@ nullstate run examples/azure-public-blob --offline
 nullstate report
 nullstate scrub
 ```
+
+Inspect a sanitized sample run without Docker, Terraform, LocalStack, or model access:
+
+```powershell
+nullstate report --runs-dir examples/sample-runs
+nullstate summary --runs-dir examples/sample-runs --json
+```
+
+The checked-in sample also includes `run-bundle.json` and `dashboard.html` for reviewing the portable bundle contract and local dashboard output without generating new artifacts.
 
 Run another offline scenario:
 
@@ -136,6 +199,7 @@ nullstate sandbox list
 nullstate sandbox status localstack-azure
 nullstate sandbox up localstack-azure --dry-run
 nullstate scenarios list
+nullstate scenarios status aws-public-s3
 nullstate policy init --output nullstate-policy.json
 nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 ```
@@ -143,6 +207,23 @@ nullstate policy init --scenario aws-public-s3 --output aws-policy.json
 `status`, `init-demo`, `sandbox`, and `run` print a short `Next` table with the most likely follow-up commands. `run` defaults to `--scenario auto` and `--target auto`; the CLI infers the scenario from the IaC shape and picks the matching sandbox backend. Pass `--scenario` or `--target` only when recording a specific demo path or testing an adapter.
 
 Runtime attack probes stay local by default. Future non-local HTTP(S) probe targets require `--allow-live-cloud`, and the approval is recorded in `events.jsonl`; when a policy file includes `allowed_target_hosts`, the target hostname must also match that allowlist. Current built-in scenarios still resolve to local/offline sandbox targets.
+
+Bootstrap GitHub Actions:
+
+```powershell
+nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
+```
+
+This writes `.github/workflows/nullstate.yml` and `nullstate-policy.json` so a repository can run Nullstate as a pull-request gate without manually copying the workflow template.
+
+External AI-agent trust preview:
+
+```powershell
+nullstate agent posture verify examples/agent-trust/external-agent-manifest.json
+nullstate agent blast-radius examples/agent-trust/external-agent-manifest.json
+```
+
+These commands validate a local external-agent manifest and summarize runtime posture evidence, evidence freshness, identity types, delegated-user authority, sensitive resources, high-risk actions, and likely attack-path classes. This is deterministic preview functionality for the external-agent trust model; it does not yet collect provider inventory or attest a live third-party runtime.
 
 Open the latest report:
 
@@ -160,13 +241,33 @@ nullstate report 20260509-200601 --runs-dir runs
 Create a portable run bundle or a free local HTML dashboard:
 
 ```powershell
+nullstate summary --json
 nullstate bundle
 nullstate dashboard --open
 nullstate sarif
 nullstate upload --dry-run
 ```
 
-The dashboard summarizes findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt from the selected run.
+`summary --json` emits a compact machine-readable object for coding agents, GitHub Actions steps, and PR-comment automation. The dashboard summarizes findings, remediation rules, bundle schema metadata, artifact inventory, evidence timeline, and the report excerpt from the selected run.
+
+Run summaries and bundles include the scenario evidence level, so automation can distinguish live-validated runs from offline deterministic, scaffolded, or plan-only evidence.
+
+Read-only cloud context preview:
+
+```powershell
+nullstate context validate examples/cloud-context/aws-readonly-context.json
+nullstate context summary examples/cloud-context/aws-readonly-context.json --json
+```
+
+The context command validates and summarizes a local cloud inventory manifest. It is the safe contract for future AWS/Azure/GCP read-only collectors; it does not call cloud APIs or request credentials yet.
+
+Evaluation metrics:
+
+```powershell
+nullstate eval run examples/eval/iac-security-regression.json --output-dir eval-runs/iac-security-regression
+```
+
+The evaluation harness runs repeatable benchmark cases and writes `eval-results.json` plus `eval-report.md`. Use it for case-study evidence such as duration, finding count, highest severity, attack before/after status, token totals, artifact count, pass/fail expectation checks, and baseline comparison. The included sample compares Nullstate against a transparent generic IaC-only review baseline, showing whether the run adds attack replay evidence, post-remediation validation, token metrics, and structured artifact coverage. It does not yet benchmark external scanners such as Checkov, tfsec, or Terrascan.
 
 ## Live LocalStack demo path
 
@@ -278,14 +379,16 @@ Users do not need to write prompts. `nullstate` sends internal red-team and blue
 
 ## Scenarios
 
-| Scenario | Backend | Status |
-|---|---|---|
-| `azure-public-blob` | `localstack-azure` | manifest-backed/offline demo available; live LocalStack Azure validation pending emulator entitlement |
-| `aws-public-s3` | `localstack-aws` | live LocalStack demo available |
-| `k8s-privileged-pod` | `kind-kubernetes` | offline demo available; live kind pending |
-| `compose-exposed-admin` | `docker-compose` | offline demo available; live Docker probe pending |
-| `onprem-ssh-password` | `microvm-onprem` | offline demo available; microVM digital twin pending |
-| `generic-plan-review` | `plan-only` | available |
+`nullstate scenarios list` prints an explicit evidence level so users can see what is proven live versus deterministic or scaffolded before running it.
+
+| Scenario | Backend | Evidence level | Status |
+|---|---|---|---|
+| `aws-public-s3` | `localstack-aws` | `live-validated` | LocalStack AWS S3 deployment and constrained anonymous object-read probe are validated before and after remediation |
+| `azure-public-blob` | `localstack-azure` | `offline-deterministic` | Static IaC detection, remediation, manifest-backed probe generation, and offline report evidence are implemented; live Azure emulator proof is pending |
+| `k8s-privileged-pod` | `kind-kubernetes` | `scaffolded` | Offline deterministic detection and remediation flow is available; live kind cluster probing is pending |
+| `compose-exposed-admin` | `docker-compose` | `scaffolded` | Offline deterministic detection and remediation flow is available; live container/network probing is pending |
+| `onprem-ssh-password` | `microvm-onprem` | `scaffolded` | Offline deterministic detection and remediation flow is available; microVM digital-twin execution is pending |
+| `generic-plan-review` | `plan-only` | `plan-only` | Static plan/configuration review is available; no executable sandbox or runtime exploit probe is attempted |
 
 ## Artifacts
 
@@ -382,15 +485,24 @@ nullstate upload 20260608-224625 --runs-dir runs --endpoint https://api.nullstat
 ## Documentation
 
 - [Case study](docs/case-study.md)
+- [First 10 minutes](docs/quickstart-10-minutes.md)
 - [Technical walkthrough](docs/technical-walkthrough.md)
 - [Architecture](docs/architecture.md)
+- [Product and validation model](docs/product-validation-model.md)
+- [External agent trust and runtime posture design](docs/plans/2026-06-22-external-agent-trust-design.md)
+- [External agent manifest schema](docs/schemas/external-agent-manifest.schema.json)
+- [Cloud context schema](docs/schemas/cloud-context.schema.json)
+- [Eval suite schema](docs/schemas/eval-suite.schema.json)
+- [Run summary schema](docs/schemas/run-summary.schema.json)
 - [Security model](docs/security-model.md)
 - [Threat model](docs/threat-model.md)
+- [Dependency audit](docs/dependency-audit.md)
 - [CI/CD](docs/ci-cd.md)
 - [Runbook](docs/runbook.md)
 - [Model serving runbook](docs/model-serving.md)
 - [Enterprise roadmap](docs/enterprise-roadmap.md)
 - [Enterprise readiness](docs/enterprise-readiness.md)
+- [Open-source readiness milestones](docs/open-source-readiness.md)
 - [Productization progress](docs/progress.md)
 - [Real sandbox red-team command plan](docs/plans/2026-06-01-real-sandbox-red-team-commands.md)
 - [Project handoff](docs/handoff.md)
@@ -405,12 +517,13 @@ The `Media` prerelease is only used to host README assets. Product releases shou
 | Tag | Purpose |
 |---|---|
 | `v0.1.0-alpha.1` | First hackathon prerelease with offline demos and polished docs |
+| `v0.1.0-alpha.2` | Open-source readiness prerelease with constrained red runner, CI artifacts, evidence bundles, local dashboard, policy scaffolds, SBOM/provenance workflow, and release documentation |
 | `v0.1.0-beta.1` | Live LocalStack Azure validation path working |
 | `v0.1.0` | Final hackathon release candidate with demo video, case study, and metrics evidence |
 
-The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.1`.
+The GitHub release title can match the tag or use a readable title such as `nullstate v0.1.0-alpha.2`.
 
-Tagged releases build wheel/sdist artifacts, upload `release-manifest.json` with SHA-256 digests, generate and validate `sbom.spdx.json` from the built wheel installed into a clean environment, validate the SBOM again with SPDX Python tools, create GitHub artifact attestations for package provenance and the SBOM, and publish keyless Sigstore `.sigstore.json` signing bundles beside release assets. Verify a downloaded wheel with:
+Tagged releases build wheel/sdist artifacts, smoke-install the built wheel into a clean environment, verify the `nullstate` console command with `doctor --offline`, upload `release-manifest.json` with SHA-256 digests, generate and validate `sbom.spdx.json` from the built wheel installed into a clean environment, validate the SBOM again with SPDX Python tools, create GitHub artifact attestations for package provenance and the SBOM, and publish keyless Sigstore `.sigstore.json` signing bundles beside release assets. Verify a downloaded wheel with:
 
 ```powershell
 gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli
@@ -420,6 +533,18 @@ gh attestation verify dist/nullstate-*.whl -R Ker102/nullstate-cli --predicate-t
 Sigstore signing bundles are uploaded as adjacent release assets such as `nullstate-...whl.sigstore.json`.
 
 Before tagging, run the `Release` workflow manually with `dry_run=true` to rehearse the build, SBOM validation, attestations, signing, and signature-bundle checks without creating a GitHub release.
+
+Before tagging locally, verify that a built wheel installs and exposes the `nullstate` console command:
+
+```powershell
+python scripts/release/install_smoke.py
+```
+
+After publishing a prerelease tag, verify that the public GitHub install path exposes the same console command:
+
+```powershell
+python scripts/release/install_smoke.py --tag v0.1.0-alpha.2
+```
 
 Verify a wheel signature with Cosign by matching the artifact to its adjacent bundle and the release workflow identity:
 

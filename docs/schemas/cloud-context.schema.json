@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/cloud-context.schema.json",
+  "title": "Nullstate cloud context",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "$schema",
+    "schema_version",
+    "scope",
+    "providers"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/cloud-context.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "mode",
+        "source"
+      ],
+      "properties": {
+        "mode": {
+          "const": "read-only"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generated_at": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "providers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "accounts",
+          "identities",
+          "resources"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "accounts": {
+            "type": "array"
+          },
+          "identities": {
+            "type": "array"
+          },
+          "resources": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}

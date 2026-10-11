@@ -1,5 +1,17 @@
 # CI/CD
 
+## When Nullstate runs
+
+Nullstate is intended to participate in three different security feedback loops:
+
+1. **Pull-request CI:** run when Terraform, CloudFormation, Bicep, Helm, policy, or related infrastructure files change. Analyze proposed state, compare against a baseline, optionally validate selected paths in a disposable environment, publish SARIF, and fail according to severity policy.
+2. **Post-deployment validation:** run after an infrastructure deployment succeeds or when a provider event reports a security-relevant resource or policy change. Refresh observed cloud state, detect drift, and validate affected paths. Destructive probes remain outside production.
+3. **Scheduled assurance:** run periodically to detect manual console changes, unmanaged resources, permission drift, newly exposed services, and attack paths created outside Git.
+
+Pull-request CI answers, "Is this proposed change safe to merge?" Post-deployment validation answers, "Did the deployed environment end up in the expected state?" Scheduled assurance answers, "Has the environment drifted since the last reviewed change?"
+
+Customer-managed CI can provide a read-only AWS/Azure identity and either a private model endpoint or managed model credentials. A future Nullstate Cloud integration can receive scrubbed run bundles, provide managed inference, retain history, and coordinate schedules and alerts.
+
 ## Branching model
 
 - `main` is protected.
@@ -55,7 +67,13 @@ When `--baseline-file` is set, `ci-summary.json` records known and new finding c
 
 The repository includes `.github/workflows/nullstate-sarif.yml` as the first GitHub Actions example. It runs an offline AWS S3 scenario with `--ci --fail-on-severity none` so the intentionally vulnerable demo can still upload SARIF, uploads it with `github/codeql-action/upload-sarif`, and stores the run artifacts for review. Change the threshold to `high` or `critical` when using the workflow as an enforcing PR gate against real project IaC.
 
-For a stricter copyable workflow, start from `docs/templates/github-actions/nullstate-enforcing.yml`. It expects a committed `nullstate-policy.json`, runs `nullstate run --ci --fail-on-severity high`, keeps the run step as `continue-on-error: true` so SARIF, policy-result, evidence manifest, bundle, and dry-run upload artifacts are still produced, then fails the job at the end if the nullstate gate failed. Set `NULLSTATE_IAC_PATH`, `NULLSTATE_SCENARIO`, `NULLSTATE_POLICY_FILE`, `NULLSTATE_BASELINE_FILE`, and `NULLSTATE_FAIL_ON_SEVERITY` for the target repository before copying it into `.github/workflows/`.
+For a stricter workflow, prefer the bootstrap command:
+
+```bash
+nullstate init-ci github --scenario aws-public-s3 --iac-path examples/aws-public-s3
+```
+
+It writes `.github/workflows/nullstate.yml` plus a scenario-scoped `nullstate-policy.json`. The workflow is based on `docs/templates/github-actions/nullstate-enforcing.yml`, runs `nullstate run --ci --fail-on-severity high`, keeps the run step as `continue-on-error: true` so SARIF, policy-result, evidence manifest, bundle, and dry-run upload artifacts are still produced, then fails the job at the end if the nullstate gate failed. Set `--iac-path`, `--scenario`, and `--fail-on-severity` for the target repository before committing the generated files.
 
 Run `nullstate scrub` before attaching bundles or reports to public issues, support tickets, or case-study artifacts.
 
@@ -77,6 +95,7 @@ merge to main
 -> update CHANGELOG.md
 -> tag v0.1.0
 -> release workflow builds package
+-> release workflow smoke-installs the built wheel and runs nullstate doctor --offline
 -> sbom.spdx.json records the installed wheel and runtime dependency versions
 -> SBOM validation checks required package fields and root-package relationships
 -> SPDX tools validate the generated SBOM document

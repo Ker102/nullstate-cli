@@ -88,6 +88,9 @@ class CliTests(unittest.TestCase):
                 for line in (reports[0].parent / "events.jsonl").read_text(encoding="utf-8").splitlines()
             ]
             red_tool_events = [event for event in events if event["phase"] == "red-tool"]
+            start_event = next(event for event in events if event["phase"] == "start")
+            self.assertEqual(start_event["data"]["scenario_evidence_level"], "offline-deterministic")
+            self.assertIn("live Azure emulator proof is pending", start_event["data"]["scenario_evidence_summary"])
             self.assertEqual(len(red_tool_events), 2)
             self.assertEqual(red_tool_events[0]["data"]["stage"], "before")
             self.assertEqual(red_tool_events[1]["data"]["stage"], "after")
@@ -162,6 +165,50 @@ class CliTests(unittest.TestCase):
             self.assertIn("Next", completed.stdout)
             self.assertIn("nullstate sandbox status localstack-aws", completed.stdout)
             self.assertIn("nullstate run examples/aws-public-s3", completed.stdout)
+
+    def test_agent_posture_verify_reports_external_agent_runtime_status(self):
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "nullstate",
+                "agent",
+                "posture",
+                "verify",
+                "examples/agent-trust/external-agent-manifest.json",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("External agent posture", completed.stdout)
+        self.assertIn("vendor-agent://ticket-triage", completed.stdout)
+        self.assertIn("pass", completed.stdout)
+        self.assertIn("Next", completed.stdout)
+        self.assertIn("nullstate agent blast-radius", completed.stdout)
+
+    def test_agent_blast_radius_reports_sensitive_resources_and_permissions(self):
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "nullstate",
+                "agent",
+                "blast-radius",
+                "examples/agent-trust/external-agent-manifest.json",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("External agent blast radius", completed.stdout)
+        self.assertIn("delegated-user", completed.stdout)
+        self.assertIn("s3://customer-prod-support-cases", completed.stdout)
+        self.assertIn("iam:PassRole", completed.stdout)
 
 
 if __name__ == "__main__":

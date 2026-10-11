@@ -82,6 +82,45 @@ class SandboxTests(unittest.TestCase):
         self.assertIn("status=exited", detail)
         self.assertIn("exit_code=55", detail)
 
+    def test_sandbox_start_verification_rejects_container_that_exits_after_first_probe(self):
+        from nullstate.cli import _verify_sandbox_container_started
+
+        responses = iter(
+            [
+                subprocess.CompletedProcess(["docker", "inspect"], 0, "true running 0\n", ""),
+                subprocess.CompletedProcess(["docker", "inspect"], 0, "false exited 55\n", ""),
+            ]
+        )
+
+        def fake_run(*args, **kwargs):
+            return next(responses)
+
+        verified, detail = _verify_sandbox_container_started("localstack-azure", runner=fake_run, sleep_seconds=0)
+
+        self.assertFalse(verified)
+        self.assertIn("status=exited", detail)
+        self.assertIn("exit_code=55", detail)
+
+    def test_sandbox_start_verification_rejects_container_that_exits_after_second_probe(self):
+        from nullstate.cli import _verify_sandbox_container_started
+
+        responses = iter(
+            [
+                subprocess.CompletedProcess(["docker", "inspect"], 0, "true running 0\n", ""),
+                subprocess.CompletedProcess(["docker", "inspect"], 0, "true running 0\n", ""),
+                subprocess.CompletedProcess(["docker", "inspect"], 0, "false exited 55\n", ""),
+            ]
+        )
+
+        def fake_run(*args, **kwargs):
+            return next(responses)
+
+        verified, detail = _verify_sandbox_container_started("localstack-azure", runner=fake_run, sleep_seconds=0)
+
+        self.assertFalse(verified)
+        self.assertIn("status=exited", detail)
+        self.assertIn("exit_code=55", detail)
+
     def test_plan_only_backend_has_no_external_runtime(self):
         backend = get_backend("plan-only")
 

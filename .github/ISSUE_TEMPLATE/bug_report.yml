@@ -35,3 +35,39 @@ body:
         - Python:
         - Docker:
         - Terraform:
+        - nullstate version or commit:
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Run ID or artifact context
+      description: Include the run ID, relevant command output, or sanitized excerpts from report.md/events.jsonl/findings.json.
+      value: |
+        - Run ID:
+        - Command:
+        - Relevant artifact:
+    validations:
+      required: false
+  - type: dropdown
+    id: security_boundary
+    attributes:
+      label: Security boundary
+      description: Which target type was used?
+      options:
+        - Offline deterministic run
+        - LocalStack or local Docker sandbox
+        - Local model endpoint
+        - External endpoint with explicit approval
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: secret_notice
+    attributes:
+      label: Secret and artifact safety
+      description: Do not paste secrets, cloud credentials, LocalStack auth tokens, raw Terraform state, .env files, or unsanitized run bundles. Run `nullstate scrub` before attaching artifacts.
+      value: |
+        Confirmed: I removed secrets or used scrubbed artifacts.
+    validations:
+      required: true

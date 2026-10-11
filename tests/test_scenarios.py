@@ -25,9 +25,29 @@ class ScenarioTests(unittest.TestCase):
         self.assertEqual(scenario.mode, "digital-twin")
         self.assertIn("Ansible", scenario.iac_targets)
 
-    def test_storage_scenarios_report_live_localstack_status(self):
-        self.assertEqual(get_scenario("aws-public-s3").status, "live LocalStack demo available")
-        self.assertEqual(get_scenario("azure-public-blob").status, "live LocalStack demo available")
+    def test_scenarios_have_explicit_evidence_level(self):
+        expected_levels = {
+            "aws-public-s3": "live-validated",
+            "azure-public-blob": "offline-deterministic",
+            "k8s-privileged-pod": "scaffolded",
+            "compose-exposed-admin": "scaffolded",
+            "onprem-ssh-password": "scaffolded",
+            "generic-plan-review": "plan-only",
+        }
+
+        for scenario in list_scenarios():
+            with self.subTest(scenario=scenario.name):
+                self.assertEqual(scenario.evidence_level, expected_levels[scenario.name])
+                self.assertTrue(scenario.evidence_summary)
+
+    def test_only_aws_s3_claims_live_runtime_validation(self):
+        live_scenarios = {
+            scenario.name
+            for scenario in list_scenarios()
+            if scenario.evidence_level == "live-validated"
+        }
+
+        self.assertEqual(live_scenarios, {"aws-public-s3"})
 
     def test_scenarios_list_cli_prints_exact_names(self):
         completed = subprocess.run(
@@ -40,6 +60,8 @@ class ScenarioTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("aws-public-s3", completed.stdout)
         self.assertIn("generic-plan-review", completed.stdout)
+        self.assertIn("live-validated", completed.stdout)
+        self.assertIn("offline-deterministic", completed.stdout)
 
     def test_init_demo_creates_non_azure_scenario_fixture(self):
         with TemporaryDirectory() as raw_tmp:

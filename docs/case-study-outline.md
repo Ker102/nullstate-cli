@@ -6,7 +6,7 @@ Cloud teams ship Terraform faster than security teams can continuously validate 
 
 ## Solution
 
-`nullstate` runs a local purple-team loop against Terraform Azure:
+`nullstate` runs a local purple-team loop against Terraform IaC:
 
 - Analyze planned infrastructure.
 - Attempt a red-team exploit.
@@ -16,7 +16,7 @@ Cloud teams ship Terraform faster than security teams can continuously validate 
 
 ## Demo Scenario
 
-An Azure Blob container is configured with anonymous container access. `nullstate` detects the exposure, simulates an anonymous read, patches the Terraform to private access, and verifies that the exploit is blocked.
+The live-validated path uses a public AWS S3 fixture in LocalStack: `nullstate` detects the exposure, runs a constrained anonymous read probe, patches the Terraform, and verifies that the attack path is blocked. The Azure Blob fixture follows the same deterministic detection and remediation pattern, but live LocalStack Azure validation is pending Azure Emulator entitlement or a storage-only fallback such as Azurite.
 
 ## Why AMD MI300X
 
@@ -25,6 +25,6 @@ The architecture is built for long-context security evidence: Terraform plan JSO
 ## Next Steps
 
 - Add more Azure rules: storage shared keys, public network access, Key Vault public access.
-- Add real LocalStack Azure exploit execution.
-- Add AWS and Kubernetes adapters behind the same run artifact model.
+- Resolve LocalStack Azure entitlement or add an Azurite fallback for the Azure Blob scenario.
+- Add Kubernetes, Docker Compose, and on-prem live adapters behind the same run artifact model.
 - Add AMD GPU-hosted model evidence with vLLM `/metrics` and `amd-smi` or `rocm-smi` snapshots.

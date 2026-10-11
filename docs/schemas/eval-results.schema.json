@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.nullstate.dev/eval-results.schema.json",
+  "title": "Nullstate evaluation results",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "$schema",
+    "schema_version",
+    "generated_at",
+    "suite",
+    "case_count",
+    "passed_count",
+    "failed_count",
+    "cases",
+    "totals"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://schemas.nullstate.dev/eval-results.schema.json"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "suite": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "case_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "passed_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "failed_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "duration_seconds",
+          "summary",
+          "metrics"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed"
+            ]
+          },
+          "duration_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "summary": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "comparison": {
+            "type": "object",
+            "required": [
+              "baseline_id",
+              "artifact_delta",
+              "adds_runtime_attack_evidence",
+              "adds_remediation_validation",
+              "adds_token_metrics",
+              "advantages"
+            ],
+            "properties": {
+              "baseline_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifact_delta": {
+                "type": "integer"
+              },
+              "adds_runtime_attack_evidence": {
+                "type": "boolean"
+              },
+              "adds_remediation_validation": {
+                "type": "boolean"
+              },
+              "adds_token_metrics": {
+                "type": "boolean"
+              },
+              "advantages": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "totals": {
+      "type": "object",
+      "properties": {
+        "comparison": {
+          "type": "object",
+          "required": [
+            "cases_with_runtime_attack_evidence",
+            "cases_with_remediation_validation",
+            "cases_with_token_metrics",
+            "artifact_delta"
+          ],
+          "properties": {
+            "cases_with_runtime_attack_evidence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cases_with_remediation_validation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cases_with_token_metrics": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "artifact_delta": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
