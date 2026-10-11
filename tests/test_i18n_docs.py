@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/docs/validate_i18n.py"
 SPEC = importlib.util.spec_from_file_location("validate_i18n", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None

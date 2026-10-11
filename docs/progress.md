@@ -18,6 +18,9 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
   emulator, model, and live-cloud validation were not repeated for this slice.
 - The owner authorized publication of the existing readiness branch with these
   translations as a pull request; no automatic main-branch merge is included.
+- Remote PR validation passed all 192 unit tests and stopped at the repository
+  lint backlog. The new documentation test's import spacing was corrected and
+  checked with the same Ruff version as CI; the broader backlog is issue #35.
 
 ### 2026-06-11
 
