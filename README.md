@@ -1,5 +1,9 @@
 # nullstate
 
+<!-- i18n-switcher:start -->
+[English](README.md) | [Español](docs/i18n/es/README.md) | [简体中文](docs/i18n/zh-CN/README.md) | [Français](docs/i18n/fr/README.md) | [日本語](docs/i18n/ja/README.md) | [Deutsch](docs/i18n/de/README.md) | [Português (Brasil)](docs/i18n/pt-BR/README.md)
+<!-- i18n-switcher:end -->
+
 Evidence-backed cloud attack-path validation for infrastructure-as-code and deployed environments.
 
 ![Nullstate terminal showcase](https://github.com/Ker102/nullstate-cli/releases/download/Media/Showcaseimage)

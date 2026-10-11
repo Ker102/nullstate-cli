@@ -10,6 +10,15 @@ This file tracks roadmap progress after the hackathon freeze. Keep updates brief
 
 ## Checkpoints
 
+### 2026-10-11
+
+- Added six-language mirrors for all 38 maintained public documentation sources
+  (228 documents), native README links, source-hash checks, and strict CI coverage.
+- The documentation validator and all 7 focused tests passed. Application,
+  emulator, model, and live-cloud validation were not repeated for this slice.
+- The owner authorized publication of the existing readiness branch with these
+  translations as a pull request; no automatic main-branch merge is included.
+
 ### 2026-06-11
 
 - `43af5fc feat: add LLM provider presets`

@@ -1,0 +1,1666 @@
+{
+  "schema_version": 1,
+  "source_of_truth": "English files at original repository paths",
+  "hash_algorithm": "SHA-256 of UTF-8 text with CRLF normalized to LF; final newline retained",
+  "locales": [
+    "es",
+    "zh-CN",
+    "fr",
+    "ja",
+    "de",
+    "pt-BR"
+  ],
+  "sources": [
+    {
+      "path": ".github/pull_request_template.md",
+      "sha256": "595923ccf4db5445f2c615f98ff733c3faad2834575aa99b744601c3071494d4",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/.github/pull_request_template.md",
+          "sha256": "cb6fa0bd605d23f0d1510bcc13212f675cd02788b6364dfc23efcc1113863f31"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/.github/pull_request_template.md",
+          "sha256": "ea77d7442f17ceb00a4175760ab286c95d62cce136915c3721f2f4ec493a3d09"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/.github/pull_request_template.md",
+          "sha256": "e86bcb11e5c7f023b4e6989d67a9ce1d36ae29ad81c97d29384daee6b1d1f120"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/.github/pull_request_template.md",
+          "sha256": "1e7c3ff7cacdd73c2cf5d9bcd026d0a15b1fbd72e848a4638df4915db68807d8"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/.github/pull_request_template.md",
+          "sha256": "921d9d59a5c26476193e671a7262a961b1c7813b14741aada59e32559d27ac60"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/.github/pull_request_template.md",
+          "sha256": "d77502cb7543c8ebba155ed5e51031a04829af60eb17e93233f49ffc4411ee54"
+        }
+      }
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "4dd74718e5e98d38d264ef7da34e8d61665ceaead8f324d2a20dec59b1961256",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/CHANGELOG.md",
+          "sha256": "c382a3a0823af7f85154e20469ba4c93cf8f80a6e3f162f23cf2e0dcd5d37cd7"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/CHANGELOG.md",
+          "sha256": "a148d001999798faee43c1d4a841b2e3cd831ace51ff079ab58b63825b4694e0"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/CHANGELOG.md",
+          "sha256": "03357f917bf8fd552690efbbb5c4a5a7f03129c8b203063f39c9e71cd6cd2cc7"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/CHANGELOG.md",
+          "sha256": "afde8c1d33f769fb2d05b6e75932241149bf7b340822eff593c3ef2a0ea1440f"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/CHANGELOG.md",
+          "sha256": "7ee3d0ae25c9e8efbc435fbd785dbd504425e3c85af2f1b68dc7f05aac2fea78"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/CHANGELOG.md",
+          "sha256": "7a28085b737d8e9b18b0129c6024ad6100c329415e8768058296143e4d54a6b9"
+        }
+      }
+    },
+    {
+      "path": "CODE_OF_CONDUCT.md",
+      "sha256": "9b7513c09d845eb1ef7baeb8987971f9b233c8c8e5391fb491a2d0f11e8f6cdb",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/CODE_OF_CONDUCT.md",
+          "sha256": "670603595ffc6af13c9cc8529c01567127aae6f7bf48076e5d064efa5dbd7dc6"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/CODE_OF_CONDUCT.md",
+          "sha256": "57a8346c912235a1052df5a222c034b0837118852db9e7c24e7380ea3d494942"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/CODE_OF_CONDUCT.md",
+          "sha256": "47731e90061e7921b099e42aa63f3327ac5301ec55dd208a552ee50048011316"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/CODE_OF_CONDUCT.md",
+          "sha256": "7d5618e16ade87d368a6a9bd8f0f66593f7d219a7f893b08909dd813c0eaf727"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/CODE_OF_CONDUCT.md",
+          "sha256": "efc27ea05b62d4f257e9473d97c0b1c731417a2180f1d732e11be058dd595bb2"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/CODE_OF_CONDUCT.md",
+          "sha256": "f2ca02e646e026a4aba9e61fd75c9a22f90d31fe55d7b5a1536e4778e075653c"
+        }
+      }
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "26cdb81c063c7293a958fd7372303b38475ed6aa8ce039b2321502d53dca4fe1",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/CONTRIBUTING.md",
+          "sha256": "a2837a24c1266c0cc6a7526c07ae31938963c464a70adcc03e2f8c6ad710cbf6"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/CONTRIBUTING.md",
+          "sha256": "dc367d79d2c7482b97120867bfe92725b02afbdcff302dafd4217b91041bccd6"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/CONTRIBUTING.md",
+          "sha256": "97bcfdc707df75dc8d3d54b08fde2fabc70e32e1f5fd3daa3c2be1fd36b78532"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/CONTRIBUTING.md",
+          "sha256": "6e37f5d16af359d3a0fa3d6f9f7b63ac5fba64dcab779a0a54c83c725cc14135"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/CONTRIBUTING.md",
+          "sha256": "4cca8d77b2d9e8f7124a208ed8d059839fde96897fbf4bf456622ded43737971"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/CONTRIBUTING.md",
+          "sha256": "23d2f73daa9f2a20f07c99b2a7a9da9b5e6d0fe9c3e803bad004ca8a99ea50a6"
+        }
+      }
+    },
+    {
+      "path": "README.md",
+      "sha256": "d59ba7640c6d429bbf9a9689d57ff3e846fa5c1d16cba111573984d70b4f8179",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/README.md",
+          "sha256": "43eebf029f2c7e450fa1d2b7196859c9479ea3b8d7ce53c639aa897824c7470b"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/README.md",
+          "sha256": "2a8fc87f4a7161d4bac63865f8bc8ebe6d5250d17e4bf68f8245ebc51715b832"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/README.md",
+          "sha256": "c1db54503ab34fcec3d9ae35abbdd3b1a94b00513a06dadf1a0651751b39d380"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/README.md",
+          "sha256": "aa32222b3a67d202e5f5c044991af01cb7dea8cf722a5ad4ae1a9eb2f1241cf0"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/README.md",
+          "sha256": "da7533a4f91cbb439582bce40c8df247e38374229fd9593af4137862604d55da"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/README.md",
+          "sha256": "c9af7dfcba0628d0c00c78c94238b8dfc5df17ce7ea21ddafb1c736279a02d37"
+        }
+      }
+    },
+    {
+      "path": "SECURITY.md",
+      "sha256": "b1e6ee12660200dd1a48bc9913e2334f5fc05e3c16e4fe9bb93952788fb4ce2f",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/SECURITY.md",
+          "sha256": "4623a0602ae75a54bcd976e6ab6c63dd76eb19be0831f958a28353475f0281a2"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/SECURITY.md",
+          "sha256": "f51a8aff31d06c5b01a310421fabc8a027c3d0a7ac8c84b7395b8dda0764045f"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/SECURITY.md",
+          "sha256": "aeb16847fd6611edc1ddb72e25e6180b316df85885c8ad4eee94cee48931e5b5"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/SECURITY.md",
+          "sha256": "ab955a5b2ce87c16b4d9280d649a50626bcfdb8276d3d546f2c1a840f5687782"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/SECURITY.md",
+          "sha256": "a8d73f368ee3a1d220e94d6f53dfedb7c9ac932407f633bd7887a508604619d9"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/SECURITY.md",
+          "sha256": "7cd9901cab1dbd299e53ee8e8a734991f589b0ca0710e286cb8d7aba84b3462b"
+        }
+      }
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "1b49e5d00362df31ec514e160a3c667813d51135927c8ae2f89bef2abc2d6e93",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/architecture.md",
+          "sha256": "1c44b38bc51922383df560913739076abe82839bf55f91457ad22312b952d7e9"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/architecture.md",
+          "sha256": "538d8aec93bd4d197d7645ee1e831d280d0148e20289e5535cfa8ff1bf778360"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/architecture.md",
+          "sha256": "6f889a758bf66a7332ae63f266afa89810f42c31453a4bacfbe5da634bb98d51"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/architecture.md",
+          "sha256": "544b2af1b1837afeb4a83fdd17860d389acf12e29bed6da43fb0c306c8e4b3a7"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/architecture.md",
+          "sha256": "f5a7dee6216d36dd98164bdfa407da293c77ee7433c9a3eaa2c90752cf8efdbd"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/architecture.md",
+          "sha256": "1499abe1624b84c8a2e421c3564b3115dbf2404deceb7fe1bf87769eb7e1c2f3"
+        }
+      }
+    },
+    {
+      "path": "docs/case-study-outline.md",
+      "sha256": "d2f2cff9ad927ec73f8cb51b58c3295dbca5e1dcf8879ba796d4c9d3372fcfb7",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/case-study-outline.md",
+          "sha256": "774dfff7107b92713a565e113e4704575590c9c69400b2d171ec58026023f7b2"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/case-study-outline.md",
+          "sha256": "a7534e88521d4ef86723eaa1b80794bafdc8a49450cff44c936333973bc25da5"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/case-study-outline.md",
+          "sha256": "8a28341dc0395943c920d956fe5f3558e2019d7e3f17b64ab1355df343a441d8"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/case-study-outline.md",
+          "sha256": "75ef361970a1c3bc212fd903dcd63a2607112467bbfdc13440139252e12a41a5"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/case-study-outline.md",
+          "sha256": "be3a6db2abb4465d5ccb699c58a9f5c0765dc8537535117c136f3d6006907950"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/case-study-outline.md",
+          "sha256": "25bb75078f7fed20096e064abbb53f55fe227fd26cd8207cee22c605258b9816"
+        }
+      }
+    },
+    {
+      "path": "docs/case-study.md",
+      "sha256": "d8f1e39ad675f15a84980cf4bcc37032b64509affa12e9b5fe4619c80a7e12d8",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/case-study.md",
+          "sha256": "7d1b0beb5b9b3d8fbf0289ff225d660cc3d32ec4e9aaf984e4be1ace7668b246"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/case-study.md",
+          "sha256": "55fee36949ac8865ef3c70c7f295b30b7bd87151bbbfa4b4258b03ab99ec6326"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/case-study.md",
+          "sha256": "fafff3b481db354b2bc73d6418521df973363ef3dbcd9f7d96de0bd3cd26567e"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/case-study.md",
+          "sha256": "432a49442ad506e92884c44b846fd7187f312b1b4f8f8c7a3f49bda5ad11afdb"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/case-study.md",
+          "sha256": "2edc91d95eaba7f3a8de2a078c9385bdba6512e807eb50515edea7711bcff175"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/case-study.md",
+          "sha256": "14033117040f2040d9f9f793c49c1ea70f68ad4247c1a7d238dea75f739a441b"
+        }
+      }
+    },
+    {
+      "path": "docs/ci-cd.md",
+      "sha256": "7714f7024db5e2d71894be26dfa546d0c5790b65b6f19806face4a7651b54597",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/ci-cd.md",
+          "sha256": "7278f90dddead2f3c3d7df4da772d27f5831b6f7caea72cf94767ee336eb6c64"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/ci-cd.md",
+          "sha256": "94c6cc08d440d5ed260141c044de48f0d028392450b57170595e7792f8a68530"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/ci-cd.md",
+          "sha256": "2c8aa17d432517cf107c27c18b0dbc7e268a25c09e231c97a68a6849729f7a81"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/ci-cd.md",
+          "sha256": "846c650847eb5cbd33e65d50e65882ca1f928d30032a87dbe656abd2aab5227f"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/ci-cd.md",
+          "sha256": "68ff5d9d54dfafec8198e756473ebe1ffbfb2562b8185530b0787022b4ba431f"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/ci-cd.md",
+          "sha256": "e703188447d1d3133aab6ee0e10bd43f65a030730a339afcaed955b432fa7b08"
+        }
+      }
+    },
+    {
+      "path": "docs/compute-strategy.md",
+      "sha256": "ddae33290f2683ec5cb8607f505787e3b731f98e02255054889691d85a43215b",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/compute-strategy.md",
+          "sha256": "ed8a62e04aac19d96776dc7223c912fdc6a10480afbbdb4261cc68bb5cabd160"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/compute-strategy.md",
+          "sha256": "1c574ee2c6a9358ad219e988f12ee6488ef6e1cf5900fe7a8b0a86b7d9c1f7d9"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/compute-strategy.md",
+          "sha256": "ee5371bbea8d4b76cb21d7c1a579caf87511238ff45099e2b9ba64bea39b3993"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/compute-strategy.md",
+          "sha256": "0db82d3559ce2348ece251e7a27eb623a4a17356ad75b5cab494a1ead9a0c8ae"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/compute-strategy.md",
+          "sha256": "ff0b9d74f6992ae80893ab6cfd3c11a93eb7a6cf605fbf8e9e9bff139c051056"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/compute-strategy.md",
+          "sha256": "c47cb0e26841f71f4eeda0046c0763f5d4e86f26f8d52895dd9b05e2842e5192"
+        }
+      }
+    },
+    {
+      "path": "docs/cost-report.md",
+      "sha256": "b473bc246e0388a605b8b6000d7510ce7dccefd48c77ed29d58b143f85dc473c",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/cost-report.md",
+          "sha256": "f2327ce5ff7fbbecf9b3b3f85e648533cc27536ac80ee7cf780af4fc1f06382a"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/cost-report.md",
+          "sha256": "4eb88c70d103aa740e916bc44372902c396f30f4ae6375081c576c426daafb86"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/cost-report.md",
+          "sha256": "288575fa4765e86d6e49457807fbbf0a5e05e75bdb658dc9b2914d8674e2d084"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/cost-report.md",
+          "sha256": "ff61fbbe164aa0962f59f77ade7168b832f4b824af0783fea0254e67ea9176aa"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/cost-report.md",
+          "sha256": "90b073a365b7fda9b37873e2f1cbedaa79443de48f8195bbf09f48a33e60ef06"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/cost-report.md",
+          "sha256": "5a753afa51e8e029c43f1bfa7224eabc4df3a7e3fc83af03767970f3d1bcda9d"
+        }
+      }
+    },
+    {
+      "path": "docs/decisions/ADR-0001-cli-first.md",
+      "sha256": "38379fc6424fce921c044d225aea3a2f47dfed33d3cf66511d33018c34ba1ae5",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/decisions/ADR-0001-cli-first.md",
+          "sha256": "fbd95ee9f4b6835d1b1bcd88b612fa420a4ee9ffd4a2d877a4a48b1f28f1cded"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/decisions/ADR-0001-cli-first.md",
+          "sha256": "a2e01cf72e8cc33820b1b49335593bb6fb3c1fd19b8367dd4bcbe332be61700a"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/decisions/ADR-0001-cli-first.md",
+          "sha256": "550d88f30d4e6ee7e7a3c47e0338a161f2a4278289ad94637faf79215456b22d"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/decisions/ADR-0001-cli-first.md",
+          "sha256": "e2a77757c4363519679a7e2dd44f3a23dc3f25c38b6f95f5464c56d866b29a57"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/decisions/ADR-0001-cli-first.md",
+          "sha256": "1fc594e1e65933e9adc474ea044b303f84ae1c23dd50fc861f36712ec2182cfd"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/decisions/ADR-0001-cli-first.md",
+          "sha256": "3fcdf0b541766a4e00eef4877132aef7b0e728e3af2c7f70d25c7c39c3201727"
+        }
+      }
+    },
+    {
+      "path": "docs/decisions/ADR-0002-pluggable-sandbox-backends.md",
+      "sha256": "f2f675842fa085394e87f07a1fa575be35d284ea16e0414b584dbe542d2e8e19",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/decisions/ADR-0002-pluggable-sandbox-backends.md",
+          "sha256": "f023b5fa32a6da9c0b4b0300056a3591d628fe6a3514695be352a4162c80c090"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/decisions/ADR-0002-pluggable-sandbox-backends.md",
+          "sha256": "220932daf747c32730154d8a3736165b95fa83b99a99cd68a75a22692e8727e0"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/decisions/ADR-0002-pluggable-sandbox-backends.md",
+          "sha256": "352f339f5ee6132b43f428eb4014fb5f5e0650706d7096d719a2a4ac0533c139"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/decisions/ADR-0002-pluggable-sandbox-backends.md",
+          "sha256": "d7b8896e36ae240dcc356695706ddf012f097af1a37d7bdb9b636a98f4675c94"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/decisions/ADR-0002-pluggable-sandbox-backends.md",
+          "sha256": "f0133700c581ec08e541245d569d5deb2d875a8e91568c3776590baab4de1101"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/decisions/ADR-0002-pluggable-sandbox-backends.md",
+          "sha256": "141033ebb5e4de182cd626d866c31a17759278e318a3ab978d19afd969f93f9f"
+        }
+      }
+    },
+    {
+      "path": "docs/decisions/ADR-0003-localstack-azure-for-v1.md",
+      "sha256": "a1e5c8b87699197f8902a24fe14432f3c5f0e2b30cb9cb5cb6b489850681f64e",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/decisions/ADR-0003-localstack-azure-for-v1.md",
+          "sha256": "352aa97d73ddd2da58eba397c66b5f158e7c11b431ce608010f3f117a7eab6fa"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/decisions/ADR-0003-localstack-azure-for-v1.md",
+          "sha256": "8307784b0822bac9887e46c4e37b23ee810238fff40e04bbc452027f041ee9f2"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/decisions/ADR-0003-localstack-azure-for-v1.md",
+          "sha256": "9a267f32315572e8f933ee3c8b33ecc390d375c1dc22e2c5d32a8cdff976cb83"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/decisions/ADR-0003-localstack-azure-for-v1.md",
+          "sha256": "ff19e6b2fb0d0531dff29532544ce0c6941588510d7f2c955522e2833c44b751"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/decisions/ADR-0003-localstack-azure-for-v1.md",
+          "sha256": "2163075b72df31378cc5a495809956ee70fd7720e4595aa2bcc0833ae7758c70"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/decisions/ADR-0003-localstack-azure-for-v1.md",
+          "sha256": "65162ad19d9fbe04f89b11747fec15d989d6b394a26963a5121fd9b6225bf90f"
+        }
+      }
+    },
+    {
+      "path": "docs/demo-script.md",
+      "sha256": "e6cf36abf714c14f9c47b103231872f6544681b07cc39c1dbf94a328adb879d4",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/demo-script.md",
+          "sha256": "0944fb4cece1c004e2f8f77680ff0ef31e4225cf2d26af2a95753875bb6e2e3b"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/demo-script.md",
+          "sha256": "fd3d73f8138aac0f7cb98c181ebd3041b8f608c9c97bbc61d3fc93c6dd02020d"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/demo-script.md",
+          "sha256": "cc516091657e86e75680fc94de50d166f3f48c7170e4afdd0062d08d102448b3"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/demo-script.md",
+          "sha256": "4ed31dec3868d43d63244b45a6a303d325654e8a977282071da8de6562c7f628"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/demo-script.md",
+          "sha256": "c4de1f1c278d2b27eedf38150fba84f15600e1053bcedbcb8e3b2815aa217c5c"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/demo-script.md",
+          "sha256": "0c0d3b932eef9f395e325990adb6f684a3df439cdc771ae1655a94fde0de9fbc"
+        }
+      }
+    },
+    {
+      "path": "docs/dependency-audit.md",
+      "sha256": "dcd3810caa85ad2b93bec96e1069c788f6875deae4deeaa3f4a3e4c5b82acc14",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/dependency-audit.md",
+          "sha256": "54abb364633adf25fa0e1de683bf6e7b045ad4bd7741a2ff06ed538f28836c40"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/dependency-audit.md",
+          "sha256": "46b948dadcfb57afc581d8e6f40bb465df0edaaa957dffc7d12a9c4b3f2401cc"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/dependency-audit.md",
+          "sha256": "b025e785d5f6b61260734456011058bb9e5110f54492071a8b429aad812c8cad"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/dependency-audit.md",
+          "sha256": "c7ba7250c0fa02e97aef261c14bd3171689c9bad6f62b0febc6ade3cf0a4b598"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/dependency-audit.md",
+          "sha256": "e892f211c1963a136c464b80d24aecbfca453a587f9f2e78da6d018e8ca775ca"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/dependency-audit.md",
+          "sha256": "55a587f36b41442fb14b8baea7963617f8fb378602d53b7f8df24311b13077e0"
+        }
+      }
+    },
+    {
+      "path": "docs/enterprise-readiness.md",
+      "sha256": "0fd4bec443567247c6efc8d87745a316d933b8561803ec39f0b6795d3bf35603",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/enterprise-readiness.md",
+          "sha256": "f504e2ce0663f33dbda60b5a0c7be1090be4252e02cd37c09d14988c409d3949"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/enterprise-readiness.md",
+          "sha256": "e551bc5b9e99870482853a4636fe7707f2b297600b5a1b0c55233579f5a9f3e9"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/enterprise-readiness.md",
+          "sha256": "04527a8a64ab924dc3060bf001546a70afe267692d90ae4d116ac970ea3603a4"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/enterprise-readiness.md",
+          "sha256": "2503bc564e7a643ebfb0a82b34241110ce42286f6aef0d1a500c90f28d402e43"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/enterprise-readiness.md",
+          "sha256": "6235f4bcebcaea4335661f2c7260f005710e45950ffae4e8d0a2e42ded544300"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/enterprise-readiness.md",
+          "sha256": "3ada90da3f0bfd94694c23b2f0a44c6b66b5e3376ecd59587283f3d1a55bc7b4"
+        }
+      }
+    },
+    {
+      "path": "docs/enterprise-roadmap.md",
+      "sha256": "fb356da662ede2d7d31e00b1cf1939abc7478f914172fc6cbb70428c2f928a15",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/enterprise-roadmap.md",
+          "sha256": "71cd7be15452ef359f715f7b8fdadbf503bb2d5a667138df3a5eb00fcb240390"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/enterprise-roadmap.md",
+          "sha256": "92ae0ce3f022e5cf5c20d90686b50289618cb3bfa3bbe11fec79668e592f652a"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/enterprise-roadmap.md",
+          "sha256": "8419e821220d5c2742dc8c2056eae5a30025319f73b4bec76f9ce43464eda098"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/enterprise-roadmap.md",
+          "sha256": "1fcab38615f22d9d53902ab2d25e790ac86a41ecfbc5fa096ca7552bca8209b8"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/enterprise-roadmap.md",
+          "sha256": "62cc659512753db92f8c4d2498755e89eb67c0ed5d6e7f5ab37bbd5ab70df533"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/enterprise-roadmap.md",
+          "sha256": "640c3b14dd72aee86f27cd282c5b93a5df59c0cb798ee4572c494abcf450aa83"
+        }
+      }
+    },
+    {
+      "path": "docs/failure-modes.md",
+      "sha256": "77b996529b40ed6333e5e5b30a4e7e1d386562a8eaf84781634ceaabe9a66dd0",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/failure-modes.md",
+          "sha256": "9c6ec84eeacd6dc2d036cd9d78aca53e55e1fedd88195d24c0ce835aa2cd0e27"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/failure-modes.md",
+          "sha256": "b7e5f8d78d14fb4247a6c392d5d77e94132d53c8ea9d4bdd99dd9a14b1bf473a"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/failure-modes.md",
+          "sha256": "9d6a39421506fdc7bdd622b32fcba63a762993122de754630037ee4ab929bf71"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/failure-modes.md",
+          "sha256": "f3fb8ddfcbc22daad257352a445cb1c787a760f798013550de4cde57f5f9a2c3"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/failure-modes.md",
+          "sha256": "2d5b1ada49bdf818e6ad0757cbc450533a17e8094455b9290614fe37be0dfa03"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/failure-modes.md",
+          "sha256": "2cb8ce539c738430448fc96ce01ce7d7931cea5d8ce640dbeca2b55a662eb5a2"
+        }
+      }
+    },
+    {
+      "path": "docs/model-serving.md",
+      "sha256": "fc3b1a182866c526b96afd722f0bb4ee041f2bba54db29334635aa7165eb4990",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/model-serving.md",
+          "sha256": "e656a1fbab5cf3702f3bf9f927d79fe8fdd70e099d1eff5f0ddcc21bf0f96412"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/model-serving.md",
+          "sha256": "eab1026ab8aa1af57ca2fe7a05251569be8b3b16cb6d61f54935475fafae7148"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/model-serving.md",
+          "sha256": "eb025c57f24795a02068360e728fe1b927ff263e24cd13e6c9b56b58e82bf940"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/model-serving.md",
+          "sha256": "bc67b2a90f5088f3158b6db23601d3b32440097558391f8d9cc3f453a0e4ce89"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/model-serving.md",
+          "sha256": "7877e316c2833f629b893220ae403c925d421a8f502eab3a08ec3bc4a05ad10e"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/model-serving.md",
+          "sha256": "9f64cb5a73951a81a6a4dcdb82dbec5cf0c086bde701ef24c2ee2873ac7ff89f"
+        }
+      }
+    },
+    {
+      "path": "docs/open-source-readiness.md",
+      "sha256": "7dc2bd04b1f6ad2cbd869ecb72043e14e857329eb2b73a3175bb4c245c8d308d",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/open-source-readiness.md",
+          "sha256": "2327071925a6007151b39dcff9da64df06fda216a6559ef9a166460148610796"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/open-source-readiness.md",
+          "sha256": "8c7fa3841f9737a37b408a57dd6e589dc317412f58d32f5011ca104dd10384fe"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/open-source-readiness.md",
+          "sha256": "1aedcdb2c785a8ed5438fa23b55a70b8b0ceab59eabf7e293d3151f6a5b98e65"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/open-source-readiness.md",
+          "sha256": "6ff72aa6a7187aab30ac29b5150eb2aaa9374fa340a3211d56faa37917ab28ec"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/open-source-readiness.md",
+          "sha256": "f6dcc23c31a0de84145fa257af87b62a6e003795e35db7e8aebf835e0651ebc0"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/open-source-readiness.md",
+          "sha256": "237952356095567f227410cc4f346f50fe0346282d1f97569463072e4629eab2"
+        }
+      }
+    },
+    {
+      "path": "docs/plans/2026-06-22-external-agent-trust-design.md",
+      "sha256": "252593396453380943ff043c1645802697ec6160bf90e99735161e593a152fa0",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/plans/2026-06-22-external-agent-trust-design.md",
+          "sha256": "be7173803be2d62d7f9d66955735dc36abb884b2d397b5d0ff6791377ad50db2"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/plans/2026-06-22-external-agent-trust-design.md",
+          "sha256": "db3b323f01e05a92762bbc04bf0388050bfd9a4251de02f2a751fb7b8bf30895"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/plans/2026-06-22-external-agent-trust-design.md",
+          "sha256": "93df5a03ac921edd101d0a8b1b425123029a866d96653d469c9b9e5d0b149e14"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/plans/2026-06-22-external-agent-trust-design.md",
+          "sha256": "8d0c5099071ced9b2ba060cf6b64533ecbdaff189aa95aa88b7587879e16f790"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/plans/2026-06-22-external-agent-trust-design.md",
+          "sha256": "6b4b4bf20542d36912bc6113647495c6ce51c806b005c8a825b0a34280884e90"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/plans/2026-06-22-external-agent-trust-design.md",
+          "sha256": "a4be86455db3febc68a2722608120827953abaf86f6fef24b4a40ed516894b15"
+        }
+      }
+    },
+    {
+      "path": "docs/product-validation-model.md",
+      "sha256": "fd0b0300e82f97c706066b0994d33bd3dc57f08360fb42dc64bc9d0b4c61bdb7",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/product-validation-model.md",
+          "sha256": "a504705bee657c14448b1c91ad031aca1d0b30b87c4b64a2f2aa22fdf6409d6f"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/product-validation-model.md",
+          "sha256": "47fde666d16a33d5ace90a97487e43baaf0d723614c4f3d8a9d95554aa20e872"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/product-validation-model.md",
+          "sha256": "67675eaf368951a6c4dd634a539b4ae26bf8aa50731a7c1b5b98167664eafe80"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/product-validation-model.md",
+          "sha256": "f64b71aee724ed2ee3eb77a20b047b502b7e01adb384496c15266a6cec43da36"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/product-validation-model.md",
+          "sha256": "efd66087e9e9eeb92dde1421af0242e25954abf8a3c5439eabceaf811d5cbba7"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/product-validation-model.md",
+          "sha256": "261d522fbed91ccdf26e91d4177edde1e245b45c658711afd22efd19fc45f61b"
+        }
+      }
+    },
+    {
+      "path": "docs/quickstart-10-minutes.md",
+      "sha256": "5d8e72b153702d02d866872e9b1e6ec76c993b7f4235e25965bf92a27f141aaf",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/quickstart-10-minutes.md",
+          "sha256": "ecaa26ff132766cda0b23cb8f95e2836ef8ab45dd5d9d4f372367f0503d3029e"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/quickstart-10-minutes.md",
+          "sha256": "4148922bdcc50896137a54601d94ecd1b2a6c55901b4445849b00f3e6aee8d63"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/quickstart-10-minutes.md",
+          "sha256": "ecf4c21b14bde05c4d03dff2da1fa22104bd5ba957919f9e1af5f975bc04b91f"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/quickstart-10-minutes.md",
+          "sha256": "490dbb5be3878f14368eb74916ff74ea4599c2f60da23c1561d578f0c2e84144"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/quickstart-10-minutes.md",
+          "sha256": "02ea750adf0ce7dab0d91e8ea4db7221dfcd2d0011a80e6c41bd431cf99de808"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/quickstart-10-minutes.md",
+          "sha256": "dd820ea7d110ea1a47c3fe233c30b8b181eb7ac0da6ec24d99ca9c71cb84cef5"
+        }
+      }
+    },
+    {
+      "path": "docs/runbook.md",
+      "sha256": "a110799b869d0aaaaf1ca5feb1567a29646b075c37de269392781969724a25c6",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/runbook.md",
+          "sha256": "520b74ce95743d38b17f57e292f9aa406fcba3723bd606e9604c49952578e179"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/runbook.md",
+          "sha256": "20e7e898fada28e965ad7c7d9724017c88cf4089e7861345e76178c1ab491f9e"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/runbook.md",
+          "sha256": "34de65af0c82e707a4b263f59417ba401552dce487271a31d7c22c0ee10a72d8"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/runbook.md",
+          "sha256": "bffec4401d2d134b4a26c77c4d832136f7556c35dbce352ea6076d29636a3b23"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/runbook.md",
+          "sha256": "c647b551e671941fd5b97ab02fb298ab0a54d95d015e3622432f55953b44b758"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/runbook.md",
+          "sha256": "6679e8c63ffd3ca1d0ac40b0ebe984291f80be8d77ad855461df8592cd4868c9"
+        }
+      }
+    },
+    {
+      "path": "docs/security-model.md",
+      "sha256": "e8780f23c09040a7bc9caa1a0d36427af93bbb1366d674db2681095b86f44827",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/security-model.md",
+          "sha256": "f82f71e7d4dd6fd28fe4b16194b663b2fc0d35c9541e2eced192910db289839d"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/security-model.md",
+          "sha256": "82c7b1565b39002ce476028f57298d3364149da6dac45010a74becd115d90713"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/security-model.md",
+          "sha256": "f47001145f0ed01dc942940057c0d2db8e3201bdb066b2b13b694f5921b9508a"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/security-model.md",
+          "sha256": "691c55e5b201ae374abbf17f5529389771a173d57c80b554f856f8f218f550ba"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/security-model.md",
+          "sha256": "bd3862712cf583fe01a0946383e5d2a952a6eed42483acf7c871ffa3539364fd"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/security-model.md",
+          "sha256": "6481c9bf264f28d47a16df0fd96cb2dff5e93d1ed9c6e3a2a7f567beae3cf595"
+        }
+      }
+    },
+    {
+      "path": "docs/technical-walkthrough.md",
+      "sha256": "3ffbe524367bf0ff00044aaa70cdc9dc741aea1c3426a707a852735ba03c740e",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/technical-walkthrough.md",
+          "sha256": "9ce1ac1a446fe38e6d9a2c6dde436acbc6fbdbc60ddf7b7076bc9fee51b7b7a2"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/technical-walkthrough.md",
+          "sha256": "a41474791b5181ebd998c019f6922d9c4df7aee185cd90434c4afb909caca4b0"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/technical-walkthrough.md",
+          "sha256": "4fc765d1f203663fdd4cd927168183a6e96ed1c0eaaa0c96ab9d737e229e9368"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/technical-walkthrough.md",
+          "sha256": "293cbba0a6680e9503b1d487736e8734ed8b08a65e9cbd0dba789fbc07d0e1b6"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/technical-walkthrough.md",
+          "sha256": "240e269876438b76249865789d9daf8e91d87c299777888bf9903d9c0db44815"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/technical-walkthrough.md",
+          "sha256": "fe3bf526be2fe72f74d71906154da25626894494c36cbb6d6f9dfa6145b12878"
+        }
+      }
+    },
+    {
+      "path": "docs/threat-model.md",
+      "sha256": "e532a463e2eb04853c6c96fb85cbec6c40d20f563e2163eb2bc06dd4e3576efa",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/docs/threat-model.md",
+          "sha256": "2df6bfd61fb272a4c1666653d42cb8c6c6f876b8f1c3f151e03dc2e1f5d1c146"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/docs/threat-model.md",
+          "sha256": "0e72fe3c3e4e2e55047202e932d4b3a82aa2c75e611acd9d6d3d899e1929c8e1"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/docs/threat-model.md",
+          "sha256": "d1e554fb6708b27927a21d0b160a2bce36fe86bf068958a2b903de603d4e0a3f"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/docs/threat-model.md",
+          "sha256": "938a28c326ad8d66593f5757b50e825e8915e365c4c218ead68d9fcf5e43564d"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/docs/threat-model.md",
+          "sha256": "0de9acefb80126b9637bf3fb3ee6574d783b9f065c4d374a0c8152809f283485"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/docs/threat-model.md",
+          "sha256": "10ac8d8c50e935ae6580aad8d610fa5f42744a43ffe48fe010def5c282eabfab"
+        }
+      }
+    },
+    {
+      "path": "examples/agent-trust/README.md",
+      "sha256": "7e74196f7822a43d0c661a7328f9033aa8b9417573a110f6d7bea48438836c66",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/agent-trust/README.md",
+          "sha256": "4d1661237de11d7fcddeabc5300d894b0a5ec71bbc541469afc247f679f0088b"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/agent-trust/README.md",
+          "sha256": "f141d3182c77b4f0463b62b2eb114816a414bac39cd23dea75982ea04fb4f400"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/agent-trust/README.md",
+          "sha256": "1ba0c223c2868dacfdc0f6f61235e6f5a94a4b7da970a1de35c621bb9e6687fe"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/agent-trust/README.md",
+          "sha256": "51c92f66cfe81484fe4aa8e63aeb787d0b59453a0de4ebb0a730c8c786796686"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/agent-trust/README.md",
+          "sha256": "b5558ef7b101d8ba65f87614348d53c4d0493dedfed323bf05787caf3fca6c88"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/agent-trust/README.md",
+          "sha256": "792297778b9956a7420a39627824f2e997cc279ff478dc5e3d277e69ea1ea2c3"
+        }
+      }
+    },
+    {
+      "path": "examples/aws-public-s3/README.md",
+      "sha256": "e9a7a91afd5618fd03b2c7defc2a0e82fc4fd78636ae82ab7088b8c8712ed112",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/aws-public-s3/README.md",
+          "sha256": "2ac9542900d500ccd5f1803d81036d49b5563caf729f32a00cd769b7c5a62202"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/aws-public-s3/README.md",
+          "sha256": "22a535423c63ff0bf4d31d1b4bab2e9e9a13f9a03f58d9f44a3310d729eb5b6a"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/aws-public-s3/README.md",
+          "sha256": "e0450d82977330d467053f6677ce246670341f4b7cf72ce388705a46b663f7f4"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/aws-public-s3/README.md",
+          "sha256": "1479a70e99935bb541461420feaf4b73d48ba8bf02fbd0d11f70388544ae5fac"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/aws-public-s3/README.md",
+          "sha256": "689d75beea3134cbe1efd5078cd9606b5d4cd27acb16ae14b24f8211579b6b50"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/aws-public-s3/README.md",
+          "sha256": "8f4410ee6246d225de653569104039eb8a752e92e922d8a14e9ad3dbce90b3fb"
+        }
+      }
+    },
+    {
+      "path": "examples/azure-public-blob/README.md",
+      "sha256": "3d556965db268ac72a97d774c0c1e8f54e9acf971bf707d3421a9c6d53a6ccd4",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/azure-public-blob/README.md",
+          "sha256": "bdceaa3aa6c24cbf48674557cb5701f5bc50cc1fc293d4d08772e35c0c78a8f3"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/azure-public-blob/README.md",
+          "sha256": "34577a3b834fc41c7468ac6bfecef2933aa518d9444785ffe2972e19ce46744e"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/azure-public-blob/README.md",
+          "sha256": "6cf913e37ad25cdf8d1cd56dcf91a38b7b6a71a3b5d928779b6e95f8462767e4"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/azure-public-blob/README.md",
+          "sha256": "8eddcaded59c9407d6208db2c36001879693305a983e58c1d99589d29d0693c4"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/azure-public-blob/README.md",
+          "sha256": "bc6258cfd9954d03a31d65d9094e792b15c8249629521f4f7ee9e95d09d6b4b2"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/azure-public-blob/README.md",
+          "sha256": "4a9467b1a98c011da9a6b84dd3ebd02889e974c96fc61d59dbf4db59f8ddaec5"
+        }
+      }
+    },
+    {
+      "path": "examples/cloud-context/README.md",
+      "sha256": "8265949659f8f38977b7758670b4d2a23889d2b4e692ca60d741b6ba21a0f2be",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/cloud-context/README.md",
+          "sha256": "ba3d11dd1c75598fa26a7bd8fddaf132f66a4dfa4f5370395e11a7e793feab69"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/cloud-context/README.md",
+          "sha256": "6071ba211f9cbf91dea7d3ea146c5400d062042d16b7284d150f27a919dbb689"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/cloud-context/README.md",
+          "sha256": "f28fc323d5569b6c3efdaef4d0e23ca458db76f043ca45eacec7ef3e71d6d87c"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/cloud-context/README.md",
+          "sha256": "59e2cbff6c0042708a9c3fdb5ec9b673c546e9ea7f29609d6eaae3fe12a992db"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/cloud-context/README.md",
+          "sha256": "f00aee0878d0b844fa41168dbbeaef7d2b84d56bc7d290c9259ec9e9a2fb7c99"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/cloud-context/README.md",
+          "sha256": "988721ebfc7bb0d98d591f3623f1c05c557046d55510c4f0be246d9b40182bd9"
+        }
+      }
+    },
+    {
+      "path": "examples/compose-exposed-admin/README.md",
+      "sha256": "b14aa225663b50c794c7ddaa4cd7570620c243e7d4f10853baff48676a54e8f0",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/compose-exposed-admin/README.md",
+          "sha256": "fc1e1a5689423f1085bf6f5cca82573125961b763fad6f0e44a287edf381d661"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/compose-exposed-admin/README.md",
+          "sha256": "8ee85f480eb972a1b6529523ba7bd65a93c6475ee4811194005b44a68e586dd9"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/compose-exposed-admin/README.md",
+          "sha256": "5290a0a346259e757db8efbbe016f68c413d38287582bfa25f075c57bf456f89"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/compose-exposed-admin/README.md",
+          "sha256": "e02dcb68ea973983cca67d004c760ad5d6b7b8e889ef17a5d1c0cadbf4b3207a"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/compose-exposed-admin/README.md",
+          "sha256": "02101d3792edd67c0bb277e90e741cfb53e247445fd8acc1e3d96633f61a5d7b"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/compose-exposed-admin/README.md",
+          "sha256": "ac4c93813482cc3568869a32b32c0f0fa65b8c48205ddcaad9776493d4f7fe59"
+        }
+      }
+    },
+    {
+      "path": "examples/eval/README.md",
+      "sha256": "e436abe8c8ae1a83529fc0f68693da1b38bb55ba4491a4762a156cf4c0789a8c",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/eval/README.md",
+          "sha256": "ff2cfb3cb840f5227ec251c047ec04a4243d6e2bdd8c9ea7d22b00226afd2c12"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/eval/README.md",
+          "sha256": "1550c087ab9aea8d795283060b68c39dab97d967b587a6ccaa61f6a59d8fb693"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/eval/README.md",
+          "sha256": "65fb6bdd8a0804a0b8330f0f779014268d27e7834a5ecebe0a4fadb8b456d02a"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/eval/README.md",
+          "sha256": "25f96d0fa8c9cdbe92021afde9c8bd47ae2f7c0b8c824ccc41827fccd50ad436"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/eval/README.md",
+          "sha256": "55f91f34a20aaa2d046eafe5e980287e329dbd5b71b48466399cf8864d0cc320"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/eval/README.md",
+          "sha256": "2e93043156953397a78db137241606d9c68d59a02cf1fbd02c5fdef4363a93d9"
+        }
+      }
+    },
+    {
+      "path": "examples/generic-plan-review/README.md",
+      "sha256": "4a10cd51062d213c761822568f6642582cdfaa5a31140833a656141eba254acf",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/generic-plan-review/README.md",
+          "sha256": "fd4d0117f6f4519fb14c812cb6a6f1082c157dbdac465ba61d4ae60ebf9cc20f"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/generic-plan-review/README.md",
+          "sha256": "739dc892f6920e1becc4352d1b039d3d5aabde841f74f613491dd6219c78a3c8"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/generic-plan-review/README.md",
+          "sha256": "abbe458130b3beb9f5baf71cf035f5104cb9708905bf5e15ad7564bd565d38d1"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/generic-plan-review/README.md",
+          "sha256": "a07813d0bc4ecbf20fa8c327b8e183ebb6ac8ce319277b0dba48ddb154810fdb"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/generic-plan-review/README.md",
+          "sha256": "c5f1dde157323715d66a318aac83bbb9b4f25665113974e1630c5203998f0f09"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/generic-plan-review/README.md",
+          "sha256": "a9ebb398808d503168327854ccb0565f6f5ef8e5ba04fca782d12d299bb7a0ad"
+        }
+      }
+    },
+    {
+      "path": "examples/k8s-privileged-pod/README.md",
+      "sha256": "38c253dee160c82633ba4ba99b1e0763503e8e27bc6d5d343fdcd6cc62107d63",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/k8s-privileged-pod/README.md",
+          "sha256": "05f453a61f37bd492c662ec00c28ade02726d9c50f12fbb6f98ec3c214858430"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/k8s-privileged-pod/README.md",
+          "sha256": "1d0375a10e9649cfb458294f0de0b2a74792b29469722bf08df43569ec8f23ca"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/k8s-privileged-pod/README.md",
+          "sha256": "051f347e3f14f489f01d0af103566b5fa6935775989d506722d83a95b2d50223"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/k8s-privileged-pod/README.md",
+          "sha256": "e090f13c46c486104148e6ae4ad8e610831f934593580b3e13c70ca0a1594471"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/k8s-privileged-pod/README.md",
+          "sha256": "f1953e5e520358945af8b10c3c2a55411d211101960b570a290865633ba30d97"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/k8s-privileged-pod/README.md",
+          "sha256": "f7fc5849ce9a9f254dbbc462778808df768a118eb02c1ccdf6f127cb3fe2b243"
+        }
+      }
+    },
+    {
+      "path": "examples/onprem-ssh-password/README.md",
+      "sha256": "1739906366e5fdb62a0bc256d997a363d1aa2137bff22e42223baafada2b85ee",
+      "mirrors": {
+        "es": {
+          "status": "complete",
+          "path": "docs/i18n/es/examples/onprem-ssh-password/README.md",
+          "sha256": "f7fa699137ae68c31bbd44943d9dee50673f1deb852b1d31f6f666b3924d4821"
+        },
+        "zh-CN": {
+          "status": "complete",
+          "path": "docs/i18n/zh-CN/examples/onprem-ssh-password/README.md",
+          "sha256": "ebdff0fe31b07a7f37d8e56d60f86b91aeb3a531c303a8497819c0aab8811a5d"
+        },
+        "fr": {
+          "status": "complete",
+          "path": "docs/i18n/fr/examples/onprem-ssh-password/README.md",
+          "sha256": "89a73d550237c69738cd2144cd8529fc192a48a2703bdcc7120aee8a2803dfd1"
+        },
+        "ja": {
+          "status": "complete",
+          "path": "docs/i18n/ja/examples/onprem-ssh-password/README.md",
+          "sha256": "9c576ecf01d98fa5c56948f9a76a4f215ecb4ed69b6c677f4f6b2c3850c39d2c"
+        },
+        "de": {
+          "status": "complete",
+          "path": "docs/i18n/de/examples/onprem-ssh-password/README.md",
+          "sha256": "6d2c130dd64bc01b3522f63223539ba94f20dff43e2857d7ceddcba70b6cc4b4"
+        },
+        "pt-BR": {
+          "status": "complete",
+          "path": "docs/i18n/pt-BR/examples/onprem-ssh-password/README.md",
+          "sha256": "bb8e8cbc692cd4d8c8cc1c89435d10c8c7f0c1284452850aa015a536b15c3d50"
+        }
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "path": "docs/handoff.md",
+      "sha256": "74f2f794638f47d0179fec5f0352ef084a5a01ef2c1938325837f26f18f184f6",
+      "reason": "Internal handoff/progress record"
+    },
+    {
+      "path": "docs/plans/2026-06-01-real-sandbox-red-team-commands.md",
+      "sha256": "7a322dfadbbf7163d245e55fe26bf59f771a2b3875efbd32878b6e29ef4dc7dd",
+      "reason": "Internal implementation/task plan"
+    },
+    {
+      "path": "docs/progress.md",
+      "sha256": "e7d9172b1fe3ebc9f0b2e32466bec6690141b6e006dac84a327448b2ef9ede43",
+      "reason": "Internal handoff/progress record"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-evidence-integrity-manifest.md",
+      "sha256": "d665537cf66f67bfbe85742f9eabba79bb2de7c275fff56ccae207073d0667ed",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-evidence-manifest-signing.md",
+      "sha256": "61993f527113786396fae9dd6b89702f2b833f35d187857fd63f9a8c78fd4db6",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-evidence-manifest-verification.md",
+      "sha256": "1cfde0705073ed33fa39ab6fed38aa2267488cd775d4144d6d91fabf3ed89baa",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-installed-wheel-sbom.md",
+      "sha256": "1455e13b48f45d4db8c94c3b9bf48f4c79d113ca68b8837bfacc8d0631773627",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-keyless-release-signing.md",
+      "sha256": "ad5d8bb9430d84cbf3fe5e0d366829e2f480cf65b78b50dba6624f4e94765f08",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-live-cloud-approval-gate.md",
+      "sha256": "4cb0f7b066e44da70d124b3de500161e8c8bff8ca6763d0cafa872bd2b9b5914",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-policy-command-controls.md",
+      "sha256": "d23da459e55c25dd367163d0a2f1afc756593163fce127547359b98fb5714fe3",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-policy-scenario-backend-allowlists.md",
+      "sha256": "3f82e3de19db6698e190d6472346e0b702f424f43b4f6cf631112fccb82d8dc3",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-policy-scenario-presets.md",
+      "sha256": "2f330d866e67a2f2d246d09ccecac970fe9279bb5405cdcde9334c40f708dfff",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-policy-validation-command.md",
+      "sha256": "0910172a3ee1bdba8dd07916982525dfa4dbb3467888b61ce09e2b0722ed7377",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-release-provenance.md",
+      "sha256": "a312befe044ba8b766d66a335a918516203173e6ece15dab0a695c565a8daf29",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-release-sbom-attestation.md",
+      "sha256": "794b4ffa57a9ac51a20743af402ee2724d04def995819e4f297e9b38b8a22c9f",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-12-upload-preflight-scrub.md",
+      "sha256": "4045d66c2c6ea1ffc3fb2572dbfd9bc61e080a06cd54b263841b7f76dc14fa91",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-attack-manifest-schema-validation.md",
+      "sha256": "0cdf529fc79c161a79c39c1227530d91101d7f7afa2276432739dd6db3ed9dbb",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-ci-summary-schema-validation.md",
+      "sha256": "e856d2503ab639295b5467514f83a2b92f8b0cf59b1b128ef9da63ff3d9c6027",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-evidence-manifest-schema-validation.md",
+      "sha256": "1fe79afe3888e77ab53bd14311aa8a653d0d47725afb01ee22fc43d0d0979c6e",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-policy-schema-validation.md",
+      "sha256": "475a4e68a9087cc62d456ce0221e5e7456c9d6830188b9d9f4fde1098928e6b7",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-policy-target-host-allowlists.md",
+      "sha256": "64b912297d42e6d065eb760bf08c0b801e2eaf80ac9c1c91f8bd137841508c93",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-release-sbom-validation.md",
+      "sha256": "6c8a84e8dbfe2e12829198b9ac74e5f4f702da15661ad0adc714ac3029992a90",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-remediation-metadata-schema-validation.md",
+      "sha256": "893de1d8859c8a09c6bde4ec4b105b6d15cca5af455f9f4976f56bc72fee5ed0",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-13-upload-plan-schema-validation.md",
+      "sha256": "807208a57f292a59eb6666a4b94df5865a2cc4d4b387e74d275c397c1bddf8d0",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-06-27-external-agent-trust-cli.md",
+      "sha256": "fc1d4608e681e6fa7f2ec015d8217dd35164a60e9ba526d5a728d807d9f6ecec",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-02-agent-ci-context-interface.md",
+      "sha256": "42ac10ffab8950e304af1dd6a989b9678186c1703f94d6277cb98908b9e82d6d",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-02-eval-baseline-comparison.md",
+      "sha256": "48c7424d3fa5a7d2fada25b46790bb1527cac43122905811ca354b68a63efbe2",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-02-evaluation-harness.md",
+      "sha256": "15215f983834e99714d8f34f11f8b47c7d57856c8411244c8a08defa3785ebfc",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-02-init-ci-github.md",
+      "sha256": "f5f7a1468daf884a70da52d9e160e68674a230cd72fb4114b9e296a944936496",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-12-installed-wheel-sbom-design.md",
+      "sha256": "b064a75f49da17fc285e7c238baa10a8c11c724a8031b7a5657e8f5db143371f",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-12-keyless-release-signing-design.md",
+      "sha256": "e0bdecafbd8010bfeccecdd9b5da7f575a81074c7ce31cfa737751ecdc725ecf",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-12-upload-preflight-scrub-design.md",
+      "sha256": "7a4be0c4e417b6aaa64b2925bfe46f2c5ebe3dedcc94f4ba88e501af952b88dd",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "docs/superpowers/specs/2026-06-13-release-sbom-validation-design.md",
+      "sha256": "db995917af4f65934017279c3de20bcbb6678b778f2824af72e60d04c87ce044",
+      "reason": "Historical internal implementation plan or specification"
+    },
+    {
+      "path": "examples/sample-runs/20260702-182015/report.md",
+      "sha256": "356dea941b40ce3d161af86425d6b8f744f776afb4a9476620b49b6166a04cd9",
+      "reason": "Generated historical run evidence"
+    },
+    {
+      "path": "examples/sample-runs/20260702-182015/workspace/README.md",
+      "sha256": "e9a7a91afd5618fd03b2c7defc2a0e82fc4fd78636ae82ab7088b8c8712ed112",
+      "reason": "Generated historical run evidence"
+    },
+    {
+      "path": "implementation-plan.md",
+      "sha256": "2bea71367e0c3a3fd08a63ed1c3e37bb87d6aae418f7ee164eb89d23d5fa2b77",
+      "reason": "Internal implementation/task plan"
+    },
+    {
+      "path": "task.md",
+      "sha256": "a637cf80d0e00684cccafb0e4dcf457fe5c6c80ed02ec14ed3c29d3191aa79fb",
+      "reason": "Internal implementation/task plan"
+    }
+  ],
+  "shared_assets": [
+    {
+      "path": "LICENSE",
+      "sha256": "d7bf130879d987475d125e4eaf527cf22ca2ebc8c02b70e2578d34c093d674c9",
+      "reason": "Authoritative English legal text"
+    },
+    {
+      "path": "NOTICE",
+      "sha256": "7a125bb6aa9f50d848fa52990fd229d9b26b27de95e34b26934b0384d8797b0d",
+      "reason": "Authoritative English legal text"
+    },
+    {
+      "path": "docs/diagrams/architecture.mmd",
+      "sha256": "73b6f06fd5baa0dd93f81b98698c955267cd3b0b669d0687b58c3b5310da51cb",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/attack-manifest.schema.json",
+      "sha256": "5ee40cc3330fc5c5fd0f2441b3ef5e4048190b4b3468f24bd1eedd83d9a33951",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/ci-summary.schema.json",
+      "sha256": "0df9fce591af7c4d7a4bb27be76c6adc29dd596849473dbff4f6c4e168c1c6a4",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/cloud-context.schema.json",
+      "sha256": "c5179f05814a5664fcee2ec720662986a0501e48d583b9ac60a2d0343bc23cb0",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/eval-results.schema.json",
+      "sha256": "271e78633eaa09998d2cfc76a2adb4b64c544fe3714448502889a691cd65ae23",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/eval-suite.schema.json",
+      "sha256": "aa66863ce9b98a0803b331c1102b4a0a80bc01c5cd59648296d675741de6ba2b",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/evidence-manifest.schema.json",
+      "sha256": "2744380fa61f57a3caff8c1aa3ac8fba8ab19d64dd9cb05fe5b52e1ef28e3536",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/external-agent-manifest.schema.json",
+      "sha256": "01e51ebce12d643bde9300c81a22a51279e4433610049b68363d0d26d4f03f28",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/nullstate-policy.schema.json",
+      "sha256": "1cbbb7aa34f990bc30dc7fa8f427da9aa2a24d050330fec382ca38019a8539a7",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/remediation-metadata.schema.json",
+      "sha256": "4a657dd04072310fc3d098003526e3a8ecd8d220386ff5a69c862c1c07d4eb64",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/run-bundle.schema.json",
+      "sha256": "c3f74cd7686e5356eb65572bcd70a83862a156e83a9e5b9f3cf0f100e7a3c163",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/run-summary.schema.json",
+      "sha256": "628b04154b769338ad528e15d3b1a6b5e7c898f01d219e30a1e6ff044c3a1041",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/schemas/upload-plan.schema.json",
+      "sha256": "4b95bdc935d53203a4dd1306cc8ae4871ace1627932260e16486f3503cabbe2f",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    },
+    {
+      "path": "docs/templates/github-actions/nullstate-enforcing.yml",
+      "sha256": "68e6de80cd69a6804f62a1e468f7afcb3b111d9aabae7c6c0874be883687d599",
+      "reason": "Authoritative executable/schema/diagram asset; not localized"
+    }
+  ],
+  "exclusion_patterns": [
+    {
+      "pattern": "**/AGENTS.md; **/CLAUDE.md",
+      "reason": "Agent instructions"
+    },
+    {
+      "pattern": "**/*.local.md; runs/**; scrubbed-runs/**; eval-runs/**",
+      "reason": "Private local evidence or generated runtime artifacts; not ingested"
+    },
+    {
+      "pattern": "vendor/**; node_modules/**; .venv/**",
+      "reason": "Third-party/vendor documentation"
+    }
+  ]
+}
